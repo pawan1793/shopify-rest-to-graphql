@@ -25,3 +25,12 @@ Step 3: Register the Service Provider
         // ...
         Thalia\ShopifyRestToGraphql\ShopifyRestToGraphqlServiceProvider::class,
     ];
+
+
+## How to use
+To post product using graphql using REST API payload
+
+    use Thalia\ShopifyRestToGraphql\GraphqlService; 
+
+    $shopifygl = new GraphqlService();
+    $product = $shopifygl->graphqlPostProduct($params,$shop,$accesstoken);
