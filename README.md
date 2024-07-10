@@ -2,6 +2,8 @@
 
 Shopify REST to GraphQL Processor is a Laravel package that simplifies the process of converting Shopify REST API payloads into GraphQL queries with minimal modifications. This package enables seamless integration of Shopify's GraphQL API into your Laravel application.
 
+NOTE :: This is experimental package 
+
 ## Features
  - Easy Integration: Simplifies the integration of Shopify's GraphQL API into your Laravel application.
  - Minimal Changes: Converts Shopify REST API payloads to GraphQL with minimal modifications, reducing development time and effort.
@@ -28,9 +30,16 @@ Step 3: Register the Service Provider
 
 
 ## How to use
-To post product using graphql using REST API payload
+To post product via graphql using REST API payload
 
     use Thalia\ShopifyRestToGraphql\GraphqlService; 
 
     $shopifygl = new GraphqlService();
     $product = $shopifygl->graphqlPostProduct($params,$shop,$accesstoken);
+
+To update product via graphql using REST API payload
+
+    use Thalia\ShopifyRestToGraphql\GraphqlService; 
+
+    $shopifygl = new GraphqlService();
+    $product = $shopifygl->graphqlUpdateProduct($params,$shop,$accesstoken);
