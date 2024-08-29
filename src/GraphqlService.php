@@ -186,9 +186,9 @@ class GraphqlService
                    
                     // Check for GraphQL or user errors
                     if (isset($responseData['errors'])) {
-                        echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                        //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
                     } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                        echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                        //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
                     } else {
                         // Print the created product details
                         $variantid = $responseData['data']['productCreate']['product']['variants']['edges'][0]['node']['id'];
@@ -203,7 +203,7 @@ class GraphqlService
                 } catch (\Exception $e) {
                     // Handle Guzzle exceptions
                     \Log::info('205 graphql Request Error: ' . $e->getMessage());
-                    echo 'Request Error: ' . $e->getMessage();
+                    //tmppm echo 'Request Error: ' . $e->getMessage();
                 }
 
             }
@@ -292,9 +292,9 @@ class GraphqlService
               
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                    //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                    //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
                 } else {
                     // Print the created product details
                     $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
@@ -306,7 +306,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                echo 'Request Error: ' . $e->getMessage();
+                //tmppm echo 'Request Error: ' . $e->getMessage();
             }
           
           return $productreturndata;
@@ -434,9 +434,9 @@ class GraphqlService
                    
                     // Check for GraphQL or user errors
                     if (isset($responseData['errors'])) {
-                        echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                        //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
                     } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                        echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                       //tmppm  echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
                     } else {
                         // Print the created product details
                         $variantid = $responseData['data']['productUpdate']['product']['variants']['edges'][0]['node']['id'];
@@ -450,7 +450,7 @@ class GraphqlService
                     }
                 } catch (\Exception $e) {
                     // Handle Guzzle exceptions
-                    echo 'Request Error: ' . $e->getMessage();
+                    //tmppm echo 'Request Error: ' . $e->getMessage();
                 }
 
             }
@@ -536,9 +536,9 @@ class GraphqlService
               
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                    //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                    //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
                 } else {
                     // Print the created product details
                     $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
@@ -550,7 +550,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                echo 'Request Error: ' . $e->getMessage();
+                //tmppm echo 'Request Error: ' . $e->getMessage();
             }
           
           return $productreturndata;
