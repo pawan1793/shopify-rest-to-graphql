@@ -202,13 +202,19 @@ class GraphqlService
                     }
                 } catch (\Exception $e) {
                     // Handle Guzzle exceptions
+                    \Log::info('205 graphql Request Error: ' . $e->getMessage());
                     echo 'Request Error: ' . $e->getMessage();
                 }
 
             }
-          
+            
+            if(!isset($variantid)){
+                return false;
+            }
+
             $variant = $productdata['variants'][0];
-       
+            
+
             $variantdata['id'] = $variantid;
             $variantdata['price'] = $variant['price'];
             if(!empty($variant['compare_at_price'])){
