@@ -186,9 +186,14 @@ class GraphqlService
                    
                     // Check for GraphQL or user errors
                     if (isset($responseData['errors'])) {
-                        //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                    
+
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
                     } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                        //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+
                     } else {
                         // Print the created product details
                         $variantid = $responseData['data']['productCreate']['product']['variants']['edges'][0]['node']['id'];
@@ -201,9 +206,7 @@ class GraphqlService
 
                     }
                 } catch (\Exception $e) {
-                    // Handle Guzzle exceptions
-                    \Log::info('205 graphql Request Error: ' . $e->getMessage());
-                    //tmppm echo 'Request Error: ' . $e->getMessage();
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
                 }
 
             }
@@ -292,9 +295,13 @@ class GraphqlService
               
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                    
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                   
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+
                 } else {
                     // Print the created product details
                     $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
@@ -306,7 +313,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                //tmppm echo 'Request Error: ' . $e->getMessage();
+                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
             }
           
           return $productreturndata;
@@ -434,9 +441,13 @@ class GraphqlService
                    
                     // Check for GraphQL or user errors
                     if (isset($responseData['errors'])) {
-                        //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
                     } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                       //tmppm  echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                       
+                       throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+
                     } else {
                         // Print the created product details
                         $variantid = $responseData['data']['productUpdate']['product']['variants']['edges'][0]['node']['id'];
@@ -449,8 +460,8 @@ class GraphqlService
 
                     }
                 } catch (\Exception $e) {
-                    // Handle Guzzle exceptions
-                    //tmppm echo 'Request Error: ' . $e->getMessage();
+                    
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
                 }
 
             }
@@ -536,9 +547,9 @@ class GraphqlService
               
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    //tmppm echo 'GraphQL Errors: ' . print_r($responseData['errors'], true);
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    //tmppm echo 'User Errors: ' . print_r($responseData['data']['productCreate']['userErrors'], true);
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
                 } else {
                     // Print the created product details
                     $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
@@ -550,9 +561,335 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                //tmppm echo 'Request Error: ' . $e->getMessage();
+                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
             }
           
           return $productreturndata;
+    }
+
+    public function graphqlGetProducts($params, $shop,$accessToken){
+
+
+        //dd($params);
+        $gqparams = "";
+        if(isset($params['created_at_max'])){
+            $gqparams .= " created_at:<='{$params['created_at_max']}T00:00:00Z'";
+        }
+
+        if(isset($params['created_at_min'])){
+            $gqparams .= " created_at:>='{$params['created_at_min']}T00:00:00Z'";
+        }
+
+
+        if(isset($params['published_status'])){
+            if($params['published_status'] == 'published'){
+                $gqparams .= " status:ACTIVE";    
+            }elseif($params['published_status'] == 'unpublished'){
+                $gqparams .= " status:DRAFT";
+            }
+            
+        }
+        
+        if(isset($params['vendor'])){
+            $gqparams .= " vendor:{$params['vendor']}";
+        }
+
+        if(isset($params['product_type'])){
+            $gqparams .= " product_type:{$params['product_type']}";
+        }
+
+        
+        $cursor = '';
+        if(isset($params['page_info']) && isset($params['direction']) && $params['direction'] == 'next'){
+            // $gqparams .= " product_type:{$params['product_type']}";
+            $cursor = 'after: "'.$params['page_info'].'"';
+        }
+
+        
+        if(isset($params['page_info']) && isset($params['direction']) && $params['direction'] == 'previous' ){
+            // $gqparams .= " product_type:{$params['product_type']}";
+            $cursor = 'before: "'.$params['page_info'].'"';
+        }
+        
+        if(!isset($params['limit'])){
+            $params['limit'] = 25;
+        }
+
+        $query = array();
+        $productvariants = json_encode($gqparams, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $productvariants = preg_replace('/"([^"]+)"\s*:/','$1:', $productvariants);
+        //$productvariants = str_replace('"MEDIAPMIMAGE"',"IMAGE",$productvariants);
+        $queryinput = $productvariants;
+        //echo $queryinput;
+        if(empty($gqparams)){
+            $gqquery = "products(first: {$params['limit']},$cursor)";
+        }else{
+            $gqquery =  "products(first: {$params['limit']}, query: $queryinput,$cursor)";
+        }
+        if(isset($params['direction']) && $params['direction'] == 'previous'){
+            $gqquery = str_replace('first',"last",$gqquery);
+        }
+       
+       
+       
+     
+        $onlinepublication = [];
+        $query = <<<QUERY
+                query {
+                    $gqquery {
+                        edges {
+                        node {
+                            id
+                            title
+                            handle
+                            status
+                            featuredImage {
+                                id
+                                url
+                            }
+                        }
+                        }
+                        pageInfo {
+                            hasNextPage,
+                            hasPreviousPage,
+                            endCursor,
+                            startCursor
+                        }
+                    }
+                }
+                QUERY;
+       
+
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+
+
+        $shopifyproducts = array();
+        $pageinfo = array();
+        try {
+            // Send GraphQL request
+            $response = $client->post('graphql.json', [
+                'body' => json_encode(['query' => $query])
+            ]);
+
+            // Get the response body
+            $body = $response->getBody();
+            $responseData = json_decode($body, true);
+            
+           
+            
+
+            if(isset($responseData['data'])){
+                foreach ($responseData['data']['products']['edges'] as $key => $product) {
+                    $product = $product['node'];
+                    $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $product['id']);
+                    $shopifyproduct['title'] = $product['title'];
+                    $shopifyproduct['handle'] = $product['handle'];
+                    if(!empty($product['featuredImage'])){
+                        $shopifyproduct['image']['src'] = $product['featuredImage']['url'];
+                    }
+                    
+                    
+                    $shopifyproducts[$key] = $shopifyproduct;
+                    
+                }
+    
+                
+                $pageinfo = $responseData['data']['products']['pageInfo'];
+
+
+                $responsedata['products'] = $shopifyproducts;
+                $responsedata['pageinfo'] = $pageinfo;
+                return $responsedata;
+            }
+
+            
+          
+           
+          
+            if (isset($responseData["errors"])) {
+                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+            }
+        } catch (\Exception $e) {
+            // Handle Guzzle exceptions
+            throw new \Exception('Request Error: ' . print_r($e->getMessage(), true));
+           
+        }
+    }
+
+    public function graphqlGetProduct($shopifyid, $shop,$accessToken){
+        
+
+        $shopifyid = "gid://shopify/Product/{$shopifyid}";
+
+        $query = <<<QUERY
+        query publications {
+            product(id: "$shopifyid") {
+                id
+                title
+                handle
+                bodyHtml
+                vendor
+                productType
+                tags
+                status
+                options {
+                    name
+                    values
+                }
+                featuredImage {
+                    id
+                    url
+                }
+
+                variants(first: 250) {
+                    edges {
+                        node {
+                        id
+                        sku
+                        title
+                        }
+                    }
+                }
+            }
+        }
+        QUERY;
+            
+       
+  
+        
+
+
+            // Initialize Guzzle client
+            $client = new Client([
+                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-Shopify-Access-Token' => $accessToken
+                ]
+            ]);
+
+           $productreturndata = array();
+            if(1){
+           
+                try {
+                    // Send GraphQL request
+                    $response = $client->post('graphql.json', [
+                        'body' => json_encode(['query' => $query])
+                    ]);
+
+                    // Get the response body
+                    $body = $response->getBody();
+                    $responseData = json_decode($body, true);
+                  
+                   
+                    // Check for GraphQL or user errors
+                    if (isset($responseData['errors'])) {
+                    
+
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+                    } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+
+                    } else {
+                        $shopifyproduct = $responseData['data']['product'];
+
+                        
+                        if(!empty($shopifyproduct['featuredImage'])){
+                            $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
+                        }
+                        if(!empty($shopifyproduct['variants'])){
+                            $variants = array();
+                            foreach($shopifyproduct['variants']['edges'] as $qlvariant){
+                                
+                                $variant = $qlvariant['node'];
+                                $variant['id'] = str_replace("gid://shopify/ProductVariant/","", $variant['id']);
+                               $variants[] = $variant;
+                            }
+                        }
+                        $shopifyproduct['variants'] = $variants;
+                       
+                        return $shopifyproduct;
+
+                    }
+                } catch (\Exception $e) {
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                }
+
+            }
+    }
+
+    public function graphqlDeleteProduct($shopifyid, $shop,$accessToken){
+        
+
+        $shopifyid = "gid://shopify/Product/{$shopifyid}";
+
+        $query = <<<QUERY
+        mutation {
+            productDelete(input: {id: "$shopifyid"}) {
+                deletedProductId
+                userErrors {
+                field
+                message
+                }
+            }
+        }
+        QUERY;
+            
+       
+  
+        
+
+
+            // Initialize Guzzle client
+            $client = new Client([
+                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-Shopify-Access-Token' => $accessToken
+                ]
+            ]);
+
+           $productreturndata = array();
+            if(1){
+           
+                try {
+                    // Send GraphQL request
+                    $response = $client->post('graphql.json', [
+                        'body' => json_encode(['query' => $query])
+                    ]);
+
+                    // Get the response body
+                    $body = $response->getBody();
+                    $responseData = json_decode($body, true);
+                   
+                   
+                    // Check for GraphQL or user errors
+                    if (isset($responseData['errors'])) {
+                    
+
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+                    } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+
+                    } else {
+                        
+                        return $responseData;
+
+                    }
+                } catch (\Exception $e) {
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                }
+
+            }
     }
 }
