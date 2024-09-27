@@ -3,8 +3,8 @@
     "description": "Shopify REST to GraphQL : Converts Shopify REST API payloads to GraphQL queries with minimal changes for seamless Laravel integration.",
     "type": "library",
     "require": {
-        "php": "^7.3.3",
-        "guzzlehttp/guzzle": "^7.5"
+        "php": ">=7.4",
+        "guzzlehttp/guzzle": ">=7.5"
     },
     "license": "MIT",
     "autoload": {
