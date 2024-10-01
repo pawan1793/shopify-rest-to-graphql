@@ -702,7 +702,39 @@ class GraphqlService
         }
        
        
+        $fields['id'] = 'id';
+        $fields['title'] = 'title';
+        $fields['handle'] = 'handle';
+        $fields['status'] = 'status';
+        $fields['featuredImage'] = 'featuredImage {
+                                id
+                                url
+                            }';
+
+
+        if(isset($params['fields'])){
+            $parmsfields = explode(",",$params['fields']);
+         
+            if(in_array('variants',$parmsfields)){
+                $fields['variants'] = 'variants(first: 250) {
+                    edges {
+                        node {
+                        id
+                        sku
+                        title
+                        inventoryItem {
+                            id
+                            inventoryHistoryUrl
+                        }
+                        }
+                    }
+                }';
+            }
+            
+        }
        
+       $fields = implode("\n",$fields);
+      
      
         $onlinepublication = [];
         $query = <<<QUERY
@@ -710,14 +742,7 @@ class GraphqlService
                     $gqquery {
                         edges {
                         node {
-                            id
-                            title
-                            handle
-                            status
-                            featuredImage {
-                                id
-                                url
-                            }
+                            $fields
                         }
                         }
                         pageInfo {
@@ -764,6 +789,23 @@ class GraphqlService
                     if(!empty($product['featuredImage'])){
                         $shopifyproduct['image']['src'] = $product['featuredImage']['url'];
                     }
+
+                    if(!empty($product['variants'])){
+                        $variants = array();
+                        if(!empty($product['variants'])){
+                          
+                            foreach($product['variants']['edges'] as $qlvariant){
+                                
+                                $variant = $qlvariant['node'];
+                                $variant['id'] = str_replace("gid://shopify/ProductVariant/","", $variant['id']);
+                                $variant['inventory_item_id'] = str_replace("gid://shopify/InventoryItem/","", $variant['inventoryItem']['id']);
+
+                               $variants[] = $variant;
+                            }
+                        }
+                        $shopifyproduct['variants'] = $variants;
+                     
+                    }
                     
                     
                     $shopifyproducts[$key] = $shopifyproduct;
@@ -793,6 +835,158 @@ class GraphqlService
         }
     }
 
+    public function graphqlGetProductsCount($params, $shop,$accessToken){
+
+
+        //dd($params);
+        $gqparams = "";
+        if(isset($params['created_at_max'])){
+            $gqparams .= " created_at:<='{$params['created_at_max']}T00:00:00Z'";
+        }
+
+        if(isset($params['created_at_min'])){
+            $gqparams .= " created_at:>='{$params['created_at_min']}T00:00:00Z'";
+        }
+
+
+        if(isset($params['published_status'])){
+            if($params['published_status'] == 'published'){
+                $gqparams .= " status:ACTIVE";    
+            }elseif($params['published_status'] == 'unpublished'){
+                $gqparams .= " status:DRAFT";
+            }
+            
+        }
+        
+        if(isset($params['vendor'])){
+            $gqparams .= " vendor:{$params['vendor']}";
+        }
+
+        if(isset($params['product_type'])){
+            $gqparams .= " product_type:{$params['product_type']}";
+        }
+
+        
+        $cursor = '';
+        if(isset($params['page_info']) && isset($params['direction']) && $params['direction'] == 'next'){
+            // $gqparams .= " product_type:{$params['product_type']}";
+            $cursor = 'after: "'.$params['page_info'].'"';
+        }
+
+        
+        if(isset($params['page_info']) && isset($params['direction']) && $params['direction'] == 'previous' ){
+            // $gqparams .= " product_type:{$params['product_type']}";
+            $cursor = 'before: "'.$params['page_info'].'"';
+        }
+        
+        if(!isset($params['limit'])){
+            $params['limit'] = 25;
+        }
+
+        $query = array();
+        $productvariants = json_encode($gqparams, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $productvariants = preg_replace('/"([^"]+)"\s*:/','$1:', $productvariants);
+        //$productvariants = str_replace('"MEDIAPMIMAGE"',"IMAGE",$productvariants);
+        $queryinput = $productvariants;
+        //echo $queryinput;
+        if(empty($gqparams)){
+            $gqquery = "products(first: {$params['limit']},$cursor)";
+        }else{
+            $gqquery =  "products(first: {$params['limit']}, query: $queryinput,$cursor)";
+        }
+        if(isset($params['direction']) && $params['direction'] == 'previous'){
+            $gqquery = str_replace('first',"last",$gqquery);
+        }
+       
+       
+        $fields['id'] = 'id';
+        $fields['title'] = 'title';
+        $fields['handle'] = 'handle';
+        $fields['status'] = 'status';
+        $fields['featuredImage'] = 'featuredImage {
+                                id
+                                url
+                            }';
+
+
+        if(isset($params['fields'])){
+            $parmsfields = explode(",",$params['fields']);
+         
+            if(in_array('variants',$parmsfields)){
+                $fields['variants'] = 'variants(first: 250) {
+                    edges {
+                        node {
+                        id
+                        sku
+                        title
+                        inventoryItem {
+                            id
+                            inventoryHistoryUrl
+                        }
+                        }
+                    }
+                }';
+            }
+            
+        }
+       
+       $fields = implode("\n",$fields);
+      
+     
+        $onlinepublication = [];
+        $query = <<<QUERY
+                query {
+                    productsCount {
+                        count
+                    }
+                }
+                QUERY;
+       
+
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+
+
+        $shopifyproducts = array();
+        $pageinfo = array();
+        try {
+            // Send GraphQL request
+            $response = $client->post('graphql.json', [
+                'body' => json_encode(['query' => $query])
+            ]);
+
+            // Get the response body
+            $body = $response->getBody();
+            $responseData = json_decode($body, true);
+         
+           
+            
+
+            if(isset($responseData['data'])){
+                $responsedata =  $responseData['data']['productsCount'];
+                return $responsedata;
+            }
+
+            
+          
+           
+          
+            if (isset($responseData["errors"])) {
+                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+            }
+        } catch (\Exception $e) {
+            // Handle Guzzle exceptions
+            throw new \Exception('Request Error: ' . print_r($e->getMessage(), true));
+           
+        }
+    }
+
+    
     public function graphqlGetProduct($shopifyid, $shop,$accessToken){
         
 
@@ -824,6 +1018,11 @@ class GraphqlService
                         id
                         sku
                         title
+                        inventoryItem {
+                            id
+                            inventoryHistoryUrl
+                        }
+                        
                         }
                     }
                 }
@@ -876,12 +1075,14 @@ class GraphqlService
                         if(!empty($shopifyproduct['featuredImage'])){
                             $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
                         }
+                        $variants = array();
                         if(!empty($shopifyproduct['variants'])){
-                            $variants = array();
+                          
                             foreach($shopifyproduct['variants']['edges'] as $qlvariant){
                                 
                                 $variant = $qlvariant['node'];
                                 $variant['id'] = str_replace("gid://shopify/ProductVariant/","", $variant['id']);
+                                $variant['inventory_item_id'] = str_replace("gid://shopify/InventoryItem/","", $variant['inventoryItem']['id']);
                                $variants[] = $variant;
                             }
                         }
