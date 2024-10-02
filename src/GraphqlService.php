@@ -685,7 +685,21 @@ class GraphqlService
         if(!isset($params['limit'])){
             $params['limit'] = 25;
         }
+        
+        if(isset($params['ids']) && !empty($params['ids'])){
+            $params['limit'] = 250;
+            $productids = explode(",",$params['ids']);
+            $productIdQuery = array();
+            foreach($productids as $productid){
+                $productIdQuery[] = "(id:{$productid})";
+            }
+            $productIdQuery = implode(" OR ",$productIdQuery);
+          
+            $gqparams .= ' '.$productIdQuery;
+        }
 
+       
+       
         $query = array();
         $productvariants = json_encode($gqparams, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $productvariants = preg_replace('/"([^"]+)"\s*:/','$1:', $productvariants);
@@ -700,8 +714,8 @@ class GraphqlService
         if(isset($params['direction']) && $params['direction'] == 'previous'){
             $gqquery = str_replace('first',"last",$gqquery);
         }
-       
-       
+      
+
         $fields['id'] = 'id';
         $fields['title'] = 'title';
         $fields['handle'] = 'handle';
@@ -754,8 +768,9 @@ class GraphqlService
                     }
                 }
                 QUERY;
-       
-
+            
+  
+     
         $client = new Client([
             'base_uri' => "https://$shop/admin/api/2024-04/",
             'headers' => [
@@ -763,7 +778,17 @@ class GraphqlService
                 'X-Shopify-Access-Token' => $accessToken
             ]
         ]);
+        
+        if(0){
+            $response = $client->post('graphql.json', [
+                'body' => json_encode(['query' => $query])
+            ]);
 
+            // Get the response body
+            $body = $response->getBody();
+            $responseData = json_decode($body, true);
+            dd($responseData);
+        }
 
         $shopifyproducts = array();
         $pageinfo = array();
