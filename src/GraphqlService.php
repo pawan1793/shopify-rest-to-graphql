@@ -640,7 +640,7 @@ class GraphqlService
 
     public function graphqlGetProducts($params, $shop,$accessToken){
 
-
+       
         //dd($params);
         $gqparams = "";
         if(isset($params['created_at_max'])){
@@ -660,6 +660,15 @@ class GraphqlService
             }
             
         }
+        if(isset($params['title'])){
+            $gqparams .= " title:*{$params['title']}*";
+        }
+
+
+        if(isset($params['handle'])){
+            $gqparams .= " handle:*{$params['handle']}*";
+        }
+
         
         if(isset($params['vendor'])){
             $gqparams .= " vendor:{$params['vendor']}";
@@ -668,8 +677,12 @@ class GraphqlService
         if(isset($params['product_type'])){
             $gqparams .= " product_type:{$params['product_type']}";
         }
-
         
+        if(isset($params['since_id']) && !empty($params['since_id'])){
+            $gqparams .= " id:>{$params['since_id']}";
+        }
+
+
         $cursor = '';
         if(isset($params['page_info']) && isset($params['direction']) && $params['direction'] == 'next'){
             // $gqparams .= " product_type:{$params['product_type']}";
@@ -681,6 +694,8 @@ class GraphqlService
             // $gqparams .= " product_type:{$params['product_type']}";
             $cursor = 'before: "'.$params['page_info'].'"';
         }
+
+        
         
         if(!isset($params['limit'])){
             $params['limit'] = 25;
@@ -716,6 +731,9 @@ class GraphqlService
         }
       
 
+        
+
+
         $fields['id'] = 'id';
         $fields['title'] = 'title';
         $fields['handle'] = 'handle';
@@ -748,7 +766,7 @@ class GraphqlService
         }
        
        $fields = implode("\n",$fields);
-      
+    
      
         $onlinepublication = [];
         $query = <<<QUERY
@@ -769,7 +787,29 @@ class GraphqlService
                 }
                 QUERY;
             
-  
+        //if filter by collectionid 
+        if(isset($params['collection_id']) && !empty($params['collection_id'])){
+        
+            $collection_id = $params['collection_id'];
+             
+            $collection_handle = $this->getCollectionHandle($collection_id,$shop,$accessToken);
+           
+            $query = <<<QUERY
+             query {
+                collectionByHandle(handle: "$collection_handle") {
+                    id
+                    title
+                    products(first: 250) {
+                    edges {
+                        node {
+                           $fields
+                        }
+                    }
+                    }
+                }
+                }
+            QUERY;
+         }
      
         $client = new Client([
             'base_uri' => "https://$shop/admin/api/2024-04/",
@@ -801,11 +841,14 @@ class GraphqlService
             // Get the response body
             $body = $response->getBody();
             $responseData = json_decode($body, true);
-            
            
             
 
             if(isset($responseData['data'])){
+                if(isset($params['collection_id']) && !empty($params['collection_id'])){
+                    $responseData['data']['products']['edges'] =  $responseData['data']['collectionByHandle']['products']['edges'];
+                }
+
                 foreach ($responseData['data']['products']['edges'] as $key => $product) {
                     $product = $product['node'];
                     $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $product['id']);
@@ -838,11 +881,14 @@ class GraphqlService
                 }
     
                 
-                $pageinfo = $responseData['data']['products']['pageInfo'];
-
+                
+               
 
                 $responsedata['products'] = $shopifyproducts;
-                $responsedata['pageinfo'] = $pageinfo;
+                if(isset($responseData['data']['products']['pageInfo'])){
+                    $pageinfo = $responseData['data']['products']['pageInfo'];
+                    $responsedata['pageinfo'] = $pageinfo;
+                }
                 return $responsedata;
             }
 
@@ -1016,7 +1062,7 @@ class GraphqlService
         
 
         $shopifyid = "gid://shopify/Product/{$shopifyid}";
-
+      
         $query = <<<QUERY
         query publications {
             product(id: "$shopifyid") {
@@ -1054,7 +1100,7 @@ class GraphqlService
             }
         }
         QUERY;
-            
+       
        
   
         
@@ -1081,7 +1127,7 @@ class GraphqlService
                     // Get the response body
                     $body = $response->getBody();
                     $responseData = json_decode($body, true);
-                  
+                
                    
                     // Check for GraphQL or user errors
                     if (isset($responseData['errors'])) {
@@ -1093,9 +1139,15 @@ class GraphqlService
                         
                         throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
-                    } else {
-                        $shopifyproduct = $responseData['data']['product'];
+                    }elseif (empty($responseData['data']['product'])) {
+                        
+                        throw new \Exception('GraphQL Error: Product Not Found');
 
+                    } else {
+
+
+                        $shopifyproduct = $responseData['data']['product'];
+                      
                         
                         if(!empty($shopifyproduct['featuredImage'])){
                             $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
@@ -1354,4 +1406,43 @@ class GraphqlService
 
             }
     }
+
+    public function getCollectionHandle($collection_id,$shop,$accessToken){
+        
+        $query = <<<QUERY
+        query {
+                    collection(id: "gid://shopify/Collection/$collection_id") {
+                        id
+                        title
+                        handle
+                        updatedAt
+                    }
+                }
+        QUERY;
+
+
+
+        $client = new Client([
+        'base_uri' => "https://$shop/admin/api/2024-04/",
+        'headers' => [
+        'Content-Type' => 'application/json',
+        'X-Shopify-Access-Token' => $accessToken
+        ]
+        ]);
+
+        $response = $client->post('graphql.json', [
+        'body' => json_encode(['query' => $query])
+        ]);
+
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+
+        if(isset($responseData['data']['collection']['id'])){
+             return $responseData['data']['collection']['handle'];
+        }else{
+            throw new \Exception('GraphQL Errors: Collection Not Found');
+        }
+    }
+
 }
