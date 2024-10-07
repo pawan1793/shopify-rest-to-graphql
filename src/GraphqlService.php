@@ -1082,13 +1082,24 @@ class GraphqlService
                     id
                     url
                 }
-
+                images (first:10) {
+                    edges {
+                        node {
+                        id
+                        src
+                        }
+                    }
+                }
                 variants(first: 250) {
                     edges {
                         node {
                         id
                         sku
                         title
+                        selectedOptions {
+                                name
+                                value
+                         }
                         inventoryItem {
                             id
                             inventoryHistoryUrl
@@ -1160,11 +1171,197 @@ class GraphqlService
                                 $variant = $qlvariant['node'];
                                 $variant['id'] = str_replace("gid://shopify/ProductVariant/","", $variant['id']);
                                 $variant['inventory_item_id'] = str_replace("gid://shopify/InventoryItem/","", $variant['inventoryItem']['id']);
+
+                                if(isset($variant['selectedOptions'])){
+                                    foreach ($variant['selectedOptions'] as $selectedOptionskey => $selectedOption) {
+                                        $optionkey = $selectedOptionskey+1;
+                                        $variant["option{$optionkey}"] = $selectedOption['value'];
+                                    }
+                                    
+                                }
+
                                $variants[] = $variant;
                             }
                         }
                         $shopifyproduct['variants'] = $variants;
+
+                        
+                        if(!empty($shopifyproduct['images'])){
+                            $shopifyimages = [];
+                            foreach($shopifyproduct['images']['edges'] as $image){
+                               
+                               $shopifyimage['id'] =  str_replace("gid://shopify/ProductImage/","", $image['node']['id']); 
+                               $shopifyimage['src'] = $image['node']['src'];
+                               
+                               $shopifyimages[] = $shopifyimage;
+                              
+                            }
+                            $shopifyproduct['images'] = $shopifyimages;
+                        }
+
+                        
                        
+                        return $shopifyproduct;
+
+                    }
+                } catch (\Exception $e) {
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                }
+
+            }
+    }
+    public function graphqlGetProductWithoutInventory($shopifyid, $shop,$accessToken){
+        
+
+        $shopifyid = "gid://shopify/Product/{$shopifyid}";
+      
+        $query = <<<QUERY
+        query publications {
+            product(id: "$shopifyid") {
+                id
+                title
+                handle
+                bodyHtml
+                vendor
+                productType
+                tags
+                status
+                options {
+                    id
+                    name
+                    position
+                    values
+                }
+                featuredImage {
+                    id
+                    url
+                }
+                images (first:10) {
+                    edges {
+                        node {
+                        id
+                        src
+                        }
+                    }
+                }
+                variants(first: 250) {
+                    edges {
+                        node {
+                            id
+                            sku
+                            title
+                            selectedOptions {
+                                name
+                                value
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        QUERY;
+       
+       
+  
+        
+
+
+            // Initialize Guzzle client
+            $client = new Client([
+                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-Shopify-Access-Token' => $accessToken
+                ]
+            ]);
+
+           $productreturndata = array();
+            if(1){
+           
+                try {
+                    // Send GraphQL request
+                    $response = $client->post('graphql.json', [
+                        'body' => json_encode(['query' => $query])
+                    ]);
+
+                    // Get the response body
+                    $body = $response->getBody();
+                    $responseData = json_decode($body, true);
+                
+                 
+                    // Check for GraphQL or user errors
+                    if (isset($responseData['errors'])) {
+                    
+
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+                    } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+
+                    }elseif (empty($responseData['data']['product'])) {
+                        
+                        throw new \Exception('GraphQL Error: Product Not Found');
+
+                    } else {
+
+
+                        $shopifyproduct = $responseData['data']['product'];
+                      
+                        
+                        if(!empty($shopifyproduct['featuredImage'])){
+                            $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
+                        }
+                        $variants = array();
+                        if(!empty($shopifyproduct['variants'])){
+                          
+                            foreach($shopifyproduct['variants']['edges'] as $qlvariant){
+                                
+                                $variant = $qlvariant['node'];
+                                $variant['id'] =  str_replace("gid://shopify/ProductVariant/","", $variant['id']);
+                                if(isset($variant['selectedOptions'])){
+                                    foreach ($variant['selectedOptions'] as $selectedOptionskey => $selectedOption) {
+                                        $optionkey = $selectedOptionskey+1;
+                                        $variant["option{$optionkey}"] = $selectedOption['value'];
+                                    }
+                                    
+                                }
+                               $variants[] = $variant;
+                            }
+                        }
+                        
+
+
+                        $shopifyproduct['variants'] = $variants;
+                        
+                        
+                        if(!empty($shopifyproduct['images'])){
+                            $shopifyimages = [];
+                            foreach($shopifyproduct['images']['edges'] as $image){
+                               
+                               $shopifyimage['id'] =  str_replace("gid://shopify/ProductImage/","", $image['node']['id']); 
+                               $shopifyimage['src'] = $image['node']['src'];
+                               
+                               $shopifyimages[] = $shopifyimage;
+                              
+                            }
+                            $shopifyproduct['images'] = $shopifyimages;
+                        }
+
+                        if(!empty($shopifyproduct['options'])){
+                            $productoptions = array();
+                         
+                            foreach($shopifyproduct['options'] as $productoption){
+                               
+                                $productoption['id'] =  str_replace("gid://shopify/ProductOption/","", $productoption['id']); 
+                               $productoptions[] = $productoption;
+                               
+                             }
+                             $shopifyproduct['options'] = $productoptions;
+                        }
+                        $shopifyproduct['id'] =  str_replace("gid://shopify/Product/","", $shopifyproduct['id']);
+
+                          
                         return $shopifyproduct;
 
                     }
@@ -1444,5 +1641,81 @@ class GraphqlService
             throw new \Exception('GraphQL Errors: Collection Not Found');
         }
     }
+
+    public function graphQLQuery($query,$shop,$accessToken){
+        $query = <<<QUERY
+                    $query
+                QUERY;
+
+
+
+        $client = new Client([
+        'base_uri' => "https://$shop/admin/api/2024-04/",
+        'headers' => [
+        'Content-Type' => 'application/json',
+        'X-Shopify-Access-Token' => $accessToken
+        ]
+        ]);
+
+        $response = $client->post('graphql.json', [
+        'body' => json_encode(['query' => $query])
+        ]);
+
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+        
+        return $responseData;
+    }
+
+    public function reOrderProductImages($params,$shop,$accessToken){
+        
+       
+
+       $productid = $params['product']['id'];
+       $productorder = array();
+        foreach ($params['product']['images'] as $key => $image) {
+            $productorder[] = '{ id: "gid://shopify/MediaImage/'. $image['id'] .'", newPosition: "'. $image['position'] .'" }';
+           
+        }
+       $productorder = implode(",",$productorder);
+        $query = <<<QUERY
+                    mutation ReorderProductMedia {
+                        productReorderMedia(id: "gid://shopify/Product/$productid", moves: [
+                       $productorder
+                        ]) {
+                        job {
+                            id
+                        }
+                        mediaUserErrors {
+                            field
+                            message
+                        }
+                        }
+                    }
+                QUERY;
+
+        
+                      
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+
+        $response = $client->post('graphql.json', [
+            'body' => json_encode(['query' => $query])
+        ]);
+
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+     
+        return $responseData;
+
+    }
+   
 
 }
