@@ -664,6 +664,10 @@ class GraphqlService
             $gqparams .= " title:*{$params['title']}*";
         }
 
+        if(isset($params['sku'])){
+            $gqparams .= " sku:*{$params['sku']}*";
+        }
+
 
         if(isset($params['handle'])){
             $gqparams .= " handle:*{$params['handle']}*";
