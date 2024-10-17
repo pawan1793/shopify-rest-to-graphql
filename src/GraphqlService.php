@@ -747,8 +747,9 @@ class GraphqlService
                                 id
                                 url
                             }';
-
-
+        $fields['vendor'] = 'vendor';
+        $fields['productType'] = 'productType';
+        
         if(isset($params['fields'])){
             $parmsfields = explode(",",$params['fields']);
            
@@ -759,10 +760,31 @@ class GraphqlService
                         id
                         sku
                         title
+                        price
+                        weight
+                        weightUnit
+                        compareAtPrice
+                        taxable
+                        inventoryQuantity
+                        inventoryPolicy
+                        createdAt
+                        selectedOptions {
+                                name
+                                value
+                            }
+                        fulfillmentService {
+                                id
+                                serviceName
+                                type
+                            }
                         inventoryItem {
-                            id
-                            inventoryHistoryUrl
-                        }
+                                id
+                                inventoryHistoryUrl
+                                unitCost {
+                                    amount
+                                    currencyCode
+                                }
+                            }
                         }
                     }
                 }';
@@ -774,8 +796,10 @@ class GraphqlService
             if(in_array('created_at',$parmsfields)){
                 $fields['createdAt'] = 'createdAt';
             }
+
+          
         }
-       
+       $fields['publishedAt'] = 'publishedAt';
        $fields = implode("\n",$fields);
       
      
@@ -821,7 +845,8 @@ class GraphqlService
                 }
             QUERY;
          }
-     
+         
+         
         $client = new Client([
             'base_uri' => "https://$shop/admin/api/2024-04/",
             'headers' => [
@@ -862,23 +887,65 @@ class GraphqlService
 
                 foreach ($responseData['data']['products']['edges'] as $key => $product) {
                     $product = $product['node'];
+                    $shopifyproduct = $product;
                     $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $product['id']);
                     $shopifyproduct['title'] = $product['title'];
                     $shopifyproduct['handle'] = $product['handle'];
+                    $shopifyproduct['product_type'] = $product['productType'];
+                    
+                    
                     if(!empty($product['featuredImage'])){
                         $shopifyproduct['image']['src'] = $product['featuredImage']['url'];
+                    }else{
+                        $shopifyproduct['image'] = null;
                     }
-
+                    if(!empty($product['publishedAt'])){
+                        $shopifyproduct['published_at'] = $product['publishedAt'];
+                    }else{
+                        $shopifyproduct['published_at'] = NUll;
+                    }
+                    
                     if(!empty($product['variants'])){
                         $variants = array();
                         if(!empty($product['variants'])){
                           
                             foreach($product['variants']['edges'] as $qlvariant){
                                 
+                               
                                 $variant = $qlvariant['node'];
+                                $variant['product_id'] = $shopifyproduct['id'];
                                 $variant['id'] = str_replace("gid://shopify/ProductVariant/","", $variant['id']);
                                 $variant['inventory_item_id'] = str_replace("gid://shopify/InventoryItem/","", $variant['inventoryItem']['id']);
+                                if(!empty($variant['compareAtPrice'])){
+                                    $variant['compare_at_price'] = $variant['compareAtPrice'];
+                                }
+                                if(!empty($variant['weightUnit'])){
+                                    $variant['weight_unit'] = $variant['weightUnit'];
+                                }
+                                if(!empty($variant['inventoryQuantity'])){
+                                    $variant['inventory_quantity'] = $variant['inventoryQuantity'];
+                                }else{
+                                    $variant['inventory_quantity'] = 0;
+                                }
+                                if(isset($variant['inventoryItem']['unitCost']['amount'])){
+                                    $variant['cost_price'] = $variant['inventoryItem']['unitCost']['amount'];
+                                }else{
+                                    $variant['cost_price'] = null;
+                                }
+                               
+                                $variant['fulfillment_service']  = strtolower($variant['fulfillmentService']['serviceName']);
+                                $variant['inventory_policy'] = strtolower($variant['inventoryPolicy']);
+                                if(isset($variant['createdAt'])){
+                                    $variant['created_at'] = $variant['createdAt'];
+                                }
 
+                                if(isset($variant['selectedOptions'])){
+                                    foreach ($variant['selectedOptions'] as $selectedOptionskey => $selectedOption) {
+                                        $optionkey = $selectedOptionskey+1;
+                                        $variant["option{$optionkey}"] = $selectedOption['value'];
+                                    }
+                                    
+                                }
                                $variants[] = $variant;
                             }
                         }
@@ -890,10 +957,10 @@ class GraphqlService
                         $shopifyproduct['tags'] = implode(",",$product['tags']);
                     }
                    
-                    if(!empty($product['createdAt'])){
+                    if(isset($product['createdAt'])){
                         $shopifyproduct['created_at'] = $product['createdAt'];
                     }
-                    
+                  
                     $shopifyproducts[$key] = $shopifyproduct;
                     
                 }
@@ -1784,6 +1851,7 @@ class GraphqlService
 
     public function getCollectionHandle($collection_id,$shop,$accessToken){
         
+       
         $query = <<<QUERY
         query {
                     collection(id: "gid://shopify/Collection/$collection_id") {
