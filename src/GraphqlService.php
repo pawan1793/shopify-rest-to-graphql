@@ -888,7 +888,7 @@ class GraphqlService
                 foreach ($responseData['data']['products']['edges'] as $key => $product) {
                     $product = $product['node'];
                     $shopifyproduct = $product;
-                    $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $product['id']);
+                    $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $shopifyproduct['id']);
                     $shopifyproduct['title'] = $product['title'];
                     $shopifyproduct['handle'] = $product['handle'];
                     $shopifyproduct['product_type'] = $product['productType'];
@@ -1243,7 +1243,7 @@ class GraphqlService
 
 
                         $shopifyproduct = $responseData['data']['product'];
-                      
+                        $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $shopifyproduct['id']);
                         
                         if(!empty($shopifyproduct['featuredImage'])){
                             $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
@@ -1392,7 +1392,7 @@ class GraphqlService
 
 
                         $shopifyproduct = $responseData['data']['product'];
-                      
+                        $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $shopifyproduct['id']);
                         
                         if(!empty($shopifyproduct['featuredImage'])){
                             $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
@@ -1663,7 +1663,7 @@ class GraphqlService
 
                     } else {
                         $shopifyproduct = $responseData['data']['product'];
-
+                        $shopifyproduct['id'] = str_replace("gid://shopify/Product/","", $shopifyproduct['id']);
                         
                         if(!empty($shopifyproduct['featuredImage'])){
                             $shopifyproduct['image']['src'] = $shopifyproduct['featuredImage']['url'];
