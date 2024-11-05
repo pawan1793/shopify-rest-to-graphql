@@ -228,7 +228,10 @@ class GraphqlService
             $variantdata['barcode'] = $variant['barcode'];
             $variantdata['sku'] = $variant['sku'];
             $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] :  true;
-            $variantdata['weight'] = (float)$variant['weight'];
+            if(isset($variant['weight'])){
+                $variantdata['weight'] = (float)$variant['weight'];
+            }
+            
             
             $variantdata['inventoryManagement'] = 'SHOPIFY';
 
