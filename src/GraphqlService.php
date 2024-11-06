@@ -87,10 +87,16 @@ class GraphqlService
         $product['vendor'] = $productdata['vendor'];
         $product['tags'] = $productdata['tags'];
         $product['templateSuffix'] = $productdata['template_suffix'];
+
+        if(isset( $productdata['published'])){
+            if( $productdata['published'] == false){
+                $product['status'] = 'DRAFT';
+            }
+        }
       
         $product['publications'][]['publicationId'] = $onlinepublication['id'];
+        
        
-
         foreach ($productdata['metafields'] as $metafieldkey => $metafield)
         {
             if (is_integer($metafield['value']))
@@ -127,6 +133,8 @@ class GraphqlService
       
         $productDataJson = json_encode($product, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $productDataJson = preg_replace('/"([^"]+)"\s*:/', '$1:', $productDataJson);
+        $productDataJson = str_replace('status:"DRAFT"', "status:DRAFT", $productDataJson);
+      
         $input = $productDataJson;
 
         $productmedia = json_encode($productmedia, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
