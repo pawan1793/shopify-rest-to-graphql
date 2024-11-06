@@ -1178,7 +1178,7 @@ class GraphqlService
                     id
                     url
                 }
-                images (first:10) {
+                images (first:250) {
                     edges {
                         node {
                         id
@@ -1930,12 +1930,100 @@ class GraphqlService
        
 
        $productid = $params['product']['id'];
+
+
+       $mediaquery = <<<QUERY
+                    query productq {
+                    product(id: "gid://shopify/Product/$productid") {
+                        images (first:250) {
+                            edges {
+                                node {
+                                id
+                                src
+                                }
+                            }
+                        }
+                        media(first: 250) {
+                            edges {
+                            node {
+                                id
+                                ... on MediaImage {
+                                id
+                                image {
+                                    id
+                                    src
+                                }
+                               
+                                }
+                            }
+                            }
+                        }
+                        
+                    }
+                }
+                QUERY;
+
+        
+                      
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+
+
+        $response = $client->post('graphql.json', [
+            'body' => json_encode(['query' => $mediaquery])
+        ]);
+
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+       
+        $shopifyimages = array();
+        foreach ($responseData['data']['product']['images']['edges'] as $key => $image) {
+            $imageid = str_replace('gid://shopify/ProductImage/','',$image['node']['id']);
+            $imagesrc = $image['node']['src'];
+
+            $shopifyimages[$imagesrc] = $imageid;
+        }
+
+      
+
+        $productmedia = array();
+        foreach ($responseData['data']['product']['media']['edges'] as $key => $media) {
+        
+           $mediaid = str_replace('gid://shopify/MediaImage/','',$media['node']['id']);
+
+            if(isset($media['node']['image']['id'])){
+                 // $imageid = str_replace('gid://shopify/ImageSource/','',$media['node']['image']['id']); //$media['node']['image']['id'];
+                 // $productmedia[$imageid] = $mediaid;
+                $mediaurl = $media['node']['image']['src'];
+
+                $tmpimageid = $shopifyimages[$mediaurl];
+                $productmedia[$tmpimageid] = $mediaid;
+            }
+          
+        }
+
+       
+ 
+
+
+
+
+
        $productorder = array();
         foreach ($params['product']['images'] as $key => $image) {
-            $productorder[] = '{ id: "gid://shopify/MediaImage/'. $image['id'] .'", newPosition: "'. $image['position'] .'" }';
+            $productorder[$image['position']] = '{ id: "gid://shopify/MediaImage/'. $productmedia[$image['id']] .'", newPosition: "'. $image['position'] .'" }';
            
         }
+          ksort($productorder);
        $productorder = implode(",",$productorder);
+      
+
         $query = <<<QUERY
                     mutation ReorderProductMedia {
                         productReorderMedia(id: "gid://shopify/Product/$productid", moves: [
