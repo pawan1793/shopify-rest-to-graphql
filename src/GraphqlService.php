@@ -804,12 +804,11 @@ class GraphqlService
                 $fields['tags'] = 'tags';
             }
 
-            if(in_array('created_at',$parmsfields)){
-                $fields['createdAt'] = 'createdAt';
-            }
+            
 
           
         }
+       $fields['createdAt'] = 'createdAt';
        $fields['publishedAt'] = 'publishedAt';
        $fields = implode("\n",$fields);
       
