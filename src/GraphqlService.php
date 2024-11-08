@@ -736,11 +736,16 @@ class GraphqlService
         $productvariants = preg_replace('/"([^"]+)"\s*:/','$1:', $productvariants);
         //$productvariants = str_replace('"MEDIAPMIMAGE"',"IMAGE",$productvariants);
         $queryinput = $productvariants;
+        if(isset($params['reverse'])){
+            $reverseflag= "reverse: {$params['reverse']}";
+        } else {
+            $reverseflag = "";
+        }
         //echo $queryinput;
         if(empty($gqparams)){
-            $gqquery = "products(first: {$params['limit']},$cursor)";
+            $gqquery = "products(first: {$params['limit']},   $reverseflag, $cursor)";
         }else{
-            $gqquery =  "products(first: {$params['limit']}, query: $queryinput,$cursor)";
+            $gqquery =  "products(first: {$params['limit']},  $reverseflag, query: $queryinput,$cursor)";
         }
         if(isset($params['direction']) && $params['direction'] == 'previous'){
             $gqquery = str_replace('first',"last",$gqquery);
