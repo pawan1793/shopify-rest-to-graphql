@@ -96,16 +96,19 @@ class GraphqlService
       
         $product['publications'][]['publicationId'] = $onlinepublication['id'];
         
-       
-        foreach ($productdata['metafields'] as $metafieldkey => $metafield)
-        {
-            if (is_integer($metafield['value']))
+        if(!empty($productdata['metafields'])){
+            
+            foreach ($productdata['metafields'] as $metafieldkey => $metafield)
             {
-                $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
+                if (is_integer($metafield['value']))
+                {
+                    $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
+                }
+                $product['metafields'] = $productdata['metafields'];
+            
             }
-            $product['metafields'] = $productdata['metafields'];
-           
         }
+        
  
 
 
