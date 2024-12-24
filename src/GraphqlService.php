@@ -2517,7 +2517,7 @@ class GraphqlService
         $responseData = json_decode($body, true);
 
         if(isset($responseData['data']['productVariant'])){
-            $product['id'] = str_replace("gid://shopify/Product/","", $responseData['data']['productVariant']['product']['id']);
+            $product['product_id'] = str_replace("gid://shopify/Product/","", $responseData['data']['productVariant']['product']['id']);
             return $product;
              
         }else{
