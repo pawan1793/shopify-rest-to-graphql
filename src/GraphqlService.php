@@ -24,7 +24,7 @@ class GraphqlService
     public function graphqlPostProduct($params, $shop,$accessToken)
     {
         
-        
+     
         $onlinepublication = [];
         $query = <<<QUERY
                 query publications {
@@ -47,7 +47,14 @@ class GraphqlService
                 'X-Shopify-Access-Token' => $accessToken
             ]
         ]);
+        $response = $client->post('graphql.json', [
+            'body' => json_encode(['query' => $query])
+        ]);
 
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+        
         try {
             // Send GraphQL request
             $response = $client->post('graphql.json', [
@@ -306,6 +313,409 @@ class GraphqlService
                 ]
             ]);
 
+            try {
+                // Send GraphQL request
+                $response = $client->post('graphql.json', [
+                    'body' => json_encode(['query' => $query])
+                ]);
+
+                // Get the response body
+                $body = $response->getBody();
+                $responseData = json_decode($body, true);
+              
+                // Check for GraphQL or user errors
+                if (isset($responseData['errors'])) {
+                    
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+                } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+                   
+                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+
+                } else {
+                    // Print the created product details
+                    $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
+                    
+                    $inventory_item_id = str_replace("gid://shopify/InventoryItem/","",$inventory_item_id);
+                    $productreturndata['variants'][0]['inventory_item_id'] = $inventory_item_id;
+                    //inventory_item_id
+                   
+                }
+            } catch (\Exception $e) {
+                // Handle Guzzle exceptions
+                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            }
+          
+          return $productreturndata;
+    }
+
+    public function graphqlPostProductWithVariants($params, $shop,$accessToken)
+    {
+        
+       
+        $onlinepublication = [];
+        $query = <<<QUERY
+                query publications {
+                    publications(first: 5) {
+                    edges {
+                        node {
+                        id
+                        name
+                        
+                        }
+                    }
+                    }
+                }
+                QUERY;
+
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+        $response = $client->post('graphql.json', [
+            'body' => json_encode(['query' => $query])
+        ]);
+
+        // Get the response body
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+        
+        try {
+            // Send GraphQL request
+            $response = $client->post('graphql.json', [
+                'body' => json_encode(['query' => $query])
+            ]);
+
+            // Get the response body
+            $body = $response->getBody();
+            $responseData = json_decode($body, true);
+           
+          
+            if (isset($responseData["errors"])) {
+                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+            }else {
+                foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
+                    if($publication["node"]["name"] == "Online Store"){
+                        $onlinepublication = $publication["node"];
+                    }
+                  
+                }
+               
+            }
+        } catch (\Exception $e) {
+            // Handle Guzzle exceptions
+            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+
+        }    
+
+
+       
+
+        $productdata = $params['product'];
+
+        $product['title'] = $productdata['title'];
+        $product['bodyHtml'] = $productdata['body_html'];
+        $product['productType'] = $productdata['product_type'];
+        $product['vendor'] = $productdata['vendor'];
+        $product['tags'] = $productdata['tags'];
+        $product['templateSuffix'] = $productdata['template_suffix'];
+
+        if(isset( $productdata['published'])){
+            if( $productdata['published'] == false){
+                $product['status'] = 'DRAFT';
+            }
+        }
+      
+        $product['publications'][]['publicationId'] = $onlinepublication['id'];
+        
+        if(!empty($productdata['metafields'])){
+            
+            foreach ($productdata['metafields'] as $metafieldkey => $metafield)
+            {
+                if (is_integer($metafield['value']))
+                {
+                    $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
+                }
+                $product['metafields'] = $productdata['metafields'];
+            
+            }
+        }
+        
+ 
+
+
+        if (!empty($productdata['collection']))
+        {
+            foreach ($productdata['collection'] as $collectionid => $collection)
+            {
+                $product['collectionsToJoin'][] = "gid://shopify/Collection/{$collectionid}";
+            }
+        }
+        $productmedia = array();
+        if (!empty($productdata['images']))
+        {
+            foreach ($productdata['images'] as $imagekey => $image)
+            {
+                $gqimage = [];
+                $gqimage['originalSource'] = $image['src'];
+                $gqimage['mediaContentType'] = "MEDIAPMIMAGE";
+                //$gqimage['originalSource'] = $image['src'];
+                $productmedia[] = $gqimage;
+            }
+        }
+       
+        $productrawoptions  = $params['product']['options'];
+        $productoptions = array();
+        if(!empty($productrawoptions)){
+            foreach($productrawoptions as $optionkey => $option){
+                $productoptions[$optionkey]['name'] = $option['name'];
+                $values = array();
+                foreach ($option['values'] as $valuekey => $value) {
+                    $values[$valuekey]['name'] = $value;
+                }
+                $productoptions[$optionkey]['values'] = $values;
+                
+            }
+        }
+        $product['productOptions'] = $productoptions;
+        $productDataJson = json_encode($product, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $productDataJson = preg_replace('/"([^"]+)"\s*:/', '$1:', $productDataJson);
+        $productDataJson = str_replace('status:"DRAFT"', "status:DRAFT", $productDataJson);
+      
+        $input = $productDataJson;
+
+        $productmedia = json_encode($productmedia, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $productmedia = preg_replace('/"([^"]+)"\s*:/', '$1:', $productmedia);
+        $productmedia = str_replace('"MEDIAPMIMAGE"', "IMAGE", $productmedia);
+        $mediainput = $productmedia;
+
+        $productquery = <<<GQL
+        mutation {
+          productCreate(input: $input,media: $mediainput) {
+            product {
+              id
+              title
+              options {
+                id
+                name
+                position
+                values
+                optionValues {
+                    id
+                    name
+                    hasVariants
+                }
+            }
+              variants(first: 1) {
+                    edges {
+                        node {
+                            id
+                            title
+                            barcode
+                        }
+                    }
+                }
+            },
+             userErrors {
+              field
+              message
+            }
+          }
+        }
+        GQL;
+        
+
+  
+        
+
+
+            // Initialize Guzzle client
+            $client = new Client([
+                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-Shopify-Access-Token' => $accessToken
+                ]
+            ]);
+
+           $productreturndata = array();
+            if(1){
+           
+                try {
+                    // Send GraphQL request
+                    $response = $client->post('graphql.json', [
+                        'body' => json_encode(['query' => $productquery])
+                    ]);
+
+                    // Get the response body
+                    $body = $response->getBody();
+                    $responseData = json_decode($body, true);
+                    
+                   
+                    // Check for GraphQL or user errors
+                    if (isset($responseData['errors'])) {
+                    
+
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+                    } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+                        
+                        throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+
+                    } else {
+                       $productId = $responseData['data']['productCreate']['product']['id'];
+                       $graphqloptionids  = array();
+                       $currentopt = 1;
+                        foreach ($responseData['data']['productCreate']['product']['options'] as $graphqloptionidkey => $option) {
+                           
+                        
+                            $graphqloptionids['option'.$currentopt]['id'] = $option['id'];
+                            $graphqloptionids['option'.$currentopt]['values'] = array();
+                           
+                            foreach($option['optionValues'] as $optionvalue){
+                                $graphqloptionids['option'.$currentopt]['values'][$optionvalue['name']] = $optionvalue['id'];
+                            }
+
+                            $currentopt++;
+                        }
+
+                    }
+                } catch (\Exception $e) {
+                    throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                }
+
+            }
+            
+           
+            $variantsdata = array();
+            foreach($params['product']['variants'] as $rawvariantkey => $rawvariant){
+                //$variantdata['id'] = $rawvariant;
+                $variantdata['price'] = $rawvariant['price'];
+                if(!empty($variant['compare_at_price'])){
+                    $variantdata['compareAtPrice'] = $rawvariant['compare_at_price'];
+                }
+                $variantdata['barcode'] = $rawvariant['barcode'];
+                //$variantdata['sku'] = $rawvariant['sku'];
+                $variantdata['taxable'] = isset($variant['taxable']) ? $rawvariant['taxable'] :  true;
+                if(isset($variant['weight'])){
+                    $variantdata['weight'] = (float)$rawvariant['weight'];
+                }
+                
+                
+                $optionValues = array();
+                if(isset($rawvariant['option1'])){
+                    $optiondata['optionId'] = $graphqloptionids['option1']['id'];
+                    $optiondata['id'] = $graphqloptionids['option1']['values'][$rawvariant['option1']];
+                    $optionValues[0] = $optiondata;
+                }
+
+                if(isset($rawvariant['option2'])){
+                    $optiondata['optionId'] = $graphqloptionids['option2']['id'];
+                    $optiondata['id'] = $graphqloptionids['option2']['values'][$rawvariant['option2']];
+                    $optionValues[1] = $optiondata;
+                }
+
+                if(isset($rawvariant['option3'])){
+                    $optiondata['optionId'] = $graphqloptionids['option3']['id'];
+                    $optiondata['id'] = $graphqloptionids['option3']['values'][$rawvariant['option3']];
+                    $optionValues[2] = $optiondata;
+                }
+                $optionValues = array_values($optionValues);
+
+                $variantdata['optionValues'] = $optionValues;
+                $variantsdata[] = $variantdata;
+               
+            }
+
+            // "productId": "gid://shopify/Product/9704751497507",
+            //print_r($variantsdata);
+            //$variantBULk['productId'] = $productId;
+            $variantBULk = $variantsdata;
+           
+           
+        
+         
+            $productvariants = json_encode($variantBULk, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $productvariants = preg_replace('/"([^"]+)"\s*:/','$1:', $productvariants);
+            $productvariants = str_replace('"MEDIAPMIMAGE"',"IMAGE",$productvariants);
+            $productvariants = str_replace('inventoryManagement:"SHOPIFY"','inventoryManagement:SHOPIFY',$productvariants);
+            $variantsinput = $productvariants;
+                 
+           
+                
+           
+
+
+            if(1){
+           
+                // mutation {
+                //     productCreate(input: $input,media: $mediainput) {
+                print_r($productId);
+                print_r($variantsinput);
+                $query = <<<GQL
+                mutation {
+                productVariantsBulkCreate(
+                    productId: "$productId",
+                    variants: $variantsinput,
+                    strategy: REMOVE_STANDALONE_VARIANT
+                ) {
+                   
+                    userErrors {
+                            field
+                            message
+                        }
+                        product {
+                            id
+                            options {
+                            id
+                            name
+                            values
+                            position
+                            optionValues {
+                                id
+                                name
+                                hasVariants
+                            }
+                            }
+                        }
+                        productVariants {
+                            id
+                            title
+                            selectedOptions {
+                            name
+                            value
+                            }
+                        }
+                    }
+                }
+                GQL;
+          
+            }
+
+
+            
+            // Initialize Guzzle client
+            $client = new Client([
+                'base_uri' => "https://$shop/admin/api/2024-10/",
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-Shopify-Access-Token' => $accessToken
+                ]
+            ]);
+
+            $response = $client->post('graphql.json', [
+                'body' => json_encode(['query' => $query])
+            ]);
+
+            // Get the response body
+            $body = $response->getBody();
+            $responseData = json_decode($body, true);
+
+            print_r($responseData);
+            exit;
             try {
                 // Send GraphQL request
                 $response = $client->post('graphql.json', [
@@ -2067,6 +2477,52 @@ class GraphqlService
      
         return $responseData;
 
+    }
+
+
+    public function getProductIdFromVairant($variantid,$shop,$accessToken){
+        
+       
+
+
+        $query = <<<QUERY
+        query GetProductFromVariant {
+            productVariant(id: "gid://shopify/ProductVariant/$variantid") {
+                id
+                title
+                price
+                product {
+                id
+                }
+            }
+            }
+        QUERY;
+
+
+
+        $client = new Client([
+            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'headers' => [
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $accessToken
+            ]
+        ]);
+
+        $response = $client->post('graphql.json', [
+        'body' => json_encode(['query' => $query])
+        ]);
+
+       
+        $body = $response->getBody();
+        $responseData = json_decode($body, true);
+
+        if(isset($responseData['data']['productVariant'])){
+            $product['id'] = str_replace("gid://shopify/Product/","", $responseData['data']['productVariant']['product']['id']);
+            return $product;
+             
+        }else{
+            throw new \Exception('GraphQL Errors: productVariant Not Found');
+        }
     }
    
 
