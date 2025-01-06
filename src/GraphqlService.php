@@ -41,7 +41,7 @@ class GraphqlService
                 QUERY;
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -183,7 +183,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -306,7 +306,7 @@ class GraphqlService
             
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -369,7 +369,7 @@ class GraphqlService
                 QUERY;
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -534,7 +534,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -898,7 +898,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -1021,7 +1021,7 @@ class GraphqlService
                 
                 // Initialize Guzzle client
                 $client = new Client([
-                    'base_uri' => "https://$shop/admin/api/2024-04/",
+                    'base_uri' => "https://$shop/admin/api/2024-10/",
                     'headers' => [
                         'Content-Type' => 'application/json',
                         'X-Shopify-Access-Token' => $accessToken
@@ -1276,7 +1276,7 @@ class GraphqlService
          
          
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1528,7 +1528,7 @@ class GraphqlService
        
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1632,7 +1632,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -1781,7 +1781,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -1909,7 +1909,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -1978,7 +1978,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -2058,7 +2058,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -2153,7 +2153,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -2229,7 +2229,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2024-10/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -2294,7 +2294,7 @@ class GraphqlService
 
 
         $client = new Client([
-        'base_uri' => "https://$shop/admin/api/2024-04/",
+        'base_uri' => "https://$shop/admin/api/2024-10/",
         'headers' => [
         'Content-Type' => 'application/json',
         'X-Shopify-Access-Token' => $accessToken
@@ -2324,7 +2324,7 @@ class GraphqlService
 
 
         $client = new Client([
-        'base_uri' => "https://$shop/admin/api/2024-04/",
+        'base_uri' => "https://$shop/admin/api/2024-10/",
         'headers' => [
         'Content-Type' => 'application/json',
         'X-Shopify-Access-Token' => $accessToken
@@ -2383,7 +2383,7 @@ class GraphqlService
         
                       
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
             'Content-Type' => 'application/json',
             'X-Shopify-Access-Token' => $accessToken
@@ -2460,7 +2460,7 @@ class GraphqlService
         
                       
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
             'Content-Type' => 'application/json',
             'X-Shopify-Access-Token' => $accessToken
@@ -2501,7 +2501,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
+            'base_uri' => "https://$shop/admin/api/2024-10/",
             'headers' => [
             'Content-Type' => 'application/json',
             'X-Shopify-Access-Token' => $accessToken
