@@ -89,7 +89,7 @@ class GraphqlService
         $productdata = $params['product'];
 
         $product['title'] = $productdata['title'];
-        $product['bodyHtml'] = $productdata['body_html'];
+        $product['descriptionHtml '] = $productdata['body_html'];
         $product['productType'] = $productdata['product_type'];
         $product['vendor'] = $productdata['vendor'];
         $product['tags'] = $productdata['tags'];
@@ -416,7 +416,7 @@ class GraphqlService
         $productdata = $params['product'];
 
         $product['title'] = $productdata['title'];
-        $product['bodyHtml'] = $productdata['body_html'];
+        $product['descriptionHtml '] = $productdata['body_html'];
         $product['productType'] = $productdata['product_type'];
         $product['vendor'] = $productdata['vendor'];
         $product['tags'] = $productdata['tags'];
@@ -764,7 +764,7 @@ class GraphqlService
         }
 
         if (isset($productdata['body_html'])) {
-            $product['bodyHtml'] = $productdata['body_html'];
+            $product['descriptionHtml '] = $productdata['body_html'];
         }
 
         if (isset($productdata['product_type'])) {
@@ -1561,7 +1561,7 @@ class GraphqlService
                 id
                 title
                 handle
-                bodyHtml
+                descriptionHtml 
                 vendor
                 productType
                 tags
@@ -1714,7 +1714,7 @@ class GraphqlService
                 id
                 title
                 handle
-                bodyHtml
+                descriptionHtml 
                 vendor
                 productType
                 tags
