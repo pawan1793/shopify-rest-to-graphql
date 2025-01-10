@@ -305,7 +305,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2024-04/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
