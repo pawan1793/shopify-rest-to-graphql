@@ -54,6 +54,7 @@ This function is designed to execute GraphQL queries and mutations and handle po
 Example Usage
 1. Basic Query Without Variables
 
+    ```
     $query = 'query { shop { name email } }';
     $variables = [];
 
@@ -64,11 +65,14 @@ Example Usage
     } else {
         print_r($response);
     }
+    ```
+
 
 2. Query With Variables
 
+    ```
     $query = 'mutation createProduct($title: String!) { productCreate(input: { title: $title }) { product { id      title } } }';
-    
+
     $variables = [
         'title' => 'New Product'
     ];
@@ -80,3 +84,4 @@ Example Usage
     } else {
         print_r($response);
     }
+    ```
