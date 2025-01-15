@@ -37,7 +37,8 @@ The graphqlQueryThalia function sends a GraphQL query to an API endpoint, with o
 
 This function is designed to execute GraphQL queries and mutations and handle potential errors gracefully by returning error details in a predictable format.
 
-Parameters
+    Parameters
+
     string $query
     Type: string
     Required: Yes
