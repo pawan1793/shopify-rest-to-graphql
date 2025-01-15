@@ -31,20 +31,20 @@ Step 3: Register the Service Provider
 
 ## How to use
 
-How to use graphqlQueryThalia Function 
-    Description
-        The graphqlQueryThalia function sends a GraphQL query to an API endpoint, with optional variables, and returns the decoded JSON response as an associative array. In case of any errors, it handles exceptions and returns a structured error message.
+## How to use graphqlQueryThalia Function 
+Description
+The graphqlQueryThalia function sends a GraphQL query to an API endpoint, with optional variables, and returns the decoded JSON response as an associative array. In case of any errors, it handles exceptions and returns a structured error message.
 
-        This function is designed to execute GraphQL queries and mutations and handle potential errors gracefully by returning error details in a predictable format.
+This function is designed to execute GraphQL queries and mutations and handle potential errors gracefully by returning error details in a predictable format.
 
-    Parameters
-        string $query
-        Type: string
-        Required: Yes
-        Description: The GraphQL query string that defines the operation to be performed on the server (e.g., fetching or mutating data).
-    
-        array $variables (optional)
-        Type: array
-        Required: No
-        Default: []
-        Description: An associative array of variables that can be passed to the GraphQL query. This allows for dynamic and flexible queries. If no variables are needed, this can be an empty array.
+Parameters
+    string $query
+    Type: string
+    Required: Yes
+    Description: The GraphQL query string that defines the operation to be performed on the server (e.g., fetching or mutating data).
+
+    array $variables (optional)
+    Type: array
+    Required: No
+    Default: []
+    Description: An associative array of variables that can be passed to the GraphQL query. This allows for dynamic and flexible queries. If no variables are needed, this can be an empty array.
