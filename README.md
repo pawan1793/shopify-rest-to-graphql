@@ -49,3 +49,34 @@ This function is designed to execute GraphQL queries and mutations and handle po
     Required: No
     Default: []
     Description: An associative array of variables that can be passed to the GraphQL query. This allows for dynamic and flexible queries. If no variables are needed, this can be an empty array.
+
+
+Example Usage
+1. Basic Query Without Variables
+
+    $query = 'query { shop { name email } }';
+    $variables = [];
+
+    $response = $this->graphqlQueryThalia($query, $variables);
+
+    if (isset($response['errors'])) {
+        echo "Error: " . $response['errors']['message'];
+    } else {
+        print_r($response);
+    }
+
+2. Query With Variables
+
+    $query = 'mutation createProduct($title: String!) { productCreate(input: { title: $title }) { product { id      title } } }';
+    
+    $variables = [
+        'title' => 'New Product'
+    ];
+
+    $response = $this->graphqlQueryThalia($query, $variables);
+
+    if (isset($response['errors'])) {
+        echo "Error: " . $response['errors']['message'];
+    } else {
+        print_r($response);
+    }
