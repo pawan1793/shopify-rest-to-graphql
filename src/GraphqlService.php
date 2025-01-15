@@ -5,7 +5,35 @@ namespace Thalia\ShopifyRestToGraphql;
 use GuzzleHttp\Client;
 
 class GraphqlService
-{
+{   
+
+    
+    private $shopDomain;
+    private $accessToken;
+    private $client;
+
+    public function __construct(string $shopDomain = null, string $accessToken = null)
+    {
+
+        if ($shopDomain === null || $accessToken === null) {
+            throw new \InvalidArgumentException('Shop domain and access token must be provided.');
+        }
+
+
+        $this->shopDomain = $shopDomain;
+        $this->accessToken = $accessToken;
+        $this->client = new Client([
+            'base_uri' => "https://{$this->shopDomain}/admin/api/2025-01/graphql.json",
+            'headers' => [
+                'X-Shopify-Access-Token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+            ],
+        ]);
+
+        
+    }
+
+
 
     /**
      * Send a GraphQL query to Shopify to fetch the list of publications,create product and update variant 
@@ -21,10 +49,43 @@ class GraphqlService
      */
 
 
-    public function graphqlPostProduct($params, $shop, $accessToken)
+
+ 
+     public function graphqlQueryThalia(string $query, array $variables = []): array
+     {
+
+         try {
+
+            if(!empty($variables)) {
+                $response = $this->client->post('', [
+                    'json' => [
+                        'query' => $query,
+                        'variables' => $variables,
+                    ],
+                ]);
+            }else{
+                $response = $this->client->post('', [
+                    'json' => [
+                        'query' => $query
+                    ],
+                ]);
+            }
+             
+ 
+             return json_decode($response->getBody(), true);
+         } catch (\Exception $e) {
+             return [
+                 'errors' => [
+                     'message' => $e->getMessage(),
+                 ],
+             ];
+         }
+     }
+
+    public function graphqlPostProduct($params)
     {
-
-
+        
+        
         $onlinepublication = [];
         $query = <<<QUERY
                 query publications {
@@ -40,30 +101,19 @@ class GraphqlService
                 }
                 QUERY;
 
-        $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'X-Shopify-Access-Token' => $accessToken
-            ]
-        ]);
-        $response = $client->post('graphql.json', [
-            'body' => json_encode(['query' => $query])
-        ]);
 
-        // Get the response body
-        $body = $response->getBody();
-        $responseData = json_decode($body, true);
+      
+        
+      
+        
+        
+      
+        
 
         try {
             // Send GraphQL request
-            $response = $client->post('graphql.json', [
-                'body' => json_encode(['query' => $query])
-            ]);
-
-            // Get the response body
-            $body = $response->getBody();
-            $responseData = json_decode($body, true);
+           
+            $responseData = $this->graphqlQueryThalia($query);
 
 
             if (isset($responseData["errors"])) {
@@ -85,11 +135,11 @@ class GraphqlService
 
 
 
-
+       
         $productdata = $params['product'];
 
         $product['title'] = $productdata['title'];
-        $product['descriptionHtml '] = $productdata['body_html'];
+        $product['descriptionHtml'] = $productdata['body_html'];
         $product['productType'] = $productdata['product_type'];
         $product['vendor'] = $productdata['vendor'];
         $product['tags'] = $productdata['tags'];
@@ -135,75 +185,56 @@ class GraphqlService
             foreach ($productdata['images'] as $imagekey => $image) {
                 $gqimage = [];
                 $gqimage['originalSource'] = $image['src'];
-                $gqimage['mediaContentType'] = "MEDIAPMIMAGE";
-                //$gqimage['originalSource'] = $image['src'];
+                $gqimage['mediaContentType'] = "IMAGE";
                 $productmedia[] = $gqimage;
             }
         }
 
-
-
-        $productDataJson = json_encode($product, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $productDataJson = preg_replace('/"([^"]+)"\s*:/', '$1:', $productDataJson);
-        $productDataJson = str_replace('status:"DRAFT"', "status:DRAFT", $productDataJson);
-
-        $input = $productDataJson;
-
-        $productmedia = json_encode($productmedia, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $productmedia = preg_replace('/"([^"]+)"\s*:/', '$1:', $productmedia);
-        $productmedia = str_replace('"MEDIAPMIMAGE"', "IMAGE", $productmedia);
-        $mediainput = $productmedia;
-
-        $productquery = <<<GQL
-        mutation {
-          productCreate(input: $input,media: $mediainput) {
-            product {
-              id
-              title
-              variants(first: 1) {
-                    edges {
-                        node {
-                            id
-                            title
-                            barcode
+        $productquery = <<<'GRAPHQL'
+                    mutation CreateProduct($input: ProductInput!, $mediainput: [CreateMediaInput!]) {
+                    productCreate(input: $input, media: $mediainput) {
+                        product {
+                        id
+                        title
+                        variants(first: 1) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    barcode
+                                }
+                            }
+                        }
+                        }
+                        userErrors {
+                            field
+                            message
                         }
                     }
-                }
-            },
-             userErrors {
-              field
-              message
-            }
-          }
-        }
-        GQL;
+                    }
+                    GRAPHQL;
 
+       
 
+        $variables = [
+            'input' => $product,
+            'mediainput' => $productmedia,
+        ];
+        
 
+     
 
-
-
-        // Initialize Guzzle client
-        $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'X-Shopify-Access-Token' => $accessToken
-            ]
-        ]);
+      
+      
+      
 
         $productreturndata = array();
         if (1) {
 
             try {
                 // Send GraphQL request
-                $response = $client->post('graphql.json', [
-                    'body' => json_encode(['query' => $productquery])
-                ]);
-
-                // Get the response body
-                $body = $response->getBody();
-                $responseData = json_decode($body, true);
+              
+                $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
 
                 // Check for GraphQL or user errors
@@ -232,7 +263,7 @@ class GraphqlService
             }
 
         }
-
+      
         if (!isset($variantid)) {
             return false;
         }
@@ -246,14 +277,11 @@ class GraphqlService
             $variantdata['compareAtPrice'] = $variant['compare_at_price'];
         }
         $variantdata['barcode'] = $variant['barcode'];
-        $variantdata['sku'] = $variant['sku'];
+     
         $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
-        if (isset($variant['weight'])) {
-            $variantdata['weight'] = (float) $variant['weight'];
-        }
+        
 
-
-        $variantdata['inventoryManagement'] = 'SHOPIFY';
+      
 
 
         if (!empty($variant['cost'])) {
@@ -261,79 +289,93 @@ class GraphqlService
             $variantdata['inventoryItem']['tracked'] = true;
         }
 
+        
+        $variantdata['inventoryItem']['sku'] = $variant['sku'];
+        if (isset($variant['weight'])) {
+            
+            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
+            if(isset($variant['weight_unit'])){
+                switch ($variant['weight_unit']) {
+                    case 'lb':
+                        $weight_unit = 'POUNDS';
+                        break;
+                
+                    case 'kg':
+                        $weight_unit = 'KILOGRAMS';
+                        break;
+                
+                    default:
+                        $weight_unit = 'KILOGRAMS';
+                        break;
+                }
 
+                $variantdata['inventoryItem']['measurement']['weight']['unit'] = $weight_unit;
+            }
+            
+        }
+        
+       
 
+        $finalvariantvariables['productId'] = $productId;
+        $finalvariantvariables['variants'][] = $variantdata;
+        
+       
+      
 
-
-        $productvariants = json_encode($variantdata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $productvariants = preg_replace('/"([^"]+)"\s*:/', '$1:', $productvariants);
-        $productvariants = str_replace('"MEDIAPMIMAGE"', "IMAGE", $productvariants);
-        $productvariants = str_replace('inventoryManagement:"SHOPIFY"', 'inventoryManagement:SHOPIFY', $productvariants);
-
-
-        $variantsinput = $productvariants;
-
-
-
-
-
-
+       
+       
         if (1) {
 
 
-            $query = <<<GQL
-                mutation {
-                  productVariantUpdate(input: $variantsinput) {
-                    productVariant {
-                      id
-                      title
-                      inventoryItem{
-                        id
-                      }
-                    },
-                     userErrors {
-                      field
-                      message
-                    }
-                  }
-                }
-                GQL;
+            $variantquery = <<<'GRAPHQL'
+                        mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+                        productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+                            product {
+                                id
+                            }
+                            productVariants {
+                                id
+                                title
+                                inventoryItem{
+                                    id
+                                }
+                            }
+                            userErrors {
+                                field
+                                message
+                            }
+                        }
+                        }
+                        GRAPHQL;
+
+
+
 
         }
 
+       
 
-
-        // Initialize Guzzle client
-        $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-04/",
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'X-Shopify-Access-Token' => $accessToken
-            ]
-        ]);
+       
+       
 
         try {
             // Send GraphQL request
-            $response = $client->post('graphql.json', [
-                'body' => json_encode(['query' => $query])
-            ]);
+            $responseData = $this->graphqlQueryThalia($variantquery, $finalvariantvariables);
 
-            // Get the response body
-            $body = $response->getBody();
-            $responseData = json_decode($body, true);
 
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
                 throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
 
-            } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+            } elseif (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
                 throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
             } else {
                 // Print the created product details
-                $inventory_item_id = $responseData['data']['productVariantUpdate']['productVariant']['inventoryItem']['id'];
+               
+                $inventory_item_id = $responseData['data']['productVariantsBulkUpdate']['productVariants'][0]['inventoryItem']['id'];
 
                 $inventory_item_id = str_replace("gid://shopify/InventoryItem/", "", $inventory_item_id);
                 $productreturndata['variants'][0]['inventory_item_id'] = $inventory_item_id;
@@ -347,6 +389,8 @@ class GraphqlService
 
         return $productreturndata;
     }
+
+
 
     public function graphqlPostProductWithVariants($params, $shop, $accessToken)
     {
@@ -368,7 +412,7 @@ class GraphqlService
                 QUERY;
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -381,7 +425,7 @@ class GraphqlService
         // Get the response body
         $body = $response->getBody();
         $responseData = json_decode($body, true);
-
+        
         try {
             // Send GraphQL request
             $response = $client->post('graphql.json', [
@@ -527,7 +571,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -692,7 +736,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -883,7 +927,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1006,7 +1050,7 @@ class GraphqlService
 
             // Initialize Guzzle client
             $client = new Client([
-                'base_uri' => "https://$shop/admin/api/2024-04/",
+                'base_uri' => "https://$shop/admin/api/2025-01/",
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'X-Shopify-Access-Token' => $accessToken
@@ -1262,7 +1306,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1506,7 +1550,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1611,7 +1655,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1761,7 +1805,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1890,7 +1934,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -1960,7 +2004,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2041,7 +2085,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2137,7 +2181,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2214,7 +2258,7 @@ class GraphqlService
 
         // Initialize Guzzle client
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2280,7 +2324,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2311,7 +2355,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2371,7 +2415,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2448,7 +2492,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2468,7 +2512,7 @@ class GraphqlService
     }
 
 
-    public function getProductIdFromVairant($variantid, $shop, $accessToken)
+    public function getProductIdFromVairant($variantid, $shop, $accessToken): array
     {
 
 
@@ -2490,7 +2534,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2024-10/",
+            'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
@@ -2514,5 +2558,12 @@ class GraphqlService
         }
     }
 
+    public function debugPM($data): never
+    {
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+        exit;
+    }
 
 }
