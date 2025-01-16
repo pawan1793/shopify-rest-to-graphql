@@ -1839,11 +1839,11 @@ class GraphqlService
 
         }
     }
-    public function graphqlDeleteVariant($shopifyid, $variantid, $shop, $accessToken)
+    public function graphqlDeleteVariant($shopifyid, $variantid)
     {
 
 
-
+      
 
         $query = <<<QUERY
         mutation DeleteProductVariant {
@@ -1865,27 +1865,14 @@ class GraphqlService
 
 
 
-        // Initialize Guzzle client
-        $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2025-01/",
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'X-Shopify-Access-Token' => $accessToken
-            ]
-        ]);
+       
 
         $productreturndata = array();
         if (1) {
 
             try {
                 // Send GraphQL request
-                $response = $client->post('graphql.json', [
-                    'body' => json_encode(['query' => $query])
-                ]);
-
-                // Get the response body
-                $body = $response->getBody();
-                $responseData = json_decode($body, true);
+                $responseData = $this->graphqlQueryThalia($query);
 
 
 
