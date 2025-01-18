@@ -2,6 +2,7 @@
     "name": "thalia/shopify-rest-to-graphql",
     "description": "Shopify REST to GraphQL : Converts Shopify REST API payloads to GraphQL queries with minimal changes for seamless Laravel integration.",
     "type": "library",
+    "version": "2.0.0",
     "require": {
         "php": ">=7.4",
         "guzzlehttp/guzzle": ">=7.5"
