@@ -278,7 +278,10 @@ class GraphqlService
 
 
         $variantdata['id'] = $variantid;
-        $variantdata['price'] = $variant['price'];
+        if (!empty($variant['compare_at_price'])) {
+            $variantdata['price'] = $variant['price'];
+        }
+
         if (!empty($variant['compare_at_price'])) {
             $variantdata['compareAtPrice'] = $variant['compare_at_price'];
         }
@@ -485,6 +488,8 @@ class GraphqlService
         }
 
         $productrawoptions = $params['product']['options'];
+
+
         $productoptions = array();
         if (!empty($productrawoptions)) {
             foreach ($productrawoptions as $optionkey => $option) {
@@ -565,6 +570,7 @@ class GraphqlService
                     $productId = $responseData['data']['productCreate']['product']['id'];
                     $graphqloptionids = array();
                     $currentopt = 1;
+
                     foreach ($responseData['data']['productCreate']['product']['options'] as $graphqloptionidkey => $option) {
 
 
@@ -594,11 +600,38 @@ class GraphqlService
                 $variantdata['compareAtPrice'] = $rawvariant['compare_at_price'];
             }
             $variantdata['barcode'] = $rawvariant['barcode'];
-            //$variantdata['sku'] = $rawvariant['sku'];
             $variantdata['taxable'] = isset($variant['taxable']) ? $rawvariant['taxable'] : true;
-            if (isset($variant['weight'])) {
-                $variantdata['weight'] = (float) $rawvariant['weight'];
+
+            if (!empty($rawvariant['cost'])) {
+                $variantdata['inventoryItem']['cost'] = $rawvariant['cost'];
+                $variantdata['inventoryItem']['tracked'] = true;
             }
+
+
+            $variantdata['inventoryItem']['sku'] = $rawvariant['sku'];
+            if (isset($variant['weight'])) {
+
+                $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $rawvariant['weight'];
+                if (isset($rawvariant['weight_unit'])) {
+                    switch ($rawvariant['weight_unit']) {
+                        case 'lb':
+                            $weight_unit = 'POUNDS';
+                            break;
+
+                        case 'kg':
+                            $weight_unit = 'KILOGRAMS';
+                            break;
+
+                        default:
+                            $weight_unit = 'KILOGRAMS';
+                            break;
+                    }
+
+                    $variantdata['inventoryItem']['measurement']['weight']['unit'] = $weight_unit;
+                }
+
+            }
+
 
 
             $optionValues = array();
@@ -717,7 +750,9 @@ class GraphqlService
     public function graphqlUpdateProduct($params)
     {
 
+
         $productdata = $params['product'];
+
 
         $product['id'] = $productdata['id'];
         if (strpos($productdata['id'], 'gid://shopify/Product') !== true) {
@@ -796,6 +831,140 @@ class GraphqlService
             }
         }
 
+        if (!empty($productdata['options'])) {
+
+            $productrawoptions = $productdata['options'];
+
+            $productoptions = array();
+            if (!empty($productrawoptions)) {
+                foreach ($productrawoptions as $optionkey => $option) {
+                    $productoptions[$optionkey]['name'] = $option['name'];
+                    $values = array();
+                    foreach ($option['values'] as $valuekey => $value) {
+                        $values[$valuekey]['name'] = $value;
+                    }
+                    $productoptions[$optionkey]['values'] = $values;
+
+                }
+            }
+
+
+
+            //get options for product and cross check with payload options
+            $query = <<<'GRAPHQL'
+                        query getProductDetails($id: ID!) {
+                                product(id: $id) {
+                                    id
+                                    options {
+                                        id
+                                        name
+                                        position
+                                        values
+                                        optionValues {
+                                            id
+                                            name
+                                            hasVariants
+                                        }
+                                    }
+                                }
+                            }
+                    GRAPHQL;
+            $productvariables['id'] = $product['id'];
+            $responseData = $this->graphqlQueryThalia($query, $productvariables);
+            $shopifyoptions = $responseData['data']['product']['options'];
+            $missingoptions = [];
+
+           
+           
+
+            // Find missing options
+            foreach ($productoptions as $productOption) {
+                foreach ($shopifyoptions as $shopifyOption) {
+                    
+                    //$refOptionValues = array_column(array_column($shopifyoptions,''),'id');
+                    if ($productOption['name'] === $shopifyOption['name']) {
+                     
+                        $refOptionValues = array_column($shopifyOption['optionValues'],'name');
+                      
+                        // Extract Shopify option values
+                        $shopifyValues = $shopifyOption['values'];
+                        // Extract product option values
+                        $productValues = $productOption['values'];
+                        // Find the missing options
+                        foreach ($productValues as $productValue) {
+                            if (!in_array($productValue['name'], $refOptionValues)) {
+                                $missingoptions[] = [
+                                    "id" => $shopifyOption['id'],
+                                    "name" => $shopifyOption['name'],
+                                    "value" => $productValue['name']
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (!empty($missingoptions)) {
+
+                $groupedByName = [];
+
+                foreach ($missingoptions as $option) {
+                    $groupedByName[$option['name']][] = $option;
+                }
+
+
+                foreach ($groupedByName as $byOptionName) {
+                    $mutation = '
+                        mutation updateOption($productId: ID!, $option: OptionUpdateInput!, $optionValuesToAdd: [OptionValueCreateInput!]) {
+                        productOptionUpdate(productId: $productId, option: $option, optionValuesToAdd: $optionValuesToAdd) {
+                                product {
+                                    id
+                                    options {
+                                        id
+                                        name
+                                        values
+                                    }
+                                }
+                                userErrors {
+                                    field
+                                    message
+                                    code
+                                }
+                            }
+                        }
+                    ';
+
+                    $variables = [
+                        'productId' => $product['id'],
+                        'option' => [
+                            'id' => $missingoptions[0]['id'],
+                        ],
+                        'optionValuesToAdd' => array_map(function ($option) {
+                            return [
+                                'name' => $option['value']
+                            ];
+                        }, $byOptionName)
+                    ];
+
+
+
+
+                    $response = $this->graphqlQueryThalia($mutation, $variables);
+
+                }
+
+
+            }
+
+
+         
+          
+
+
+        }
+
+
+
 
 
 
@@ -805,8 +974,18 @@ class GraphqlService
                             mutation UpdateProductWithNewMedia($input: ProductInput!, $mediainput: [CreateMediaInput!]) {
                                 productUpdate(input: $input, media: $mediainput) {
                                     product {
-                                        id
-                                        title
+                                    id
+                                    options {
+                                            id
+                                            name
+                                            values
+                                            position
+                                            optionValues {
+                                                id
+                                                name
+                                                hasVariants
+                                            }
+                                        }
                                     }
                                     userErrors {
                                         field
@@ -834,7 +1013,7 @@ class GraphqlService
             try {
                 // Send GraphQL request
                 $responseData = $this->graphqlQueryThalia($productquery, $variables);
-                // $this->debugPM($responseData);
+                
 
 
                 // Check for GraphQL or user errors
@@ -842,7 +1021,7 @@ class GraphqlService
 
                     throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
 
-                } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+                } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
                     throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
@@ -895,7 +1074,7 @@ class GraphqlService
 
             $currentopt++;
         }
-
+       
 
         if (isset($productdata['variants'])) {
 
@@ -917,7 +1096,7 @@ class GraphqlService
                     $variantdata['compareAtPrice'] = $variant['compare_at_price'];
                 }
 
-              
+
                 $variantdata['barcode'] = isset($variant['barcode']) ? $variant['barcode'] : null;
 
                 $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
@@ -957,7 +1136,7 @@ class GraphqlService
 
 
                 if (!isset($variant['id'])) {
-                   
+
                     $optionValues = array();
                     if (isset($variant['option1'])) {
                         $optiondata['optionId'] = $graphqloptionids['option1']['id'];
@@ -977,9 +1156,11 @@ class GraphqlService
                         $optionValues[2] = $optiondata;
                     }
                     $optionValues = array_values($optionValues);
-
+                  
                     $variantdata['optionValues'] = $optionValues;
-
+                    if(empty($optionValues)){
+                       continue;
+                    }
                     $newvariantsdata[] = $variantdata;
                 } else {
 
@@ -990,7 +1171,7 @@ class GraphqlService
 
             }
 
-
+         
             $finalvariantvariables['productId'] = $product['id'];
             $finalvariantvariables['variants'] = $variantsdata;
 
@@ -1047,7 +1228,7 @@ class GraphqlService
             }
 
             if (!empty($newvariantsdata)) {
-
+              
                 if (1) {
 
 
@@ -1096,13 +1277,13 @@ class GraphqlService
 
 
 
-                
-               
+
+
 
                 $responseData = $this->graphqlQueryThalia($bulkvariantquery, $variables);
-              
-               
-               
+
+                
+
             }
         }
 
@@ -1843,7 +2024,7 @@ class GraphqlService
     {
 
 
-      
+
 
         $query = <<<QUERY
         mutation DeleteProductVariant {
@@ -1865,7 +2046,7 @@ class GraphqlService
 
 
 
-       
+
 
         $productreturndata = array();
         if (1) {
