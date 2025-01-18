@@ -271,35 +271,40 @@ class GraphqlService
         }
 
         if (!isset($variantid)) {
-            return false;
+            return array();
         }
 
         $variant = $productdata['variants'][0];
 
 
         $variantdata['id'] = $variantid;
-        if (!empty($variant['compare_at_price'])) {
-            $variantdata['price'] = $variant['price'];
-        }
 
         if (!empty($variant['compare_at_price'])) {
             $variantdata['compareAtPrice'] = $variant['compare_at_price'];
         }
-        $variantdata['barcode'] = $variant['barcode'];
 
-        $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
+        if (!empty($variant['price'])) {
+            $variantdata['price'] = $variant['price'];
+        }
 
+        if (!empty($variant['barcode'])) {
+            $variantdata['barcode'] = isset($variant['barcode']) ? $variant['barcode'] : null;
+        }
 
-
-
+        if (!empty($variant['taxable'])) {
+            $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
+        }
+        if (!empty($variant['sku'])) {
+            $variantdata['inventoryItem']['sku'] = $variant['sku'];
+        }
 
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
             $variantdata['inventoryItem']['tracked'] = true;
         }
 
+        
 
-        $variantdata['inventoryItem']['sku'] = $variant['sku'];
         if (isset($variant['weight'])) {
 
             $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
@@ -594,13 +599,22 @@ class GraphqlService
 
         $variantsdata = array();
         foreach ($params['product']['variants'] as $rawvariantkey => $rawvariant) {
-            //$variantdata['id'] = $rawvariant;
-            $variantdata['price'] = $rawvariant['price'];
-            if (!empty($variant['compare_at_price'])) {
-                $variantdata['compareAtPrice'] = $rawvariant['compare_at_price'];
+           
+          
+            if (!empty($rawvariant['price'])) {
+                $variantdata['price'] = $rawvariant['price'];
             }
-            $variantdata['barcode'] = $rawvariant['barcode'];
-            $variantdata['taxable'] = isset($variant['taxable']) ? $rawvariant['taxable'] : true;
+
+            if (!empty($variant['barcode'])) {
+                $variantdata['barcode'] = isset($rawvariant['barcode']) ? $rawvariant['barcode'] : null;
+            }
+
+            if (!empty($rawvariant['taxable'])) {
+                $variantdata['taxable'] = isset($rawvariant['taxable']) ? $rawvariant['taxable'] : true;
+            }
+            if (!empty($rawvariant['sku'])) {
+                $variantdata['inventoryItem']['sku'] = $rawvariant['sku'];
+            }
 
             if (!empty($rawvariant['cost'])) {
                 $variantdata['inventoryItem']['cost'] = $rawvariant['cost'];
@@ -608,8 +622,7 @@ class GraphqlService
             }
 
 
-            $variantdata['inventoryItem']['sku'] = $rawvariant['sku'];
-            if (isset($variant['weight'])) {
+            if (isset($rawvariant['weight'])) {
 
                 $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $rawvariant['weight'];
                 if (isset($rawvariant['weight_unit'])) {
@@ -874,18 +887,18 @@ class GraphqlService
             $shopifyoptions = $responseData['data']['product']['options'];
             $missingoptions = [];
 
-           
-           
+
+
 
             // Find missing options
             foreach ($productoptions as $productOption) {
                 foreach ($shopifyoptions as $shopifyOption) {
-                    
+
                     //$refOptionValues = array_column(array_column($shopifyoptions,''),'id');
                     if ($productOption['name'] === $shopifyOption['name']) {
-                     
-                        $refOptionValues = array_column($shopifyOption['optionValues'],'name');
-                      
+
+                        $refOptionValues = array_column($shopifyOption['optionValues'], 'name');
+
                         // Extract Shopify option values
                         $shopifyValues = $shopifyOption['values'];
                         // Extract product option values
@@ -903,7 +916,7 @@ class GraphqlService
                     }
                 }
             }
-            
+
             if (!empty($missingoptions)) {
 
                 $groupedByName = [];
@@ -957,8 +970,8 @@ class GraphqlService
             }
 
 
-         
-          
+
+
 
 
         }
@@ -1013,7 +1026,7 @@ class GraphqlService
             try {
                 // Send GraphQL request
                 $responseData = $this->graphqlQueryThalia($productquery, $variables);
-                
+
 
 
                 // Check for GraphQL or user errors
@@ -1074,7 +1087,7 @@ class GraphqlService
 
             $currentopt++;
         }
-       
+
 
         if (isset($productdata['variants'])) {
 
@@ -1086,28 +1099,37 @@ class GraphqlService
                 if (isset($variant['id'])) {
                     $variantdata['id'] = "gid://shopify/ProductVariant/" . $variant['id'];
                 }
-
-                $variantdata['price'] = $variant['price'];
+               
 
                 if (!empty($variant['compareAtPrice'])) {
                     $variantdata['compareAtPrice'] = $variant['compareAtPrice'];
                 }
+                
                 if (!empty($variant['compare_at_price'])) {
                     $variantdata['compareAtPrice'] = $variant['compare_at_price'];
                 }
 
+                if (!empty($variant['price'])) {
+                    $variantdata['price'] = $variant['price'];
+                }
 
-                $variantdata['barcode'] = isset($variant['barcode']) ? $variant['barcode'] : null;
+                if (!empty($variant['barcode'])) {
+                    $variantdata['barcode'] = isset($variant['barcode']) ? $variant['barcode'] : null;
+                }
 
-                $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
+                if (!empty($variant['taxable'])) {
+                    $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
+                }
+                if (!empty($variant['sku'])) {
+                    $variantdata['inventoryItem']['sku'] = $variant['sku'];
+                }
 
                 if (!empty($variant['cost'])) {
                     $variantdata['inventoryItem']['cost'] = $variant['cost'];
                     $variantdata['inventoryItem']['tracked'] = true;
                 }
 
-
-                $variantdata['inventoryItem']['sku'] = $variant['sku'];
+                
                 if (isset($variant['weight'])) {
 
                     $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
@@ -1156,10 +1178,10 @@ class GraphqlService
                         $optionValues[2] = $optiondata;
                     }
                     $optionValues = array_values($optionValues);
-                  
+
                     $variantdata['optionValues'] = $optionValues;
-                    if(empty($optionValues)){
-                       continue;
+                    if (empty($optionValues)) {
+                        continue;
                     }
                     $newvariantsdata[] = $variantdata;
                 } else {
@@ -1171,7 +1193,7 @@ class GraphqlService
 
             }
 
-         
+
             $finalvariantvariables['productId'] = $product['id'];
             $finalvariantvariables['variants'] = $variantsdata;
 
@@ -1228,7 +1250,7 @@ class GraphqlService
             }
 
             if (!empty($newvariantsdata)) {
-              
+
                 if (1) {
 
 
@@ -1282,7 +1304,7 @@ class GraphqlService
 
                 $responseData = $this->graphqlQueryThalia($bulkvariantquery, $variables);
 
-                
+
 
             }
         }
@@ -2489,6 +2511,120 @@ class GraphqlService
         } else {
             throw new \Exception('GraphQL Errors: productVariant Not Found');
         }
+    }
+
+    public function graphqlUpdateVariant($shopifyId, $variantId, $params)
+    {
+        $variant = $params['variant'];
+
+
+        $productId = $shopifyId;
+        if (strpos($shopifyId, 'gid://shopify/Product') !== true) {
+            $productId = "gid://shopify/Product/{$shopifyId}";
+        }
+
+
+
+        if (strpos($variantId, 'gid://shopify/ProductVariant') !== true) {
+            $variantId = "gid://shopify/ProductVariant/{$variantId}";
+        }
+
+        $variantdata['id'] = $variantId;
+
+        if (!empty($variant['price'])) {
+            $variantdata['price'] = $variant['price'];
+        }
+
+        if (!empty($variant['compare_at_price'])) {
+            $variantdata['compareAtPrice'] = $variant['compare_at_price'];
+        }
+
+        if (!empty($variant['barcode'])) {
+            $variantdata['barcode'] = $variant['barcode'];
+        }
+
+
+        if (!empty($variant['taxable'])) {
+            $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
+        }
+
+
+
+
+
+
+
+        if (!empty($variant['cost'])) {
+            $variantdata['inventoryItem']['cost'] = $variant['cost'];
+            $variantdata['inventoryItem']['tracked'] = true;
+        }
+
+        if (!empty($variant['sku'])) {
+            $variantdata['inventoryItem']['sku'] = $variant['sku'];
+        }
+
+        if (isset($variant['weight'])) {
+
+            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
+            if (isset($variant['weight_unit'])) {
+                switch ($variant['weight_unit']) {
+                    case 'lb':
+                        $weight_unit = 'POUNDS';
+                        break;
+
+                    case 'kg':
+                        $weight_unit = 'KILOGRAMS';
+                        break;
+
+                    default:
+                        $weight_unit = 'KILOGRAMS';
+                        break;
+                }
+
+                $variantdata['inventoryItem']['measurement']['weight']['unit'] = $weight_unit;
+            }
+
+        }
+
+
+        $finalvariantvariables['productId'] = $productId;
+        $finalvariantvariables['variants'][] = $variantdata;
+
+
+
+        $variantquery = <<<'GRAPHQL'
+        mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+        productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+            product {
+                id
+            }
+            productVariants {
+                id
+                title
+                inventoryItem{
+                    id
+                }
+            }
+            userErrors {
+                field
+                message
+            }
+        }
+        }
+        GRAPHQL;
+
+        $responseData = $this->graphqlQueryThalia($variantquery, $finalvariantvariables);
+
+        if (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
+
+            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkUpdate']['userErrors'], true));
+
+        } else {
+            $responseData = $responseData['data']['productVariantsBulkUpdate'];
+        }
+
+
+        return $responseData;
     }
 
     public function debugPM($data): void
