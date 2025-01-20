@@ -189,6 +189,11 @@ class GraphqlService
         $productmedia = array();
         if (!empty($productdata['images'])) {
             foreach ($productdata['images'] as $imagekey => $image) {
+                
+                if(count($productmedia) > 249){
+                    break;
+                }
+
                 $gqimage = [];
                 $gqimage['originalSource'] = $image['src'];
                 $gqimage['mediaContentType'] = "IMAGE";
@@ -484,6 +489,11 @@ class GraphqlService
         $productmedia = array();
         if (!empty($productdata['images'])) {
             foreach ($productdata['images'] as $imagekey => $image) {
+
+                if(count($productmedia) > 249){
+                    break;
+                }
+                
                 $gqimage = [];
                 $gqimage['originalSource'] = $image['src'];
                 $gqimage['mediaContentType'] = "IMAGE";
@@ -841,7 +851,7 @@ class GraphqlService
                     break;
                 }
 
-                
+
                 $gqimage = [];
                 $gqimage['originalSource'] = $image['src'];
                 $gqimage['mediaContentType'] = "IMAGE";
