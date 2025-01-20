@@ -1036,7 +1036,7 @@ class GraphqlService
 
                 } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
-                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productUpdate']['userErrors'], true));
 
                 } else {
 
