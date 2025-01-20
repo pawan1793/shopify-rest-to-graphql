@@ -61,7 +61,7 @@ class GraphqlService
             return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             // return [
             //     'errors' => [
             //         'message' => $e->getMessage(),
@@ -135,7 +135,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
 
         }
 
@@ -247,11 +247,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
                 } else {
                     // Print the created product details
@@ -265,7 +265,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -373,11 +373,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
             } elseif (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-                throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
             } else {
                 // Print the created product details
@@ -391,7 +391,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
         }
 
         return $productreturndata;
@@ -438,7 +438,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
 
         }
 
@@ -565,11 +565,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
                 } else {
                     $productId = $responseData['data']['productCreate']['product']['id'];
@@ -591,7 +591,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -742,11 +742,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
             } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
             } else {
                 $shopifyid = str_replace("gid://shopify/Product/", "", $productId);
@@ -754,7 +754,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
         }
 
 
@@ -1032,11 +1032,11 @@ class GraphqlService
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
 
                 } else {
 
@@ -1044,7 +1044,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
 
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -1237,16 +1237,16 @@ class GraphqlService
 
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productCreate']['userErrors'], true));
                 } else {
 
 
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
             if (!empty($newvariantsdata)) {
@@ -1700,9 +1700,9 @@ class GraphqlService
     {
 
 
-        $shopifyid = "gid://shopify/Product/{$shopifyid}";
+    $shopifyid = "gid://shopify/Product/{$shopifyid}";
 
-        $query = <<<QUERY
+    $query = <<<QUERY
         query publications {
             product(id: "$shopifyid") {
                 id
@@ -1773,11 +1773,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
                 } elseif (empty($responseData['data']['product'])) {
 
@@ -1834,7 +1834,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -1909,11 +1909,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
                 } elseif (empty($responseData['data']['product'])) {
 
@@ -1982,7 +1982,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2025,11 +2025,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
                 } else {
 
@@ -2037,7 +2037,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2083,11 +2083,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['productVariantsBulkDelete']['userErrors']) && !empty($responseData['data']['productVariantsBulkDelete']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkDelete']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkDelete']['userErrors'], true));
 
                 } else {
 
@@ -2095,7 +2095,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2149,11 +2149,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2179,7 +2179,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2233,11 +2233,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['productVariant']['userErrors']) && !empty($responseData['data']['productVariant']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariant']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productVariant']['userErrors'], true));
 
                 } else {
                     $shopifyvariant = $responseData['data']['productVariant'];
@@ -2256,7 +2256,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2296,11 +2296,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['errors'], true));
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2313,7 +2313,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception('GraphQL Error: ' . print_r($e->getMessage(), true));
+                throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($e->getMessage(), true));
             }
 
         }
@@ -2617,7 +2617,7 @@ class GraphqlService
 
         if (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkUpdate']['userErrors'], true));
+            throw new \Exception(__LINE__.'GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkUpdate']['userErrors'], true));
 
         } else {
             $responseData = $responseData['data']['productVariantsBulkUpdate'];
