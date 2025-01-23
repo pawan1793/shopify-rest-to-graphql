@@ -1496,8 +1496,6 @@ class GraphqlService
                         sku
                         title
                         price
-                        weight
-                        weightUnit
                         compareAtPrice
                         taxable
                         inventoryQuantity
@@ -1507,14 +1505,17 @@ class GraphqlService
                                 name
                                 value
                             }
-                        fulfillmentService {
-                                id
-                                serviceName
-                                type
-                            }
+                        
                         inventoryItem {
                                 id
                                 inventoryHistoryUrl
+                                measurement{
+                                    id
+                                    weight{
+                                        unit
+                                        value
+                                    }
+                                }
                                 unitCost {
                                     amount
                                     currencyCode
@@ -1630,8 +1631,15 @@ class GraphqlService
                                 if (!empty($variant['compareAtPrice'])) {
                                     $variant['compare_at_price'] = $variant['compareAtPrice'];
                                 }
-                                if (!empty($variant['weightUnit'])) {
-                                    $variant['weight_unit'] = $variant['weightUnit'];
+
+                              
+                                if (!empty($variant['inventoryItem']['measurement']['weight'])) {
+                                    $variant['weight_unit'] = $variant['inventoryItem']['measurement']['weight']['unit'];
+
+                                }
+                                if (!empty($variant['inventoryItem']['measurement']['weight'])) {
+                                    $variant['weight'] = $variant['inventoryItem']['measurement']['weight']['value'];
+
                                 }
                                 if (!empty($variant['inventoryQuantity'])) {
                                     $variant['inventory_quantity'] = $variant['inventoryQuantity'];
@@ -1644,7 +1652,7 @@ class GraphqlService
                                     $variant['cost_price'] = null;
                                 }
 
-                                $variant['fulfillment_service'] = strtolower($variant['fulfillmentService']['serviceName']);
+                                //$variant['fulfillment_service'] = strtolower($variant['fulfillmentService']['serviceName']);
                                 $variant['inventory_policy'] = strtolower($variant['inventoryPolicy']);
                                 if (isset($variant['createdAt'])) {
                                     $variant['created_at'] = $variant['createdAt'];
