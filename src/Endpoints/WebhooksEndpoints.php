@@ -27,7 +27,7 @@ class WebhooksEndpoints
     }
 
 
-    function webhookSubscriptions()
+    public function webhookSubscriptions()
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/webhookSubscriptions
@@ -87,7 +87,7 @@ class WebhooksEndpoints
     /** 
      * To create a webhook subscription use this function.
      */
-    function webhookSubscriptionCreate($param)
+    public function webhookSubscriptionCreate($param)
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/webhookSubscriptionCreate
