@@ -53,16 +53,26 @@ class LocationsEndpoints
 
         $responseData = $this->graphqlService->graphqlQueryThalia($locationquery);
 
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+        if(isset($responseData['errors']) && !empty($responseData['errors'])) {
 
             throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
-
+    
         } else {
-
-            $responseData = $responseData['data']['locations'];
-
+    
+            $responseData = $responseData['data']['locations']['edges'];
+    
         }
-
-        return $responseData;
+    
+        $response = array();
+    
+        foreach($responseData as $key => $locations) {
+    
+            $response[$key]['id'] = str_replace('gid://shopify/Location/', '', $locations['node']['id']);
+            $response[$key]['name'] = $locations['node']['name'];
+            $response[$key]['active'] = $locations['node']['isActive'];
+    
+        }
+    
+        return $response;
     }
 }

@@ -33,20 +33,19 @@ class CollectionsEndpoints
         Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/customcollection#get-custom-collections
         */
 
-        global $graphqlService;
 
         $collectionsquery = <<<'GRAPHQL'
-                                query CustomCollectionList {
-                                    collections(first: 250, query: "collection_type:custom") {
-                                        nodes {
-                                            id
-                                            title
-                                        }
-                                    }
-                                }
-                                GRAPHQL;
+        query CustomCollectionList {
+            collections(first: 250, query: "collection_type:custom") {
+                nodes {
+                    id
+                    title
+                }
+            }
+        }
+        GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($collectionsquery);
+        $responseData = $this->graphqlService->graphqlQueryThalia($collectionsquery);
 
         if (isset($responseData['data']['errors']) && !empty($responseData['data']['errors'])) {
 
@@ -54,9 +53,14 @@ class CollectionsEndpoints
 
         } else {
 
-            $responseData = $responseData['data']['collections'];
+            $responseData = $responseData['data']['collections']['nodes'];
 
         }
+
+        $responseData = array_map(function ($collectionData) {
+            $collectionData['id'] = str_replace('gid://shopify/Collection/', '', $collectionData['id']);
+            return $collectionData;
+        }, $responseData);
 
         return $responseData;
     }
@@ -68,20 +72,20 @@ class CollectionsEndpoints
         Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/smartcollection#get-smart-collections
         */
 
-        global $graphqlService;
+
 
         $collectionsquery = <<<'GRAPHQL'
-                                query CustomCollectionList {
-                                    collections(first: 250, query: "collection_type:smart") {
-                                        nodes {
-                                            id
-                                            title
-                                        }
-                                    }
-                                }
-                                GRAPHQL;
+        query CustomCollectionList {
+            collections(first: 250, query: "collection_type:smart") {
+                nodes {
+                    id
+                    title
+                }
+            }
+        }
+        GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($collectionsquery);
+        $responseData = $this->graphqlService->graphqlQueryThalia($collectionsquery);
 
         if (isset($responseData['data']['errors']) && !empty($responseData['data']['errors'])) {
 
@@ -89,21 +93,26 @@ class CollectionsEndpoints
 
         } else {
 
-            $responseData = $responseData['data']['collections'];
+            $responseData = $responseData['data']['collections']['nodes'];
 
         }
+
+        $responseData = array_map(function ($collectionData) {
+            $collectionData['id'] = str_replace('gid://shopify/Collection/', '', $collectionData['id']);
+            return $collectionData;
+        }, $responseData);
 
         return $responseData;
     }
 
-    function getCollection($collectionId)
+    public function getCollection($collectionId)
     {
         /*
         Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collection
         Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/customcollection#get-custom-collections-custom-collection-id, https://shopify.dev/docs/api/admin-rest/2025-01/resources/smartcollection#get-smart-collections-smart-collection-id
         */
 
-        global $graphqlService;
+
 
         $collectionvariable = array();
 
@@ -111,19 +120,20 @@ class CollectionsEndpoints
             if (strpos($collectionId, "gid://shopify/Collection/") !== false) {
                 $collectionId = str_replace("gid://shopify/Collection/", "", $collectionId);
             }
+
             $collectionvariable['collection'] = "gid://shopify/Collection/" . $collectionId;
         }
 
         $collectionquery = <<<'GRAPHQL'
-                            query Collection($collection: ID!) {
-                                collection(id: $collection) {
-                                    id
-                                    title
-                                }
-                            }
-                            GRAPHQL;
+        query Collection($collection: ID!) {
+            collection(id: $collection) {
+                id
+                title
+            }
+        }
+        GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($collectionquery, $collectionvariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($collectionquery, $collectionvariable);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
@@ -132,6 +142,7 @@ class CollectionsEndpoints
         } else {
 
             $responseData = $responseData['data']['collection'];
+            $responseData['id'] = str_replace('gid://shopify/Collection/', '', $responseData['id']);
 
         }
 
