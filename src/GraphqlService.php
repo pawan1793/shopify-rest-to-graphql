@@ -530,56 +530,56 @@ class GraphqlService
         $product['productOptions'] = $productoptions;
 
         $productquery = <<<'GRAPHQL'
-        mutation CreateProduct($input: ProductInput!, $mediainput: [CreateMediaInput!]) {
-        productCreate(input: $input, media: $mediainput) {
-            product {
-              id
-              title
-              images (first:250) {
-                    edges {
-                        node {
-                        id
-                        src
-                        altText
-                        }
-                    }
-                }
-            media (first:250) {
-                    edges {
-                        node {
-                        id
-                       
-                        }
-                    }
-                }
-              options {
+            mutation CreateProduct($input: ProductInput!, $mediainput: [CreateMediaInput!]) {
+            productCreate(input: $input, media: $mediainput) {
+                product {
                 id
-                name
-                position
-                values
-                optionValues {
+                title
+                images (first:250) {
+                        edges {
+                            node {
+                            id
+                            src
+                            altText
+                            }
+                        }
+                    }
+                media (first:250) {
+                        edges {
+                            node {
+                            id
+                        
+                            }
+                        }
+                    }
+                options {
                     id
                     name
-                    hasVariants
-                }
-            }
-            variants(first: 1) {
-                    edges {
-                        node {
-                            id
-                            title
-                            barcode
-                        }
+                    position
+                    values
+                    optionValues {
+                        id
+                        name
+                        hasVariants
                     }
                 }
-            },
-            userErrors {
-                field
-                message
+                variants(first: 1) {
+                        edges {
+                            node {
+                                id
+                                title
+                                barcode
+                            }
+                        }
+                    }
+                },
+                userErrors {
+                    field
+                    message
+                }
             }
-        }
-        }
-        GRAPHQL;
+            }
+            GRAPHQL;
 
 
 

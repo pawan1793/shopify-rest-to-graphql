@@ -34,16 +34,17 @@ class CollectionsEndpoints
         */
 
 
+
         $collectionsquery = <<<'GRAPHQL'
-        query CustomCollectionList {
-            collections(first: 250, query: "collection_type:custom") {
-                nodes {
-                    id
-                    title
+            query CustomCollectionList {
+                collections(first: 250, query: "collection_type:custom") {
+                    nodes {
+                        id
+                        title
+                    }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($collectionsquery);
 
@@ -75,15 +76,15 @@ class CollectionsEndpoints
 
 
         $collectionsquery = <<<'GRAPHQL'
-        query CustomCollectionList {
-            collections(first: 250, query: "collection_type:smart") {
-                nodes {
-                    id
-                    title
+            query CustomCollectionList {
+                collections(first: 250, query: "collection_type:smart") {
+                    nodes {
+                        id
+                        title
+                    }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($collectionsquery);
 
@@ -125,13 +126,13 @@ class CollectionsEndpoints
         }
 
         $collectionquery = <<<'GRAPHQL'
-        query Collection($collection: ID!) {
-            collection(id: $collection) {
-                id
-                title
+            query Collection($collection: ID!) {
+                collection(id: $collection) {
+                    id
+                    title
+                }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($collectionquery, $collectionvariable);
 

@@ -91,6 +91,9 @@ class ThemesEndpoints
         return $responseData;
     }
 
+    /** 
+     * To set/update users theme files use this function.
+     */
     public function themeFilesUpsert($param)
     {
         /*
@@ -112,18 +115,18 @@ class ThemesEndpoints
         ];
 
         $themefileUpsertQuery = <<<'GRAPHQL'
-    mutation themeFilesUpsert($files: [OnlineStoreThemeFilesUpsertFileInput!]!, $themeId: ID!) {
-        themeFilesUpsert(files: $files, themeId: $themeId) {
-            upsertedThemeFiles {
-                filename
+            mutation themeFilesUpsert($files: [OnlineStoreThemeFilesUpsertFileInput!]!, $themeId: ID!) {
+                themeFilesUpsert(files: $files, themeId: $themeId) {
+                    upsertedThemeFiles {
+                        filename
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
             }
-            userErrors {
-                field
-                message
-            }
-        }
-    }
-    GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($themefileUpsertQuery, $themefileUpsertVariable);
 
@@ -146,6 +149,9 @@ class ThemesEndpoints
         return $responseData;
     }
 
+    /** 
+     * To delete users theme files use this function.
+     */
     public function themeFilesDelete($param)
     {
         /*
@@ -161,20 +167,20 @@ class ThemesEndpoints
         ];
 
         $themefileDeleteQuery = <<<'GRAPHQL'
-    mutation ThemeFilesDelete($files: [String!]!, $themeId: ID!) {
-        themeFilesDelete(files: $files, themeId: $themeId) {
-            deletedThemeFiles {
-                filename
+            mutation ThemeFilesDelete($files: [String!]!, $themeId: ID!) {
+                themeFilesDelete(files: $files, themeId: $themeId) {
+                    deletedThemeFiles {
+                        filename
+                    }
+                    userErrors {
+                        code
+                        field
+                        filename
+                        message
+                    }
+                }
             }
-            userErrors {
-                code
-                field
-                filename
-                message
-            }
-        }
-    }
-    GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($themefileDeleteQuery, $themefileDeleteVariable);
 

@@ -26,11 +26,14 @@ class InventoryEndpoints
 
     }
 
+    /** 
+     * To get Inventory Items use this function.
+     */
     public function getInventoryItems($params)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItems
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#get-inventory-levels
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItems
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#get-inventory-levels
         */
 
 
@@ -110,11 +113,14 @@ class InventoryEndpoints
         return $finalarray;
     }
 
+    /** 
+     * To get Inventory Item use this function.
+     */
     public function getInventoryItem($inventoryItemId)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItem
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventoryitem#get-inventory-items-inventory-item-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItem
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventoryitem#get-inventory-items-inventory-item-id
         */
 
 
@@ -124,29 +130,29 @@ class InventoryEndpoints
         }
 
         $inventoryitemquery = <<<"GRAPHQL"
-        query inventoryItem {
-            inventoryItem(id: "gid://shopify/InventoryItem/{$inventoryItemId}") {
-                id
-                tracked
-                sku
-                requiresShipping
-                countryCodeOfOrigin
-                provinceCodeOfOrigin
-                harmonizedSystemCode
-                unitCost {
-                    amount
-                }
-                countryHarmonizedSystemCodes (first: 100) {
-                    edges {
-                        node {
-                            countryCode
-                            harmonizedSystemCode
-                        }
+    query inventoryItem {
+        inventoryItem(id: "gid://shopify/InventoryItem/{$inventoryItemId}") {
+            id
+            tracked
+            sku
+            requiresShipping
+            countryCodeOfOrigin
+            provinceCodeOfOrigin
+            harmonizedSystemCode
+            unitCost {
+                amount
+            }
+            countryHarmonizedSystemCodes (first: 100) {
+                edges {
+                    node {
+                        countryCode
+                        harmonizedSystemCode
                     }
                 }
             }
         }
-        GRAPHQL;
+    }
+    GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemquery);
 
@@ -174,11 +180,14 @@ class InventoryEndpoints
         return $response;
     }
 
+    /** 
+     * To update Inventory Quantities use this function.
+     */
     public function inventoryAdjustQuantities($params)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/inventoryAdjustQuantities
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#post-inventory-levels-adjust
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/inventoryAdjustQuantities
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#post-inventory-levels-adjust
         */
 
 
@@ -195,23 +204,23 @@ class InventoryEndpoints
         }
 
         $inventoryadjustquery = <<<'GRAPHQL'
-        mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
-            inventoryAdjustQuantities(input: $input) {
-                userErrors {
-                    field
-                    message
-                }
-                inventoryAdjustmentGroup {
-                    createdAt
-                    reason
-                    changes {
-                        name
-                        delta
+            mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
+                inventoryAdjustQuantities(input: $input) {
+                    userErrors {
+                        field
+                        message
+                    }
+                    inventoryAdjustmentGroup {
+                        createdAt
+                        reason
+                        changes {
+                            name
+                            delta
+                        }
                     }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
 

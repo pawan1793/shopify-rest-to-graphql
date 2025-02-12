@@ -57,20 +57,20 @@ class ApplicationChargesEndpoints
         }
 
         $applicationchargequery = <<<'GRAPHQL'
-        mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!, $test: Boolean!) {
-            appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price, test: $test) {
-                userErrors {
-                    field
-                    message
+            mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!, $test: Boolean!) {
+                appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price, test: $test) {
+                    userErrors {
+                        field
+                        message
+                    }
+                    appPurchaseOneTime {
+                        createdAt
+                        id
+                    }
+                    confirmationUrl
                 }
-                appPurchaseOneTime {
-                    createdAt
-                    id
-                }
-                confirmationUrl
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($applicationchargequery, $chargevariables);
         $response = array();
@@ -98,20 +98,20 @@ class ApplicationChargesEndpoints
 
 
         $getappinstallationquery = <<<'GRAPHQL'
-        query {
-            currentAppInstallation {
-                oneTimePurchases(first: 10, sortKey: CREATED_AT, reverse: true) {
-                    edges {
-                        node {
-                            id
-                            name
-                            status
+            query {
+                currentAppInstallation {
+                    oneTimePurchases(first: 10, sortKey: CREATED_AT, reverse: true) {
+                        edges {
+                            node {
+                                id
+                                name
+                                status
+                            }
                         }
                     }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($getappinstallationquery);
 

@@ -29,8 +29,8 @@ class LocationsEndpoints
     public function getLocations()
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/locations
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/location#get-locations
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/locations
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/location#get-locations
         */
 
 
@@ -43,9 +43,6 @@ class LocationsEndpoints
                             id
                             name
                             isActive
-                            address {
-                                formatted
-                            }
                         }
                     }
                 }
@@ -54,26 +51,26 @@ class LocationsEndpoints
 
         $responseData = $this->graphqlService->graphqlQueryThalia($locationquery);
 
-        if(isset($responseData['errors']) && !empty($responseData['errors'])) {
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
             throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
-    
+
         } else {
-    
+
             $responseData = $responseData['data']['locations']['edges'];
-    
+
         }
-    
+
         $response = array();
-    
-        foreach($responseData as $key => $locations) {
-    
+
+        foreach ($responseData as $key => $locations) {
+
             $response[$key]['id'] = str_replace('gid://shopify/Location/', '', $locations['node']['id']);
             $response[$key]['name'] = $locations['node']['name'];
             $response[$key]['active'] = $locations['node']['isActive'];
-    
+
         }
-    
+
         return $response;
     }
 }

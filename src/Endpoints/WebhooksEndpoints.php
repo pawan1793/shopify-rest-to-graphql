@@ -27,6 +27,9 @@ class WebhooksEndpoints
     }
 
 
+    /** 
+     * To get all webook subscriptions use this function.
+     */
     public function webhookSubscriptions()
     {
         /*
@@ -34,29 +37,29 @@ class WebhooksEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#get-webhooks
         */
 
-        global $graphqlService;
+
 
         $webhookQuery = <<<"GRAPHQL"
-        query {
-            webhookSubscriptions(first: 250) {
-                edges {
-                    node {
-                        id
-                        topic
-                        createdAt
-                        updatedAt
-                        format
-                        endpoint {
-                            __typename
-                            ... on WebhookHttpEndpoint {
-                                callbackUrl
-                            }
+    query {
+        webhookSubscriptions(first: 250) {
+            edges {
+                node {
+                    id
+                    topic
+                    createdAt
+                    updatedAt
+                    format
+                    endpoint {
+                        __typename
+                        ... on WebhookHttpEndpoint {
+                            callbackUrl
                         }
                     }
                 }
             }
         }
-        GRAPHQL;
+    }
+    GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery);
 
@@ -94,7 +97,7 @@ class WebhooksEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#post-webhooks
         */
 
-        global $graphqlService;
+
 
         $webhookCreationVariable = [
             'topic' => $param['topic'],
@@ -105,28 +108,28 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-        mutation WebhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
-            webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
-                webhookSubscription {
-                    id
-                    topic
-                    createdAt
-                    updatedAt
-                    format
-                    endpoint {
-                        __typename
-                        ... on WebhookHttpEndpoint {
-                            callbackUrl
+            mutation WebhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
+                webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+                    webhookSubscription {
+                        id
+                        topic
+                        createdAt
+                        updatedAt
+                        format
+                        endpoint {
+                            __typename
+                            ... on WebhookHttpEndpoint {
+                                callbackUrl
+                            }
                         }
                     }
-                }
-                userErrors {
-                    field
-                    message
+                    userErrors {
+                        field
+                        message
+                    }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookCreationVariable);
 
@@ -174,28 +177,28 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-        mutation WebhookSubscriptionUpdate($id: ID!, $webhookSubscription: WebhookSubscriptionInput!) {
-            webhookSubscriptionUpdate(id: $id, webhookSubscription: $webhookSubscription) {
-                webhookSubscription {
-                    id
-                    topic
-                    createdAt
-                    updatedAt
-                    format
-                    endpoint {
-                        __typename
-                        ... on WebhookHttpEndpoint {
-                            callbackUrl
+                mutation WebhookSubscriptionUpdate($id: ID!, $webhookSubscription: WebhookSubscriptionInput!) {
+                    webhookSubscriptionUpdate(id: $id, webhookSubscription: $webhookSubscription) {
+                        webhookSubscription {
+                            id
+                            topic
+                            createdAt
+                            updatedAt
+                            format
+                            endpoint {
+                                __typename
+                                ... on WebhookHttpEndpoint {
+                                    callbackUrl
+                                }
+                            }
+                        }
+                        userErrors {
+                            field
+                            message
                         }
                     }
                 }
-                userErrors {
-                    field
-                    message
-                }
-            }
-        }
-        GRAPHQL;
+                GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookUpdateVariable);
 
@@ -240,16 +243,16 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-        mutation webhookSubscriptionDelete($id: ID!) {
-            webhookSubscriptionDelete(id: $id) {
-                deletedWebhookSubscriptionId
-                userErrors {
-                    field
-                    message
+                mutation webhookSubscriptionDelete($id: ID!) {
+                    webhookSubscriptionDelete(id: $id) {
+                        deletedWebhookSubscriptionId
+                        userErrors {
+                            field
+                            message
+                        }
+                    }
                 }
-            }
-        }
-        GRAPHQL;
+                GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookDeleteVariable);
 

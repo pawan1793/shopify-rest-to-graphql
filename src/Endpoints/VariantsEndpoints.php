@@ -27,14 +27,17 @@ class VariantsEndpoints
     }
 
 
+    /** 
+     * To update Bulk Product Variants use this function.
+     */
     public function productVariantsBulkUpdate($shopifyId, $variantId, $params)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkUpdate
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-07/resources/product-variant#put-variants-variant-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkUpdate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-07/resources/product-variant#put-variants-variant-id
         */
 
-       
+
 
 
         $variant = $params['variant'];
@@ -180,34 +183,34 @@ class VariantsEndpoints
 
 
         $variantquery = <<<'GRAPHQL'
-    mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        product {
-            id
-        }
-        productVariants {
-            id
-            title
-            inventoryItem{
-                id
-            }
-            metafields(first: 2) {
-                edges {
-                    node {
-                    namespace
-                    key
-                    value
+            mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+            productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+                product {
+                    id
+                }
+                productVariants {
+                    id
+                    title
+                    inventoryItem{
+                        id
+                    }
+                    metafields(first: 2) {
+                        edges {
+                            node {
+                            namespace
+                            key
+                            value
+                            }
+                        }
                     }
                 }
+                userErrors {
+                    field
+                    message
+                }
             }
-        }
-        userErrors {
-            field
-            message
-        }
-    }
-    }
-    GRAPHQL;
+            }
+            GRAPHQL;
 
 
 
@@ -226,14 +229,17 @@ class VariantsEndpoints
         return $responseData;
     }
 
+    /** 
+     * To Delete Bulk Product Variants use this function.
+     */
     public function productVariantsBulkDelete($shopifyId, $variantId)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkDelete
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/product-variant#delete-products-product-id-variants-variant-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkDelete
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/product-variant#delete-products-product-id-variants-variant-id
         */
 
-       
+
 
 
         $productId = $shopifyId;
@@ -257,19 +263,19 @@ class VariantsEndpoints
 
 
         $variantquery = <<<'GRAPHQL'
-    mutation bulkDeleteProductVariants($productId: ID!, $variantsIds: [ID!]!) {
-        productVariantsBulkDelete(productId: $productId, variantsIds: $variantsIds) {
-            product {
-                id
-                title
+            mutation bulkDeleteProductVariants($productId: ID!, $variantsIds: [ID!]!) {
+                productVariantsBulkDelete(productId: $productId, variantsIds: $variantsIds) {
+                    product {
+                        id
+                        title
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
             }
-            userErrors {
-                field
-                message
-            }
-        }
-    }
-    GRAPHQL;
+            GRAPHQL;
 
 
 
@@ -287,6 +293,5 @@ class VariantsEndpoints
 
         return $responseData;
     }
-
 
 }

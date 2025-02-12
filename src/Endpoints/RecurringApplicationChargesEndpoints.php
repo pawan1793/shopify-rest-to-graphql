@@ -26,11 +26,14 @@ class RecurringApplicationChargesEndpoints
 
     }
 
+    /** 
+     * To create App Subscription use this function.
+     */
     public function appSubscriptionCreate($params)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/appSubscriptionCreate
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#post-recurring-application-charges
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/appSubscriptionCreate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#post-recurring-application-charges
         */
 
 
@@ -64,19 +67,19 @@ class RecurringApplicationChargesEndpoints
 
 
         $recurringapplicationchargequery = <<<'GRAPHQL'
-    mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean, $trialDays: Int) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: $test, trialDays: $trialDays) {
-            userErrors {
-                field
-                message
+            mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean, $trialDays: Int) {
+                appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: $test, trialDays: $trialDays) {
+                    userErrors {
+                        field
+                        message
+                    }
+                    appSubscription {
+                        id
+                    }
+                    confirmationUrl
+                }
             }
-            appSubscription {
-                id
-            }
-            confirmationUrl
-        }
-    }
-    GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($recurringapplicationchargequery, $chargevariables);
         $response = array();
@@ -94,26 +97,29 @@ class RecurringApplicationChargesEndpoints
         return $response;
     }
 
+    /** 
+     * To Charge Recurring Application Charges use this function.
+     */
     public function currentAppInstallationForRecurring($recurringChargeId)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#get-recurring-application-charges
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#get-recurring-application-charges
         */
 
 
 
         $getappinstallationquery = <<<'GRAPHQL'
-        query {
-            currentAppInstallation {
-                activeSubscriptions {
-                    id
-                    name
-                    status
+            query {
+                currentAppInstallation {
+                    activeSubscriptions {
+                        id
+                        name
+                        status
+                    }
                 }
             }
-        }
-        GRAPHQL;
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($getappinstallationquery);
 
@@ -145,6 +151,5 @@ class RecurringApplicationChargesEndpoints
 
         return $response;
     }
-
 
 }
