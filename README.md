@@ -92,7 +92,7 @@ Example Usage for calling graphql query
     ## Usage Example
     
     ```php
-    use Thalia\ShopifyRestToGraphql\CollectionsEndpoints;
+    use Thalia\ShopifyRestToGraphql\Endpoints\LocationsEndpoints; 
 
     $collectionsEndpoint = new CollectionsEndpoints($shop, $accessToken);
     $collections = $collectionsEndpoint->getCustomCollections();
