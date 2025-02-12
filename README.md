@@ -6,7 +6,7 @@ NOTE :: This is experimental package
 ## Features
  - Easy Integration: Simplifies the integration of Shopify's GraphQL API into your Laravel application.
  - Minimal Changes: Converts Shopify REST API payloads to GraphQL with minimal modifications, reducing development time and effort.
- 
+
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)
@@ -15,7 +15,7 @@ NOTE :: This is experimental package
   - [ApplicationCharges](#ApplicationCharges)
   - [Collections](#Collections)
 - [Contributing](#contributing)
-- [License](#license)
+
 
 ## Overview
 Shopify's GraphQL API offers several advantages over the REST API, including more efficient data fetching, fewer requests, and more flexible queries. This Laravel package provides a seamless way to transition from the REST API to GraphQL by offering utility functions and endpoints that mimic REST API behavior but use GraphQL under the hood.
@@ -98,5 +98,3 @@ We welcome contributions! To contribute:
 4. Push to your branch (`git push origin feature-branch`).
 5. Open a Pull Request.
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/pawan1793/shopify-rest-to-graphql/blob/main/LICENSE) file for details.
