@@ -42,6 +42,7 @@ class LocationsEndpoints
                         node {
                             id
                             name
+                            isActive
                             address {
                                 formatted
                             }

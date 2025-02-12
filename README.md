@@ -89,6 +89,16 @@ Example Usage for calling graphql query
 - `getSmartCollections()`: Returns a list of smart collections.
 - `getCollection($collectionId))`: Returns collection by ID.
 
+    ## Usage Example
+    
+    ```php
+    use Thalia\ShopifyRestToGraphql\CollectionsEndpoints;
+
+    $collectionsEndpoint = new CollectionsEndpoints($shop, $accessToken);
+    $collections = $collectionsEndpoint->getCustomCollections();
+    print_r($collections);
+    ```
+
 
 ## Contributing
 We welcome contributions! To contribute:
