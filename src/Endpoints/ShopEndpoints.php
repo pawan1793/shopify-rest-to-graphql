@@ -125,6 +125,10 @@ class ShopEndpoints
 
             $responseData = $responseData['data']['shop'];
             $responseData['id'] = str_replace('gid://shopify/Shop/', '', $responseData['id']);
+            $responseData['plan_name'] = $responseData['plan']['displayName'];
+            $responseData['myshopify_domain'] = $responseData['myshopifyDomain'];
+            $responseData['shop_owner'] = $responseData['name'];
+            $responseData['iana_timezone'] = $responseData['ianaTimezone'];
 
         }
 

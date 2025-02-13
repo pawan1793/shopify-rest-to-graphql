@@ -53,17 +53,16 @@ class OauthScopeEndpoints
             throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
 
         } else {
+
             $handles = [];
+            
             foreach ($responseData['data']['currentAppInstallation']['accessScopes'] as $key => $response) {
                 $handles[$key]['handle'] = $response['handle'];
             }
-            $responseData = $handles;
-            // $responseData = array_map(function ($item) {
-            //     return $item['handle'];
-            // }, $responseData);
-        }
 
-        return $responseData;
+            return $handles;
+        }
+        
     }
 
 }
