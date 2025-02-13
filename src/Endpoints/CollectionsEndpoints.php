@@ -50,7 +50,7 @@ class CollectionsEndpoints
 
         if (isset($responseData['data']['errors']) && !empty($responseData['data']['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['errors']);
 
         } else {
 
@@ -90,7 +90,7 @@ class CollectionsEndpoints
 
         if (isset($responseData['data']['errors']) && !empty($responseData['data']['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['errors']);
 
         } else {
 
@@ -138,7 +138,7 @@ class CollectionsEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 

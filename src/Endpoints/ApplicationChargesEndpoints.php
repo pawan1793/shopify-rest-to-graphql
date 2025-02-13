@@ -77,7 +77,7 @@ class ApplicationChargesEndpoints
 
         if (isset($responseData['data']['appPurchaseOneTimeCreate']['userErrors']) && !empty($responseData['data']['appPurchaseOneTimeCreate']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['appPurchaseOneTimeCreate']['userErrors'], true));
+            throw new GraphqlException("Shopify API request failed", 400, $responseData['data']['appPurchaseOneTimeCreate']['userErrors']);
 
         } else {
 
@@ -117,7 +117,7 @@ class ApplicationChargesEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException("Shopify API request failed", 400, $responseData['errors']);
 
         } else {
 

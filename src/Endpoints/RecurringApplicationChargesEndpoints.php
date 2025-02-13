@@ -86,7 +86,7 @@ class RecurringApplicationChargesEndpoints
 
         if (isset($responseData['data']['appSubscriptionCreate']['userErrors']) && !empty($responseData['data']['appSubscriptionCreate']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['appSubscriptionCreate']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['appSubscriptionCreate']['userErrors']);
 
         } else {
 
@@ -126,7 +126,7 @@ class RecurringApplicationChargesEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 

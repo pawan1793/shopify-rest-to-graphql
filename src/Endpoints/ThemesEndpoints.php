@@ -67,7 +67,7 @@ class ThemesEndpoints
 
         if (isset($responseData['data']['themes']['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 
@@ -132,7 +132,7 @@ class ThemesEndpoints
 
         if (isset($responseData['data']['themeFilesUpsert']['userErrors']) && !empty($responseData['data']['themeFilesUpsert']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['themeFilesUpsert']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['themeFilesUpsert']['userErrors']);
 
         } else {
 
@@ -186,7 +186,7 @@ class ThemesEndpoints
 
         if (isset($responseData['data']['themeFilesDelete']['userErrors']) && !empty($responseData['data']['themeFilesDelete']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['themeFilesDelete']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['themeFilesDelete']['userErrors']);
 
         } else {
 

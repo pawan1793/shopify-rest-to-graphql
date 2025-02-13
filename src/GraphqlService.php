@@ -61,12 +61,12 @@ class GraphqlService
             return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
 
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
-            // return [
-            //     'errors' => [
-            //         'message' => $e->getMessage(),
-            //     ],
-            // ];
+            $responseBody = (string) $e->getResponse()->getBody();
+          
+            $responseArray = json_decode($responseBody, true);
+            $errors = isset($responseArray['errors']) ? (array) $responseArray['errors'] : ['Unknown error'];
+          
+            throw new GraphqlException("Shopify API request failed", $e->getCode(), $errors, $e);
         }
     }
 
@@ -123,7 +123,8 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+                throw new GraphqlException("Shopify API request failed", 400, $responseData["errors"]);
+                
             } else {
                 foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
                     if ($publication["node"]["name"] == "Online Store") {
@@ -135,7 +136,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+            throw new GraphqlException("Shopify API request failed", 400,[],$e);
 
         }
 
@@ -258,11 +259,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
 
                 } else {
                     // Print the created product details
@@ -276,7 +277,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -384,11 +385,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
             } elseif (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productCreate']['userErrors'], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
 
             } else {
                 // Print the created product details
@@ -402,7 +403,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
         }
 
         return $productreturndata;
@@ -437,7 +438,7 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             } else {
                 foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
                     if ($publication["node"]["name"] == "Online Store") {
@@ -449,7 +450,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
 
         }
 
@@ -603,11 +604,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
 
                 } else {
                     $productId = $responseData['data']['productCreate']['product']['id'];
@@ -629,7 +630,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -780,11 +781,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
             } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productCreate']['userErrors'], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
 
             } else {
                 $shopifyid = str_replace("gid://shopify/Product/", "", $productId);
@@ -793,7 +794,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
         }
 
 
@@ -1083,11 +1084,11 @@ class GraphqlService
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productUpdate']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productUpdate']['userErrors']);
 
                 } else {
 
@@ -1095,7 +1096,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
 
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
 
 
             }
@@ -1290,16 +1291,16 @@ class GraphqlService
 
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productCreate']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
                 } else {
 
 
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
             if (!empty($newvariantsdata)) {
@@ -1701,11 +1702,11 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('Request Error: ' . print_r($e->getMessage(), true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
 
         }
     }
@@ -1747,11 +1748,11 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new \Exception('GraphQL Errors: ' . print_r($responseData["errors"], true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new \Exception('Request Error: ' . print_r($e->getMessage(), true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
 
         }
     }
@@ -1835,11 +1836,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
                 } elseif (empty($responseData['data']['product'])) {
 
@@ -1899,7 +1900,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -1974,11 +1975,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
                 } elseif (empty($responseData['data']['product'])) {
 
@@ -2047,7 +2048,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2090,11 +2091,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
                 } else {
 
@@ -2102,7 +2103,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2148,11 +2149,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productVariantsBulkDelete']['userErrors']) && !empty($responseData['data']['productVariantsBulkDelete']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productVariantsBulkDelete']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkDelete']['userErrors']);
 
                 } else {
 
@@ -2160,7 +2161,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2214,11 +2215,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2244,7 +2245,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2298,11 +2299,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productVariant']['userErrors']) && !empty($responseData['data']['productVariant']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productVariant']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariant']['userErrors']);
 
                 } else {
                     $shopifyvariant = $responseData['data']['productVariant'];
@@ -2321,7 +2322,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2361,11 +2362,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['product']['userErrors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2378,7 +2379,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($e->getMessage(), true));
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
             }
 
         }
@@ -2682,7 +2683,7 @@ class GraphqlService
 
         if (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-            throw new \Exception(__LINE__ . 'GraphQL Error: ' . $this->shopDomain . print_r($responseData['data']['productVariantsBulkUpdate']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
 
         } else {
             $responseData = $responseData['data']['productVariantsBulkUpdate'];

@@ -219,7 +219,7 @@ class VariantsEndpoints
 
         if (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkUpdate']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
 
         } else {
             $responseData = $responseData['data']['productVariantsBulkUpdate'];
@@ -284,7 +284,7 @@ class VariantsEndpoints
 
         if (isset($responseData['data']['productVariantsBulkDelete']['userErrors']) && !empty($responseData['data']['productVariantsBulkDelete']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['productVariantsBulkDelete']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkDelete']['userErrors']);
 
         } else {
             $responseData = $responseData['data']['productVariantsBulkDelete'];
