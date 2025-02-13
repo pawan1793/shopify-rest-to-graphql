@@ -3,7 +3,7 @@
 namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 class ProductsEndpoints
 {
     private $graphqlService;
@@ -138,7 +138,7 @@ class ProductsEndpoints
 
         if (isset($responseData['data']['products']['userErrors']) && !empty($responseData['data']['products']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['products']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['products']['userErrors']);
 
         } else {
 
@@ -350,7 +350,7 @@ class ProductsEndpoints
 
         if (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['product']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
 
         } else {
 
@@ -482,7 +482,7 @@ class ProductsEndpoints
 
         if (isset($responseData['data']['productVariantsCount']['userErrors']) && !empty($responseData['data']['products']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['products']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['products']['userErrors']);
 
         } else {
 

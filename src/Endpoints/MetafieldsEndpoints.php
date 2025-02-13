@@ -3,7 +3,7 @@
 namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 class MetafieldsEndpoints
 {
     private $graphqlService;
@@ -79,7 +79,7 @@ class MetafieldsEndpoints
 
         if (isset($responseData['data']['metafieldsDelete']['userErrors']) && !empty($responseData['data']['metafieldsDelete']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['metafieldsDelete']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['metafieldsDelete']['userErrors']);
 
         } else {
             $responseData = $responseData['data']['metafieldsDelete']['deletedMetafields'];
@@ -141,7 +141,7 @@ class MetafieldsEndpoints
 
         if (isset($responseData['data']['metafieldsSet']['userErrors']) && !empty($responseData['data']['metafieldsSet']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['metafieldsSet']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['metafieldsSet']['userErrors']);
 
         } else {
 
@@ -213,7 +213,7 @@ class MetafieldsEndpoints
 
                     if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                        throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                     } else {
 
@@ -256,7 +256,7 @@ class MetafieldsEndpoints
 
                     if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                        throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                     } else {
 
@@ -306,7 +306,7 @@ class MetafieldsEndpoints
 
                     if (isset($responseData["errors"]) && !empty($responseData["errors"])) {
 
-                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                        throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                     } else {
 
@@ -350,7 +350,7 @@ class MetafieldsEndpoints
 
                     if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-                        throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                        throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                     } else {
 
@@ -396,7 +396,7 @@ class MetafieldsEndpoints
 
                 if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } else {
 
@@ -440,7 +440,7 @@ class MetafieldsEndpoints
 
                 if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-                    throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
                 } else {
 

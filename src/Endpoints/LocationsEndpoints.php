@@ -3,7 +3,7 @@
 namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 class LocationsEndpoints
 {
     private $graphqlService;
@@ -53,7 +53,7 @@ class LocationsEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 

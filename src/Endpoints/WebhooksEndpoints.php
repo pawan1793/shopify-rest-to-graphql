@@ -3,7 +3,7 @@
 namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 class WebhooksEndpoints
 {
     private $graphqlService;
@@ -65,7 +65,7 @@ class WebhooksEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 
@@ -136,7 +136,7 @@ class WebhooksEndpoints
 
         if (isset($responseData['data']['webhookSubscriptionCreate']['webhookSubscription']['userErrors']) && !empty($responseData['data']['webhookSubscriptionCreate']['webhookSubscription']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['webhookSubscriptionCreate']['webhookSubscription']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['webhookSubscriptionCreate']['userErrors']);
 
         } else {
 
@@ -204,7 +204,7 @@ class WebhooksEndpoints
 
         if (isset($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription']['userErrors']) && !empty($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['webhookSubscriptionUpdate']['userErrors']);
 
         } else {
 
@@ -255,10 +255,11 @@ class WebhooksEndpoints
                 GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookDeleteVariable);
+        
 
         if (isset($responseData['data']['webhookSubscriptionDelete']['userErrors']) && !empty($responseData['data']['webhookSubscriptionDelete']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['webhookSubscriptionDelete']['userErrors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['webhookSubscriptionDelete']['userErrors']);
 
         } else {
 

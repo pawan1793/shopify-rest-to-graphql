@@ -3,7 +3,7 @@
 namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 class InventoryEndpoints
 {
     private $graphqlService;
@@ -79,7 +79,7 @@ class InventoryEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 
@@ -158,7 +158,7 @@ class InventoryEndpoints
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
         } else {
 
@@ -226,8 +226,7 @@ class InventoryEndpoints
 
         if (isset($responseData['data']['inventoryAdjustQuantities']['userErrors']) && !empty($responseData['data']['inventoryAdjustQuantities']['userErrors'])) {
 
-            throw new \Exception('GraphQL Error: ' . print_r($responseData['data']['inventoryAdjustQuantities']['userErrors'], true));
-
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['inventoryAdjustQuantities']['userErrors']);
         } else {
 
             $responseData = $responseData['data']['inventoryAdjustQuantities'];
