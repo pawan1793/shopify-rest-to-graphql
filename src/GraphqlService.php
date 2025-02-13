@@ -1,7 +1,7 @@
 <?php
 
 namespace Thalia\ShopifyRestToGraphql;
-
+use Thalia\ShopifyRestToGraphql\GraphqlException;
 use GuzzleHttp\Client;
 
 class GraphqlService
