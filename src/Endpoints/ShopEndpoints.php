@@ -124,6 +124,7 @@ class ShopEndpoints
         } else {
 
             $responseData = $responseData['data']['shop'];
+            $responseData['id'] = str_replace('gid://shopify/Shop/', '', $responseData['id']);
 
         }
 
