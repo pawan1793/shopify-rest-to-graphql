@@ -47,24 +47,25 @@ class InventoryEndpoints
         }
 
         $inventoryitemsquery = <<<"GRAPHQL"
-    query {
-        inventoryItems(first: 250, $query) {
-            edges {
-                node {
-                    id
-                    tracked
-                    sku
-                    requiresShipping
-                    inventoryLevels(first: 250) {
-                        edges {
-                            node {
-                                id
-                                quantities (names: ["available"]) {
-                                    quantity
-                                },
-                                location {
-                                    id,
-                                    name
+        query {
+            inventoryItems(first: 250, $query) {
+                edges {
+                    node {
+                        id
+                        tracked
+                        sku
+                        requiresShipping
+                        inventoryLevels(first: 250) {
+                            edges {
+                                node {
+                                    id
+                                    quantities (names: ["available"]) {
+                                        quantity
+                                    },
+                                    location {
+                                        id,
+                                        name
+                                    }
                                 }
                             }
                         }
@@ -72,8 +73,7 @@ class InventoryEndpoints
                 }
             }
         }
-    }
-    GRAPHQL;
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemsquery);
 
@@ -130,29 +130,29 @@ class InventoryEndpoints
         }
 
         $inventoryitemquery = <<<"GRAPHQL"
-    query inventoryItem {
-        inventoryItem(id: "gid://shopify/InventoryItem/{$inventoryItemId}") {
-            id
-            tracked
-            sku
-            requiresShipping
-            countryCodeOfOrigin
-            provinceCodeOfOrigin
-            harmonizedSystemCode
-            unitCost {
-                amount
-            }
-            countryHarmonizedSystemCodes (first: 100) {
-                edges {
-                    node {
-                        countryCode
-                        harmonizedSystemCode
+        query inventoryItem {
+            inventoryItem(id: "gid://shopify/InventoryItem/{$inventoryItemId}") {
+                id
+                tracked
+                sku
+                requiresShipping
+                countryCodeOfOrigin
+                provinceCodeOfOrigin
+                harmonizedSystemCode
+                unitCost {
+                    amount
+                }
+                countryHarmonizedSystemCodes (first: 100) {
+                    edges {
+                        node {
+                            countryCode
+                            harmonizedSystemCode
+                        }
                     }
                 }
             }
         }
-    }
-    GRAPHQL;
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemquery);
 

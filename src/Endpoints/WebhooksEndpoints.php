@@ -40,26 +40,26 @@ class WebhooksEndpoints
 
 
         $webhookQuery = <<<"GRAPHQL"
-    query {
-        webhookSubscriptions(first: 250) {
-            edges {
-                node {
-                    id
-                    topic
-                    createdAt
-                    updatedAt
-                    format
-                    endpoint {
-                        __typename
-                        ... on WebhookHttpEndpoint {
-                            callbackUrl
+        query {
+            webhookSubscriptions(first: 250) {
+                edges {
+                    node {
+                        id
+                        topic
+                        createdAt
+                        updatedAt
+                        format
+                        endpoint {
+                            __typename
+                            ... on WebhookHttpEndpoint {
+                                callbackUrl
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    GRAPHQL;
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery);
 
@@ -98,12 +98,13 @@ class WebhooksEndpoints
         */
 
 
+        $webhookParams = $param['webhook'];
 
         $webhookCreationVariable = [
-            'topic' => $param['topic'],
+            'topic' => $webhookParams['topic'],
             'webhookSubscription' => [
-                'callbackUrl' => $param['webhookSubscription']['callbackUrl'],
-                'format' => $param['webhookSubscription']['format'],
+                'callbackUrl' => $webhookParams['address'],
+                'format' => $webhookParams['format'],
             ]
         ];
 
@@ -142,19 +143,18 @@ class WebhooksEndpoints
             $webhookSubscriptionsCreateResponse = [];
 
             foreach ($responseData['data']['webhookSubscriptionCreate']['webhookSubscription'] as $response) {
-                $webhookSubscriptionsCreateResponse[]['id'] = $response['id'] ?? '';
-                $webhookSubscriptionsCreateResponse[]['topic'] = $response['topic'] ?? '';
-                $webhookSubscriptionsCreateResponse[]['createdAt'] = $response['createdAt'] ?? '';
-                $webhookSubscriptionsCreateResponse[]['updatedAt'] = $response['updatedAt'] ?? '';
-                $webhookSubscriptionsCreateResponse[]['format'] = $response['format'];
-                $webhookSubscriptionsCreateResponse[]['callbackUrl'] = $response['endpoint']['callbackUrl'] ?? '';
+                $webhookSubscriptionsCreateResponse['id'] = str_replace("gid://shopify/WebhookSubscription/", "", $response['id']) ?? '';
+                $webhookSubscriptionsCreateResponse['topic'] = $response['topic'] ?? '';
+                $webhookSubscriptionsCreateResponse['created_at'] = $response['createdAt'] ?? '';
+                $webhookSubscriptionsCreateResponse['updated_at'] = $response['updatedAt'] ?? '';
+                $webhookSubscriptionsCreateResponse['format'] = $response['format'];
+                $webhookSubscriptionsCreateResponse['address'] = $response['endpoint']['callbackUrl'] ?? '';
             }
 
-            $responseData = $webhookSubscriptionsCreateResponse;
+            return $webhookSubscriptionsCreateResponse;
 
         }
 
-        return $responseData;
     }
 
     /** 
