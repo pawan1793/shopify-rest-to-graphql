@@ -39,29 +39,29 @@ class ThemesEndpoints
 
 
         $themeQuery = <<<"GRAPHQL"
-    query ThemeList {
-        themes(first: 250) {
-            edges {
-                node {
-                    id
-                    name
-                    prefix
-                    processing
-                    processingFailed
-                    role
-                    themeStoreId
-                    createdAt
-                    updatedAt
+        query ThemeList {
+            themes(first: 250) {
+                edges {
+                    node {
+                        id
+                        name
+                        prefix
+                        processing
+                        processingFailed
+                        role
+                        themeStoreId
+                        createdAt
+                        updatedAt
+                    }
+                    cursor
                 }
-                cursor
-            }
-            pageInfo {
-                hasNextPage
-                hasPreviousPage
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                }
             }
         }
-    }
-    GRAPHQL;
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($themeQuery);
 
@@ -85,6 +85,98 @@ class ThemesEndpoints
             }
 
             $responseData = $webhookSubscriptionsResponse;
+
+        }
+
+        return $responseData;
+    }
+
+    /** 
+     * To get users theme files use this function.
+     */
+    public function themesFiles($param)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/theme?example=Retrieves+a+list+of+assets+for+a+theme&language=PHP
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/asset#get-themes-theme-id-assets
+        */
+
+
+
+        $themefileUpsertVariable = [
+            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['themeId'],
+        ];
+
+        $themeQuery = <<<'GRAPHQL'
+        query ThemeFilesPaginated($themeId: ID!) {
+            theme(id: $themeId) {
+                files(first: 50) {
+                    edges {
+                        node {
+                            filename
+                            createdAt
+                            updatedAt
+                            contentType
+                            size
+                            checksumMd5
+                            body {
+                                ... on OnlineStoreThemeFileBodyBase64 {
+                                    contentBase64
+                                }
+                                ... on OnlineStoreThemeFileBodyText {
+                                    content
+                                }
+                                ... on OnlineStoreThemeFileBodyUrl {
+                                    url
+                                }
+                            }
+                        }
+                        cursor
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    userErrors {
+                        code
+                        filename
+                    }
+                }
+            }
+        }
+        GRAPHQL;
+
+        $responseData = $graphqlService->graphqlQueryThalia($themeQuery, $themefileUpsertVariable);
+
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['errors']);
+
+        } else {
+
+            $themeFilesResponse = [];
+
+            foreach ($responseData['data']['theme']['files']['edges'] as $response) {
+                $themeFilesResponse[] = [
+                'key' => $response['node']['filename'] ?? '',
+                'created_at' => $response['node']['createdAt'] ?? '',
+                'updated_at' => $response['node']['updatedAt'] ?? '',
+                'content_type' => $response['node']['contentType'] ?? '',
+                'size' => $response['node']['size'] ?? '',
+                'checksum' => $response['node']['checksumMd5'] ?? '',
+                'body' => $response['node']['body'] ?? '',
+                'cursor' => $response['cursor'] ?? '',
+                ];
+            }
+
+            $pageInfo = $responseData['data']['theme']['files']['pageInfo'];
+
+            $responseData = [
+                'data' => $themeFilesResponse,
+                'pageInfo' => $pageInfo,
+            ];
 
         }
 
