@@ -26,7 +26,7 @@ class CollectionsEndpoints
 
     }
 
-    public function getCustomCollections()
+    public function getCustomCollections($params = array())
     {
         /*
         Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collections
@@ -34,17 +34,44 @@ class CollectionsEndpoints
         */
 
 
+        $position = 'first';
+        $cursorparam = '';
+        $limit = 250;
 
-        $collectionsquery = <<<'GRAPHQL'
-            query CustomCollectionList {
-                collections(first: 250, query: "collection_type:custom") {
-                    nodes {
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+        }
+
+        if(isset($params['cursor'])){
+
+            if(isset($params['direction']) && $params['direction'] == 'next'){
+                $cursorparam = "after: \"{$params['cursor']}\"";
+            }
+
+            if(isset($params['direction']) && $params['direction'] == 'prev'){
+                $position = 'last';
+                $cursorparam = "before: \"{$params['cursor']}\"";
+            }
+
+        }
+
+        $collectionsquery = <<<"GRAPHQL"
+        query CustomCollectionList {
+            collections($position: $limit, query: "collection_type:custom", $cursorparam) {
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                }
+                edges {
+                    cursor
+                    node {
                         id
                         title
                     }
                 }
             }
-            GRAPHQL;
+        }
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($collectionsquery);
 
@@ -54,19 +81,25 @@ class CollectionsEndpoints
 
         } else {
 
-            $responseData = $responseData['data']['collections']['nodes'];
+            $collectionsResponseData = $responseData['data']['collections'];
 
         }
 
-        $responseData = array_map(function ($collectionData) {
-            $collectionData['id'] = str_replace('gid://shopify/Collection/', '', $collectionData['id']);
-            return $collectionData;
-        }, $responseData);
+        $collectionsData = [
+            'pageInfo' => $collectionsResponseData['pageInfo'],
+            'collections' => array_map(function ($collection) {
+                return [
+                    'id' => str_replace('gid://shopify/Collection/', '', $collection['node']['id']),
+                    'title' => $collection['node']['title'],
+                    'cursor' => $collection['cursor'],
+                ];
+            }, $collectionsResponseData['edges'])
+        ];
 
-        return $responseData;
+        return $collectionsData;
     }
 
-    public function getSmartCollections()
+    public function getSmartCollections($params = array())
     {
         /*
         Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collections
@@ -74,13 +107,40 @@ class CollectionsEndpoints
         */
 
 
+        $position = 'first';
+        $cursorparam = '';
+        $limit = 250;
 
-        $collectionsquery = <<<'GRAPHQL'
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+        }
+
+        if(isset($params['cursor'])){
+
+            if(isset($params['direction']) && $params['direction'] == 'next'){
+                $cursorparam = "after: \"{$params['cursor']}\"";
+            }
+
+            if(isset($params['direction']) && $params['direction'] == 'prev'){
+                $position = 'last';
+                $cursorparam = "before: \"{$params['cursor']}\"";
+            }
+
+        }
+
+        $collectionsquery = <<<"GRAPHQL"
             query CustomCollectionList {
-                collections(first: 250, query: "collection_type:smart") {
-                    nodes {
-                        id
-                        title
+                collections($position: $limit, query: "collection_type:smart", $cursorparam) {
+                    pageInfo {
+                        hasNextPage
+                        hasPreviousPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            title
+                        }
                     }
                 }
             }
@@ -94,16 +154,22 @@ class CollectionsEndpoints
 
         } else {
 
-            $responseData = $responseData['data']['collections']['nodes'];
+            $collectionsResponseData = $responseData['data']['collections'];
 
         }
 
-        $responseData = array_map(function ($collectionData) {
-            $collectionData['id'] = str_replace('gid://shopify/Collection/', '', $collectionData['id']);
-            return $collectionData;
-        }, $responseData);
+        $collectionsData = [
+            'pageInfo' => $collectionsResponseData['pageInfo'],
+            'collections' => array_map(function ($collection) {
+                return [
+                    'id' => str_replace('gid://shopify/Collection/', '', $collection['node']['id']),
+                    'title' => $collection['node']['title'],
+                    'cursor' => $collection['cursor'],
+                ];
+            }, $collectionsResponseData['edges'])
+        ];
 
-        return $responseData;
+        return $collectionsData;
     }
 
     public function getCollection($collectionId)

@@ -100,6 +100,14 @@ class WebhooksEndpoints
 
         $webhookParams = $param['webhook'];
 
+        if($webhookParams['topic'] == 'app/uninstalled'){
+            $webhookParams['topic'] = 'APP_UNINSTALLED';
+        }
+
+        if($webhookParams['format'] == 'json'){
+            $webhookParams['topic'] = 'JSON';
+        }
+
         $webhookCreationVariable = [
             'topic' => $webhookParams['topic'],
             'webhookSubscription' => [
@@ -109,32 +117,32 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-            mutation WebhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
-                webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
-                    webhookSubscription {
-                        id
-                        topic
-                        createdAt
-                        updatedAt
-                        format
-                        endpoint {
-                            __typename
-                            ... on WebhookHttpEndpoint {
-                                callbackUrl
-                            }
+        mutation WebhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
+            webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+                webhookSubscription {
+                    id
+                    topic
+                    createdAt
+                    updatedAt
+                    format
+                    endpoint {
+                        __typename
+                        ... on WebhookHttpEndpoint {
+                            callbackUrl
                         }
                     }
-                    userErrors {
-                        field
-                        message
-                    }
+                }
+                userErrors {
+                    field
+                    message
                 }
             }
-            GRAPHQL;
+        }
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookCreationVariable);
 
-        if (isset($responseData['data']['webhookSubscriptionCreate']['webhookSubscription']['userErrors']) && !empty($responseData['data']['webhookSubscriptionCreate']['webhookSubscription']['userErrors'])) {
+        if (isset($responseData['data']['webhookSubscriptionCreate']['userErrors']) && !empty($responseData['data']['webhookSubscriptionCreate']['userErrors'])) {
 
             throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['webhookSubscriptionCreate']['userErrors']);
 
@@ -142,11 +150,19 @@ class WebhooksEndpoints
 
             $webhookSubscriptionsCreateResponse = [];
 
-            foreach ($responseData['data']['webhookSubscriptionCreate']['webhookSubscription'] as $response) {
+            if (!empty($responseData['data']['webhookSubscriptionCreate']['webhookSubscription'])) {
+                $response = $responseData['data']['webhookSubscriptionCreate']['webhookSubscription'];
+
                 $webhookSubscriptionsCreateResponse['id'] = str_replace("gid://shopify/WebhookSubscription/", "", $response['id']) ?? '';
-                $webhookSubscriptionsCreateResponse['topic'] = $response['topic'] ?? '';
+                if($response['topic'] == 'APP_UNINSTALLED'){
+                    $response['topic'] = 'app/uninstalled';
+                }
+                $webhookSubscriptionsCreateResponse['topic'] = $response['topic'];
                 $webhookSubscriptionsCreateResponse['created_at'] = $response['createdAt'] ?? '';
                 $webhookSubscriptionsCreateResponse['updated_at'] = $response['updatedAt'] ?? '';
+                if($response['format'] == 'JSON'){
+                    $response['format'] = 'json';
+                }
                 $webhookSubscriptionsCreateResponse['format'] = $response['format'];
                 $webhookSubscriptionsCreateResponse['address'] = $response['endpoint']['callbackUrl'] ?? '';
             }
@@ -177,32 +193,32 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-                mutation WebhookSubscriptionUpdate($id: ID!, $webhookSubscription: WebhookSubscriptionInput!) {
-                    webhookSubscriptionUpdate(id: $id, webhookSubscription: $webhookSubscription) {
-                        webhookSubscription {
-                            id
-                            topic
-                            createdAt
-                            updatedAt
-                            format
-                            endpoint {
-                                __typename
-                                ... on WebhookHttpEndpoint {
-                                    callbackUrl
-                                }
-                            }
-                        }
-                        userErrors {
-                            field
-                            message
+        mutation WebhookSubscriptionUpdate($id: ID!, $webhookSubscription: WebhookSubscriptionInput!) {
+            webhookSubscriptionUpdate(id: $id, webhookSubscription: $webhookSubscription) {
+                webhookSubscription {
+                    id
+                    topic
+                    createdAt
+                    updatedAt
+                    format
+                    endpoint {
+                        __typename
+                        ... on WebhookHttpEndpoint {
+                            callbackUrl
                         }
                     }
                 }
-                GRAPHQL;
+                userErrors {
+                    field
+                    message
+                }
+            }
+        }
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookUpdateVariable);
 
-        if (isset($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription']['userErrors']) && !empty($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription']['userErrors'])) {
+        if (isset($responseData['data']['webhookSubscriptionUpdate']['userErrors']) && !empty($responseData['data']['webhookSubscriptionUpdate']['userErrors'])) {
 
             throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['webhookSubscriptionUpdate']['userErrors']);
 
@@ -243,16 +259,16 @@ class WebhooksEndpoints
         ];
 
         $webhookQuery = <<<'GRAPHQL'
-                mutation webhookSubscriptionDelete($id: ID!) {
-                    webhookSubscriptionDelete(id: $id) {
-                        deletedWebhookSubscriptionId
-                        userErrors {
-                            field
-                            message
-                        }
-                    }
+        mutation webhookSubscriptionDelete($id: ID!) {
+            webhookSubscriptionDelete(id: $id) {
+                deletedWebhookSubscriptionId
+                userErrors {
+                    field
+                    message
                 }
-                GRAPHQL;
+            }
+        }
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($webhookQuery, $webhookDeleteVariable);
         
