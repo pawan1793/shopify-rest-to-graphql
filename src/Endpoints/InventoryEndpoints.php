@@ -97,17 +97,17 @@ class InventoryEndpoints
 
             foreach ($locations as $lkey => $location) {
 
-                $response[$lkey]['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
-                $response[$lkey]['tracked'] = $inventoryItem['node']['tracked'];
-                $response[$lkey]['sku'] = $inventoryItem['node']['sku'];
-                $response[$lkey]['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
-                $response[$lkey]['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
-                $response[$lkey]['location_name'] = $location['node']['location']['name'];
-                $response[$lkey]['available'] = $location['node']['quantities'][0]['quantity'];
+                $response['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
+                $response['tracked'] = $inventoryItem['node']['tracked'];
+                $response['sku'] = $inventoryItem['node']['sku'];
+                $response['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
+                $response['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
+                $response['location_name'] = $location['node']['location']['name'];
+                $response['available'] = $location['node']['quantities'][0]['quantity'];
 
             }
 
-            array_push($finalarray, $response);
+           $finalarray[$lkey] = $response;
 
         }
 
