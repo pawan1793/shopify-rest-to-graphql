@@ -1937,6 +1937,7 @@ class GraphqlService
                         node {
                         id
                         src
+                        altText
                         }
                     }
                 }
@@ -2023,7 +2024,9 @@ class GraphqlService
 
                             $shopifyimage['id'] = str_replace("gid://shopify/ProductImage/", "", $image['node']['id']);
                             $shopifyimage['src'] = $image['node']['src'];
-                            $shopifyimage['alt'] = $image['node']['alt'];
+                            if (isset($image['node']['altText'])) {
+                                $shopifyimage['alt'] = $image['node']['altText'];
+                            }
                             $shopifyimages[] = $shopifyimage;
 
                         }
