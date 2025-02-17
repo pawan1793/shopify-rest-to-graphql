@@ -30,26 +30,22 @@ class MetafieldsEndpoints
     public function metafieldsDelete($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldDefinitionDelete
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldsDelete
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#delete-blogs-blog-id-metafields-metafield-id
         */
 
 
 
-        $id = $params['metafields'][0]['ownerId'];
+        $id = $params['metafields']['ownerId'];
 
-        if (strpos($id, 'gid://shopify/Product/') !== true) {
-            $id = "gid://shopify/Product/{$id}";
-        }
-
-        $namespace = $params['metafields'][0]['namespace'];
-        $key = $params['metafields'][0]['key'];
+        $namespace = $params['metafields']['namespace'];
+        $key = $params['metafields']['key'];
 
         $finalmetafieldsvariables['metafields'] = [
             [
                 'ownerId' => $id,
-                'namespace' => 'bakery',
-                'key' => 'ingredients'
+                'namespace' => $namespace,
+                'key' => $key
             ]
         ];
 
@@ -93,25 +89,27 @@ class MetafieldsEndpoints
     public function metafieldsSet($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldDefinitionCreate
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldsSet
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#post-blogs-blog-id-metafields
         */
 
 
 
-        $key = $params['metafields'][0]['key'];
-        $namespace = $params['metafields'][0]['namespace'];
+        $key = $params['metafield']['key'];
+        $namespace = $params['metafield']['namespace'];
 
-        $ownerId = $params['metafields'][0]['ownerId'];
-        $type = $params['metafields'][0]['type'];
-        $value = $params['metafields'][0]['value'];
+        $ownerId = $params['metafield']['ownerId'];
+        $type = $params['metafield']['type'];
+        $value = $params['metafield']['value'];
 
         $finalmetafieldsvariables['metafields'] = [
-            'key' => $key,
-            'namespace' => $namespace,
-            'ownerId' => $ownerId,
-            'type' => $type,
-            'value' => $value
+            [
+                'key' => $key,
+                'namespace' => $namespace,
+                'ownerId' => $ownerId,
+                'type' => $type,
+                'value' => $value
+            ]
         ];
 
 
