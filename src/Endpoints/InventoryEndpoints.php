@@ -40,7 +40,8 @@ class InventoryEndpoints
 
         $query = '';
         if (!empty($params['inventory_item_id'])) {
-            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== false) {
+           
+            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== true) {
                 $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $params['inventory_item_id']);
             }
             $query = 'query: "id:' . $inventoryItemId . '"';

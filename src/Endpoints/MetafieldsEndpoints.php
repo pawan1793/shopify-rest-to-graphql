@@ -38,7 +38,7 @@ class MetafieldsEndpoints
 
         $id = $params['metafields'][0]['ownerId'];
 
-        if (strpos($id, 'gid://shopify/Product/') !== false) {
+        if (strpos($id, 'gid://shopify/Product/') !== true) {
             $id = "gid://shopify/Product/{$id}";
         }
 
