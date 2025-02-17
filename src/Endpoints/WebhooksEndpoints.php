@@ -228,7 +228,7 @@ class WebhooksEndpoints
             $webhookSubscriptionsResponse = [];
 
             foreach ($responseData['data']['webhookSubscriptions']['edges'] as $key => $response) {
-                $webhookSubscriptionsResponse[$key]['id'] = $response['node']['id'] ?? '';
+                $webhookSubscriptionsResponse[$key]['id'] = str_replace('gid://shopify/WebhookSubscription/', '', $response['node']['id']);
                 $webhookSubscriptionsResponse[$key]['callbackUrl'] = $response['node']['endpoint']['callbackUrl'] ?? '';
                 $webhookSubscriptionsResponse[$key]['topic'] = array_flip(self::WebhookTopics)[$response['node']['topic']] ?? '';
                 $webhookSubscriptionsResponse[$key]['createdAt'] = $response['node']['createdAt'] ?? '';
