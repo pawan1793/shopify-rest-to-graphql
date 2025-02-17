@@ -36,8 +36,6 @@ class ThemesEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/theme#get-themes
         */
 
-
-
         $themeQuery = <<<"GRAPHQL"
         query ThemeList {
             themes(first: 250) {
@@ -71,20 +69,22 @@ class ThemesEndpoints
 
         } else {
 
-            $webhookSubscriptionsResponse = [];
+            $themeResponse = [];
 
             foreach ($responseData['data']['themes']['edges'] as $response) {
-                $webhookSubscriptionsResponse[]['id'] = str_replace('gid://shopify/OnlineStoreTheme/', '', $response['node']['id']);
-                $webhookSubscriptionsResponse[]['name'] = $response['node']['name'] ?? '';
-                $webhookSubscriptionsResponse[]['role'] = $response['node']['role'] ?? '';
-                $webhookSubscriptionsResponse[]['theme_store_id'] = $response['node']['themeStoreId'] ?? '';
-                $webhookSubscriptionsResponse[]['processing'] = $response['node']['processing'] ?? '';
-                $webhookSubscriptionsResponse[]['admin_graphql_api_id'] = $response['node']['admin_graphql_api_id'] ?? '';
-                $webhookSubscriptionsResponse[]['createdAt'] = $response['node']['createdAt'] ?? '';
-                $webhookSubscriptionsResponse[]['updatedAt'] = $response['node']['updatedAt'] ?? '';
+                $themeResponse[] = [
+                    'id' => str_replace('gid://shopify/OnlineStoreTheme/', '', $response['node']['id']),
+                    'name' => $response['node']['name'] ?? '',
+                    'created_at' => $response['node']['createdAt'] ?? '',
+                    'updated_at' => $response['node']['updatedAt'] ?? '',
+                    'updated_at' => $response['node']['updatedAt'] ?? '',
+                    'role' => $response['node']['role'] ?? '',
+                    'theme_store_id' => $response['node']['themeStoreId'] ?? '',
+                    'processing' => $response['node']['processing'] ?? '',
+                ];
             }
-
-            $responseData = $webhookSubscriptionsResponse;
+        
+            $responseData = $themeResponse;
 
         }
 
@@ -101,13 +101,11 @@ class ThemesEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/asset#get-themes-theme-id-assets
         */
 
-
-
-        $themefileUpsertVariable = [
-            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['themeId'],
+        $themeFilesVariable = [
+            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['theme_id'],
         ];
 
-        $themeQuery = <<<'GRAPHQL'
+        $themeFilesQuery = <<<'GRAPHQL'
         query ThemeFilesPaginated($themeId: ID!) {
             theme(id: $themeId) {
                 files(first: 50) {
@@ -148,7 +146,7 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($themeQuery, $themefileUpsertVariable);
+        $responseData = $graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
@@ -160,14 +158,14 @@ class ThemesEndpoints
 
             foreach ($responseData['data']['theme']['files']['edges'] as $response) {
                 $themeFilesResponse[] = [
-                'key' => $response['node']['filename'] ?? '',
-                'created_at' => $response['node']['createdAt'] ?? '',
-                'updated_at' => $response['node']['updatedAt'] ?? '',
-                'content_type' => $response['node']['contentType'] ?? '',
-                'size' => $response['node']['size'] ?? '',
-                'checksum' => $response['node']['checksumMd5'] ?? '',
-                'body' => $response['node']['body'] ?? '',
-                'cursor' => $response['cursor'] ?? '',
+                    'key' => $response['node']['filename'] ?? '',
+                    'created_at' => $response['node']['createdAt'] ?? '',
+                    'updated_at' => $response['node']['updatedAt'] ?? '',
+                    'content_type' => $response['node']['contentType'] ?? '',
+                    'size' => $response['node']['size'] ?? '',
+                    'checksum' => $response['node']['checksumMd5'] ?? '',
+                    'body' => $response['node']['body'] ?? '',
+                    'cursor' => $response['cursor'] ?? '',
                 ];
             }
 
@@ -193,10 +191,8 @@ class ThemesEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/asset#put-themes-theme-id-assets
         */
 
-
-
-        $themefileUpsertVariable = [
-            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['asset']['themeId'],
+        $themeFileUpsertVariable = [
+            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['theme_id'],
             'files' => [
                 'filename' => $param['asset']['filename'],
                 'body' => [
@@ -206,7 +202,7 @@ class ThemesEndpoints
             ]
         ];
 
-        $themefileUpsertQuery = <<<'GRAPHQL'
+        $themeFileUpsertQuery = <<<'GRAPHQL'
             mutation themeFilesUpsert($files: [OnlineStoreThemeFilesUpsertFileInput!]!, $themeId: ID!) {
                 themeFilesUpsert(files: $files, themeId: $themeId) {
                     upsertedThemeFiles {
@@ -220,7 +216,7 @@ class ThemesEndpoints
             }
             GRAPHQL;
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($themefileUpsertQuery, $themefileUpsertVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeFileUpsertQuery, $themeFileUpsertVariable);
 
         if (isset($responseData['data']['themeFilesUpsert']['userErrors']) && !empty($responseData['data']['themeFilesUpsert']['userErrors'])) {
 
@@ -228,13 +224,10 @@ class ThemesEndpoints
 
         } else {
 
-            $themefileUpsertResponse = [];
+            $themeFileUpsertResponse = [];
 
-            foreach ($responseData['data']['themeFilesUpsert']['upsertedThemeFiles'] as $response) {
-                $themefileUpsertResponse[]['filename'] = $response['filename'] ?? '';
-            }
-
-            $responseData = $themefileUpsertResponse;
+            $themeFileUpsertResponse['key'] = $responseData['data']['themeFilesUpsert']['upsertedThemeFiles'][0]['filename'];
+            $responseData = $themeFileUpsertResponse;
 
         }
 
@@ -251,14 +244,12 @@ class ThemesEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/asset#delete-themes-theme-id-assets?asset[key]=assets-bg-body.gif
         */
 
-
-
-        $themefileDeleteVariable = [
-            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['themeId'],
-            'files' => $param['files'],
+        $themeFileDeleteVariable = [
+            'themeId' => 'gid://shopify/OnlineStoreTheme/' . $param['theme_id'],
+            'files' => $param['asset']['key'],
         ];
 
-        $themefileDeleteQuery = <<<'GRAPHQL'
+        $themeFileDeleteQuery = <<<'GRAPHQL'
             mutation ThemeFilesDelete($files: [String!]!, $themeId: ID!) {
                 themeFilesDelete(files: $files, themeId: $themeId) {
                     deletedThemeFiles {
@@ -274,7 +265,7 @@ class ThemesEndpoints
             }
             GRAPHQL;
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($themefileDeleteQuery, $themefileDeleteVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeFileDeleteQuery, $themeFileDeleteVariable);
 
         if (isset($responseData['data']['themeFilesDelete']['userErrors']) && !empty($responseData['data']['themeFilesDelete']['userErrors'])) {
 
@@ -282,13 +273,13 @@ class ThemesEndpoints
 
         } else {
 
-            $themefileUpsertResponse = [];
+            $themeFileDeleteResponse = [];
 
             foreach ($responseData['data']['themeFilesDelete']['deletedThemeFiles'] as $response) {
-                $themefileUpsertResponse[]['filename'] = $response['filename'] ?? '';
+                $themeFileDeleteResponse[]['filename'] = $response['filename'] ?? '';
             }
 
-            $responseData = $themefileUpsertResponse;
+            $responseData = $themeFileDeleteResponse;
 
         }
 
