@@ -40,7 +40,8 @@ class InventoryEndpoints
 
         $query = '';
         if (!empty($params['inventory_item_id'])) {
-            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== false) {
+           
+            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== true) {
                 $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $params['inventory_item_id']);
             }
             $query = 'query: "id:' . $inventoryItemId . '"';
@@ -96,17 +97,17 @@ class InventoryEndpoints
 
             foreach ($locations as $lkey => $location) {
 
-                $response[$lkey]['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
-                $response[$lkey]['tracked'] = $inventoryItem['node']['tracked'];
-                $response[$lkey]['sku'] = $inventoryItem['node']['sku'];
-                $response[$lkey]['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
-                $response[$lkey]['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
-                $response[$lkey]['location_name'] = $location['node']['location']['name'];
-                $response[$lkey]['available'] = $location['node']['quantities'][0]['quantity'];
+                $response['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
+                $response['tracked'] = $inventoryItem['node']['tracked'];
+                $response['sku'] = $inventoryItem['node']['sku'];
+                $response['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
+                $response['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
+                $response['location_name'] = $location['node']['location']['name'];
+                $response['available'] = $location['node']['quantities'][0]['quantity'];
 
             }
 
-            array_push($finalarray, $response);
+           $finalarray[$lkey] = $response;
 
         }
 
@@ -180,8 +181,69 @@ class InventoryEndpoints
         return $response;
     }
 
+
     /** 
-     * To update Inventory Quantities use this function.
+     * To Set Inventory Quantities use this function.
+     */
+    public function inventorySetQuantities($params)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/inventorySetQuantities?language=PHP
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#post-inventory-levels-adjust
+        */
+
+
+
+        $inventoryadjustvariables = array();
+
+     
+
+        if (!empty($params['location_id'])) {
+            $inventoryadjustvariables['input']['reason'] = 'correction';
+            $inventoryadjustvariables['input']['name'] = 'available';
+            $inventoryadjustvariables['input']['ignoreCompareQuantity'] = true;
+            $inventoryadjustvariables['input']['quantities'] = array();
+            $inventoryadjustvariables['input']['quantities'][0]['quantity'] = $params['available'];
+            $inventoryadjustvariables['input']['quantities'][0]['inventoryItemId'] = "gid://shopify/InventoryItem/{$params['inventory_item_id']}";
+            $inventoryadjustvariables['input']['quantities'][0]['locationId'] = "gid://shopify/Location/{$params['location_id']}";
+        }
+       
+
+        $inventoryadjustquery = <<<'GRAPHQL'
+                mutation InventorySet($input: InventorySetQuantitiesInput!) {
+                inventorySetQuantities(input: $input) {
+                inventoryAdjustmentGroup {
+                    createdAt
+                    reason
+                    referenceDocumentUri
+                    changes {
+                    name
+                    delta
+                    }
+                }
+                userErrors {
+                    field
+                    message
+                }
+                }
+            }
+            GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
+        
+        if (isset($responseData['data']['inventorySetQuantities']['userErrors']) && !empty($responseData['data']['inventorySetQuantities']['userErrors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['inventorySetQuantities']['userErrors']);
+        } else {
+            $responseData = $responseData['data']['inventorySetQuantities'];
+        }
+
+        return $responseData;
+    }
+
+
+    /** 
+     * To adjust Inventory Quantities use this function. (Don't Use this)
      */
     public function inventoryAdjustQuantities($params)
     {
