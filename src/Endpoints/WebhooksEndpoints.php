@@ -227,20 +227,19 @@ class WebhooksEndpoints
 
             $webhookSubscriptionsResponse = [];
 
-            foreach ($responseData['data']['webhookSubscriptions']['edges'] as $response) {
-                $webhookSubscriptionsResponse[]['id'] = $response['node']['id'] ?? '';
-                $webhookSubscriptionsResponse[]['callbackUrl'] = $response['node']['endpoint']['callbackUrl'] ?? '';
-                $webhookSubscriptionsResponse[]['topic'] = array_flip(self::WebhookTopics)[$response['node']['topic']] ?? '';
-                $webhookSubscriptionsResponse[]['createdAt'] = $response['node']['createdAt'] ?? '';
-                $webhookSubscriptionsResponse[]['updatedAt'] = $response['node']['updatedAt'] ?? '';
-                $webhookSubscriptionsResponse[]['format'] = $response['node']['format'];
+            foreach ($responseData['data']['webhookSubscriptions']['edges'] as $key => $response) {
+                $webhookSubscriptionsResponse[$key]['id'] = $response['node']['id'] ?? '';
+                $webhookSubscriptionsResponse[$key]['callbackUrl'] = $response['node']['endpoint']['callbackUrl'] ?? '';
+                $webhookSubscriptionsResponse[$key]['topic'] = array_flip(self::WebhookTopics)[$response['node']['topic']] ?? '';
+                $webhookSubscriptionsResponse[$key]['createdAt'] = $response['node']['createdAt'] ?? '';
+                $webhookSubscriptionsResponse[$key]['updatedAt'] = $response['node']['updatedAt'] ?? '';
+                $webhookSubscriptionsResponse[$key]['format'] = $response['node']['format'];
             }
 
-            $responseData = $webhookSubscriptionsResponse;
+            return $webhookSubscriptionsResponse;
 
         }
 
-        return $responseData;
     }
 
     /** 
@@ -261,7 +260,7 @@ class WebhooksEndpoints
         }
 
         if($webhookParams['format'] == 'json'){
-            $webhookParams['topic'] = 'JSON';
+            $webhookParams['format'] = 'JSON';
         }
 
         $webhookCreationVariable = [
@@ -340,11 +339,12 @@ class WebhooksEndpoints
         */
 
 
+        $webhookParams = $param['webhook'];
 
         $webhookUpdateVariable = [
-            'id' => 'gid://shopify/WebhookSubscription/' . $param['id'],
+            'id' => 'gid://shopify/WebhookSubscription/' . $webhookParams['id'],
             'webhookSubscription' => [
-                'callbackUrl' => $param['webhookSubscription']['callbackUrl'],
+                'callbackUrl' => $webhookParams['address'],
             ]
         ];
 
@@ -382,20 +382,27 @@ class WebhooksEndpoints
 
             $webhookSubscriptionsUpdateResponse = [];
 
-            foreach ($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription'] as $response) {
-                $webhookSubscriptionsUpdateResponse[]['id'] = $response['id'] ?? '';
-                $webhookSubscriptionsUpdateResponse[]['topic'] = array_flip(self::WebhookTopics)[$response['topic']] ?? $response['topic'];
-                $webhookSubscriptionsUpdateResponse[]['createdAt'] = $response['createdAt'] ?? '';
-                $webhookSubscriptionsUpdateResponse[]['updatedAt'] = $response['updatedAt'] ?? '';
-                $webhookSubscriptionsUpdateResponse[]['format'] = $response['format'];
-                $webhookSubscriptionsUpdateResponse[]['callbackUrl'] = $response['endpoint']['callbackUrl'] ?? '';
+            if (!empty($responseData['data']['webhookSubscriptionUpdate']['webhookSubscription'])) {
+                $response = $responseData['data']['webhookSubscriptionUpdate']['webhookSubscription'];
+
+                $webhookSubscriptionsUpdateResponse['id'] = str_replace("gid://shopify/WebhookSubscription/", "", $response['id']) ?? '';
+                
+                $response['topic'] = array_flip(self::WebhookTopics)[$response['topic']] ?? $response['topic'];
+
+                $webhookSubscriptionsUpdateResponse['topic'] = $response['topic'];
+                $webhookSubscriptionsUpdateResponse['created_at'] = $response['createdAt'] ?? '';
+                $webhookSubscriptionsUpdateResponse['updated_at'] = $response['updatedAt'] ?? '';
+                if($response['format'] == 'JSON'){
+                    $response['format'] = 'json';
+                }
+                $webhookSubscriptionsUpdateResponse['format'] = $response['format'];
+                $webhookSubscriptionsUpdateResponse['address'] = $response['endpoint']['callbackUrl'] ?? '';
             }
 
-            $responseData = $webhookSubscriptionsUpdateResponse;
+            return $webhookSubscriptionsUpdateResponse;
 
         }
 
-        return $responseData;
     }
 
     /** 
@@ -435,7 +442,8 @@ class WebhooksEndpoints
 
         } else {
 
-            $responseData = ['data']['webhookSubscriptionDelete'];
+            $responseData = $responseData['data']['webhookSubscriptionDelete'];
+            $responseData['id'] = str_replace('gid://shopify/WebhookSubscription/', '', $responseData['deletedWebhookSubscriptionId']);
 
         }
 
