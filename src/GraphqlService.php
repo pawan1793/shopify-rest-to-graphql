@@ -249,9 +249,6 @@ class GraphqlService
         $productreturndata = array();
         if (1) {
 
-            try {
-                // Send GraphQL request
-
                 $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
 
@@ -276,9 +273,6 @@ class GraphqlService
                     $productreturndata['variants'][0]['id'] = str_replace("gid://shopify/ProductVariant/", "", $variantid);
 
                 }
-            } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
-            }
 
         }
 
