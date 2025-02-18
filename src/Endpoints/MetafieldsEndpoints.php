@@ -86,37 +86,37 @@ class MetafieldsEndpoints
     }
 
     // METAFIELD CREATE FUNCTION
-    public function metafieldsSet($params)
+    public function metafieldsSet($ownerId,$params)
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldsSet
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#post-blogs-blog-id-metafields
         */
 
+        if (strpos($ownerId, 'gid://shopify/Product') !== true) {
+            $ownerId = "gid://shopify/Product/{$ownerId}";
+        }
+       
+        $graphqlmetafields = array();
+        foreach($params['metafields'] as $metafield){
+            $graphqlmetafield['key'] = $metafield['key'];
+            $graphqlmetafield['namespace'] = $metafield['namespace'];
+            $graphqlmetafield['ownerId'] = $ownerId;
+            $graphqlmetafield['type'] = $metafield['type'];
+            $graphqlmetafield['value'] = (string)$metafield['value'];
+            $graphqlmetafields[] = $graphqlmetafield;
+        }
 
+      
 
-        $key = $params['metafield']['key'];
-        $namespace = $params['metafield']['namespace'];
-
-        $ownerId = $params['metafield']['ownerId'];
-        $type = $params['metafield']['type'];
-        $value = $params['metafield']['value'];
-
-        $finalmetafieldsvariables['metafields'] = [
-            [
-                'key' => $key,
-                'namespace' => $namespace,
-                'ownerId' => $ownerId,
-                'type' => $type,
-                'value' => $value
-            ]
-        ];
+        $finalmetafieldsvariables['metafields'] = $graphqlmetafields;
 
 
         $metafieldquery = <<<'GRAPHQL'
             mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
                 metafieldsSet(metafields: $metafields) {
                     metafields {
+                        id
                         key
                         namespace
                         value
@@ -135,7 +135,7 @@ class MetafieldsEndpoints
 
 
         $responseData = $this->graphqlService->graphqlQueryThalia($metafieldquery, $finalmetafieldsvariables);
-
+       
 
         if (isset($responseData['data']['metafieldsSet']['userErrors']) && !empty($responseData['data']['metafieldsSet']['userErrors'])) {
 
