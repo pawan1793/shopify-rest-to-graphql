@@ -106,6 +106,11 @@ class ApplicationChargesEndpoints
                                 id
                                 name
                                 status
+                                price {
+                                    amount
+                                    currencyCode
+                                }
+                                createdAt
                             }
                         }
                     }
@@ -134,6 +139,8 @@ class ApplicationChargesEndpoints
 
                 $response['status'] = 'active';
                 $response['message'] = 'The charge is active';
+                $response['price'] = $charges['node']['price']['amount'];
+                $response['created_at'] = $charges['node']['createdAt'];
                 break;
 
             } else {
