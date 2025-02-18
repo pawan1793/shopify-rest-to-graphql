@@ -77,13 +77,68 @@ class ThemesEndpoints
                     'name' => $response['node']['name'] ?? '',
                     'created_at' => $response['node']['createdAt'] ?? '',
                     'updated_at' => $response['node']['updatedAt'] ?? '',
-                    'updated_at' => $response['node']['updatedAt'] ?? '',
                     'role' => $response['node']['role'] ?? '',
                     'theme_store_id' => $response['node']['themeStoreId'] ?? '',
                     'processing' => $response['node']['processing'] ?? '',
                 ];
             }
         
+            $responseData = $themeResponse;
+
+        }
+
+        return $responseData;
+    }
+
+    /** 
+     * To get users theme by its Id use this function.
+    */
+    public function getThemeById($param)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/theme?example=Retrieves+a+single+theme+by+its+ID
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/theme#get-themes-theme-id
+        */
+
+        $themeVariable = [
+            'id' => 'gid://shopify/OnlineStoreTheme/' . $param['theme_id'],
+        ];
+
+        $themeQuery = <<<'GRAPHQL'
+        query Theme ($id: ID!) {
+            theme(id: $id) {
+                createdAt
+                id
+                name
+                prefix
+                processing
+                processingFailed
+                role
+                themeStoreId
+                updatedAt
+            }
+        }
+        GRAPHQL;
+
+        $responseData = $graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
+
+        if (isset($responseData['data']['theme']['errors']) && !empty($responseData['errors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+
+        } else {
+
+            $themeResponse = [
+                'id' => str_replace('gid://shopify/OnlineStoreTheme/', '', $responseData['data']['theme']['id']),
+                'name' => $responseData['data']['theme']['name'] ?? '',
+                'created_at' => $responseData['data']['theme']['createdAt'] ?? '',
+                'updated_at' => $responseData['data']['theme']['updatedAt'] ?? '',
+                'role' => $responseData['data']['theme']['role'] ?? '',
+                'theme_store_id' => $responseData['data']['theme']['themeStoreId'] ?? '',
+                'processing' => $responseData['data']['theme']['processing'] ?? '',
+                'admin_graphql_api_id' => $responseData['data']['theme']['id'] ?? '',
+            ];
+            
             $responseData = $themeResponse;
 
         }
@@ -275,9 +330,8 @@ class ThemesEndpoints
 
             $themeFileDeleteResponse = [];
 
-            foreach ($responseData['data']['themeFilesDelete']['deletedThemeFiles'] as $response) {
-                $themeFileDeleteResponse[]['filename'] = $response['filename'] ?? '';
-            }
+            $themeFileDeleteResponse['key'] = $responseData['data']['themeFilesDelete']['deletedThemeFiles'][0]['filename'];
+            $responseData = $themeFileDeleteResponse;
 
             $responseData = $themeFileDeleteResponse;
 
