@@ -67,6 +67,7 @@ class CollectionsEndpoints
                     node {
                         id
                         title
+                        handle
                     }
                 }
             }
@@ -91,6 +92,7 @@ class CollectionsEndpoints
                 return [
                     'id' => str_replace('gid://shopify/Collection/', '', $collection['node']['id']),
                     'title' => $collection['node']['title'],
+                    'handle' => $collection['node']['handle'],
                     'cursor' => $collection['cursor'],
                 ];
             }, $collectionsResponseData['edges'])
@@ -140,6 +142,7 @@ class CollectionsEndpoints
                         node {
                             id
                             title
+                            handle
                         }
                     }
                 }
@@ -164,6 +167,7 @@ class CollectionsEndpoints
                 return [
                     'id' => str_replace('gid://shopify/Collection/', '', $collection['node']['id']),
                     'title' => $collection['node']['title'],
+                    'handle' => $collection['node']['handle'],
                     'cursor' => $collection['cursor'],
                 ];
             }, $collectionsResponseData['edges'])
@@ -196,6 +200,7 @@ class CollectionsEndpoints
                 collection(id: $collection) {
                     id
                     title
+                    handle
                 }
             }
             GRAPHQL;
