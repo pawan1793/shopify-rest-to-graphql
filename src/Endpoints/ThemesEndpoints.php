@@ -82,7 +82,7 @@ class ThemesEndpoints
                     'processing' => $response['node']['processing'] ?? '',
                 ];
             }
-        
+
             $responseData = $themeResponse;
 
         }
@@ -92,7 +92,7 @@ class ThemesEndpoints
 
     /** 
      * To get all users theme use this function.
-    */
+     */
     public function themesByRole($param)
     {
         /*
@@ -150,7 +150,7 @@ class ThemesEndpoints
                     'processing' => $response['node']['processing'] ?? '',
                 ];
             }
-            
+
             $responseData = $themeResponse;
 
         }
@@ -160,7 +160,7 @@ class ThemesEndpoints
 
     /** 
      * To get users theme by its Id use this function.
-    */
+     */
     public function getThemeById($param)
     {
         /*
@@ -206,7 +206,7 @@ class ThemesEndpoints
                 'processing' => $responseData['data']['theme']['processing'] ?? '',
                 'admin_graphql_api_id' => $responseData['data']['theme']['id'] ?? '',
             ];
-            
+
             $responseData = $themeResponse;
 
         }
@@ -408,5 +408,67 @@ class ThemesEndpoints
         return $responseData;
     }
 
+    /** 
+     * To get asset file contents
+     */
+    public function onlineStoreThemeFileBodyText($themeId, $filename)
+    {
+
+         /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2024-10/queries/theme
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/asset#get-themes-theme-id-assets?asset[key]=templates-index.liquid
+        */
+
+        $query = <<<QUERY
+        query getThemeFiles(\$themeId: ID!, \$filenames: [String!]!) {
+            theme(id: \$themeId) {
+            id
+            name
+            role
+            createdAt
+            updatedAt
+            files(filenames: \$filenames, first: 1) {
+                nodes {
+                body {
+                    ... on OnlineStoreThemeFileBodyText {
+                    content
+                    }
+                }
+                }
+            }
+            }
+        }
+        QUERY;
+
+        $variables = [
+            "themeId" => "gid://shopify/OnlineStoreTheme/{$themeId}", // Replace dynamically
+            "filenames" => [$filename] // Replace dynamically
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query, $variables);
+
+        
+    
+        if (isset($responseData['data']['getThemeFiles']['userErrors']) && !empty($responseData['data']['getThemeFiles']['userErrors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['getThemeFiles']['userErrors']);
+
+        }else{
+            $fileContent = $responseData['data']['theme']['files']['nodes'][0]['body']['content'] ?? "";
+
+            $formattedResponse = [
+                    "key" => $filename,
+                    "value" => $fileContent,
+                    "created_at" => $responseData['data']['theme']['createdAt'] ?? '',
+                    "updated_at" => $responseData['data']['theme']['updatedAt'] ?? '',
+                    "theme_id" => (int) $themeId
+            ];
+
+            return $formattedResponse;
+        }
+        
+        
+       
+    }
 
 }
