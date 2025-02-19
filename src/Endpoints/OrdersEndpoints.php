@@ -377,7 +377,7 @@ class OrdersEndpoints
                 $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'];
                 $orderResponse['total_discounts'] = $order['node']['totalDiscountsSet']['presentmentMoney']['amount'];
                 $orderResponse['note_attributes'] = $order['node']['customAttributes'];
-                $orderResponse['discount_applications'] = !empty($order['node']['discountApplications']['edges']) ? $order['node']['discountApplications']['edges']['node'] : '';
+                $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['discountApplications']['edges']) : '';
                 $orderResponse['fulfillments'] = $order['node']['fulfillments'];
                 $orderResponse['line_items'] = array_map(function($item) {
                     return [
@@ -743,7 +743,7 @@ class OrdersEndpoints
             $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
             $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
             $orderResponse['note_attributes'] = $orderData['customAttributes'];
-            $orderResponse['discount_applications'] = !empty($orderData['discountApplications']['edges']) ? $orderData['discountApplications']['edges']['node'] : '';
+            $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) ? array_map(fn($edge) => $edge['node'], $orderData['discountApplications']['edges']) : '';
             $orderResponse['fulfillments'] = $orderData['fulfillments'];
             $orderResponse['line_items'] = array_map(function($item) {
                 return [
