@@ -91,6 +91,74 @@ class ThemesEndpoints
     }
 
     /** 
+     * To get all users theme use this function.
+    */
+    public function themesByRole($param)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/themes
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/theme#get-themes
+        */
+
+        $themeVariable = [
+            'roles' => $param['role'],
+        ];
+
+        $themeQuery = <<<'GRAPHQL'
+        query MainTheme($roles: [ThemeRole!]) {
+            themes(first: 250, roles: $roles) {
+                edges {
+                    node {
+                        id
+                        name
+                        prefix
+                        processing
+                        processingFailed
+                        role
+                        themeStoreId
+                        createdAt
+                        updatedAt
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                }
+            }
+        }
+        GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
+
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+
+            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+        } else {
+
+            $themeResponse = [];
+
+            foreach ($responseData['data']['themes']['edges'] as $response) {
+                $themeResponse[] = [
+                    'id' => str_replace('gid://shopify/OnlineStoreTheme/', '', $response['node']['id']),
+                    'name' => $response['node']['name'] ?? '',
+                    'created_at' => $response['node']['createdAt'] ?? '',
+                    'updated_at' => $response['node']['updatedAt'] ?? '',
+                    'role' => $response['node']['role'] ?? '',
+                    'theme_store_id' => $response['node']['themeStoreId'] ?? '',
+                    'processing' => $response['node']['processing'] ?? '',
+                ];
+            }
+            
+            $responseData = $themeResponse;
+
+        }
+
+        return $responseData;
+    }
+
+    /** 
      * To get users theme by its Id use this function.
     */
     public function getThemeById($param)
@@ -120,7 +188,7 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
 
         if (isset($responseData['data']['theme']['errors']) && !empty($responseData['errors'])) {
 
@@ -201,7 +269,7 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
