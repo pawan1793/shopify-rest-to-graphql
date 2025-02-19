@@ -120,7 +120,7 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeQuery, $themeVariable);
 
         if (isset($responseData['data']['theme']['errors']) && !empty($responseData['errors'])) {
 
@@ -201,7 +201,7 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
+        $responseData = $this->graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
