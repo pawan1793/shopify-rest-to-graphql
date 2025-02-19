@@ -29,7 +29,7 @@ class OrdersEndpoints
     /** 
      * To get Orders use this function.
      */
-    public function getOrders()
+    public function getOrders($param)
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/orders
