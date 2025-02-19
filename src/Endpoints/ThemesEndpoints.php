@@ -77,7 +77,7 @@ class ThemesEndpoints
                     'name' => $response['node']['name'] ?? '',
                     'created_at' => $response['node']['createdAt'] ?? '',
                     'updated_at' => $response['node']['updatedAt'] ?? '',
-                    'role' => $response['node']['role'] ?? '',
+                    'role' => strtolower($response['node']['role']) ?? '',
                     'theme_store_id' => $response['node']['themeStoreId'] ?? '',
                     'processing' => $response['node']['processing'] ?? '',
                 ];
