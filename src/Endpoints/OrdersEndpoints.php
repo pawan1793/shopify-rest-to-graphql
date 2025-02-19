@@ -43,9 +43,41 @@ class OrdersEndpoints
         //     note
         // }
 
-        $ordersquery = <<<'GRAPHQL'
+        $filters = [];
+
+        if (!empty($param['query']['status'])) {
+            $filters[] = "status:{$param['query']['status']}";
+        }
+
+        if (!empty($param['query']['created_at'])) {
+            $filters[] = "created_at:{$param['query']['created_at']}";
+        }
+
+        if (!empty($param['query']['updated_at'])) {
+            $filters[] = "updated_at:{$param['query']['updated_at']}";
+        }
+        
+        if (!empty($param['query']['id'])) {
+            $filters[] = "id:{$param['query']['id']}";
+        }
+        
+        if (!empty($param['query']['name'])) {
+            $filters[] = "name:{$param['query']['name']}";
+        }
+        
+        if (!empty($param['query']['financial_status'])) {
+            $filters[] = "financial_status:{$param['query']['financial_status']}";
+        }
+        
+        if (!empty($param['query']['fulfillment_status'])) {
+            $filters[] = "fulfillment_status:{$param['query']['fulfillment_status']}";
+        }
+
+        $queryString = !empty($filters) ? implode(" AND ", $filters) : "";
+
+        $ordersQuery = <<<QUERY
         query {
-            orders(first: 1) {
+            orders(first: 200, query: "$queryString") {
                 edges {
                     cursor
                     node {
@@ -304,9 +336,9 @@ class OrdersEndpoints
                 }
             }
         }
-        GRAPHQL;
+        QUERY;
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($ordersquery);
+        $responseData = $this->graphqlService->graphqlQueryThalia($ordersQuery);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
@@ -386,7 +418,7 @@ class OrdersEndpoints
                 }, $order['node']['refunds']);
                 $orderResponse['billing_address'] = $order['node']['billingAddress'];
                 $orderResponse['shipping_address'] = $order['node']['shippingAddress'];
-                $orderResponse['shipping_lines'] = !empty($order['node']['shippingLines']['edges']) ? $order['node']['shippingLines']['edges']['node'] : '';
+                $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['shippingLines']['edges']) : [];
 
                 $ordersResponse[] = $orderResponse;
             }
@@ -414,7 +446,7 @@ class OrdersEndpoints
         //     note
         // }
 
-        $orderquery = <<<'GRAPHQL'
+        $orderQuery = <<<'GRAPHQL'
         query GetOrderById($id: ID!) {
             order(id: $id) {
                 id
@@ -672,9 +704,9 @@ class OrdersEndpoints
         }
         GRAPHQL;
 
-        $ordervariables = ['id' => "gid://shopify/Order/{$orderId}"];
+        $orderVariables = ['id' => "gid://shopify/Order/{$orderId}"];
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($orderquery, $ordervariables);
+        $responseData = $this->graphqlService->graphqlQueryThalia($orderQuery, $orderVariables);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
@@ -752,7 +784,7 @@ class OrdersEndpoints
             }, $orderData['refunds']);
             $orderResponse['billing_address'] = $orderData['billingAddress'];
             $orderResponse['shipping_address'] = $orderData['shippingAddress'];
-            $orderResponse['shipping_lines'] = !empty($orderData['shippingLines']['edges']) ? $orderData['shippingLines']['edges']['node'] : '';
+            $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $orderData['shippingLines']['edges']) : [];
 
             return $orderResponse;
         }
