@@ -75,267 +75,19 @@ class OrdersEndpoints
 
         $queryString = !empty($filters) ? implode(" AND ", $filters) : "";
 
-        $ordersQuery = <<<QUERY
-        query {
-            orders(first: 200, query: "$queryString") {
-                edges {
-                    cursor
-                    node {
-                        id
-                        cancelReason
-                        cancelledAt
-                        closedAt
-                        processedAt
-                        createdAt
-                        updatedAt
-                        currencyCode
-                        discountCodes
-                        displayFinancialStatus
-                        displayFulfillmentStatus
-                        name
-                        note
-                        confirmationNumber
-                        paymentGatewayNames
-                        phone
-                        tags
-                        email
-                        taxLines {
-                            title
-                            price
-                            rate
-                            priceSet {
-                                shopMoney {
-                                    amount
-                                    currencyCode
-                                }
-                                presentmentMoney {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                        }
-                        totalOutstandingSet {
-                            presentmentMoney {
-                                amount
-                            }
-                            shopMoney {
-                                amount
-                            }
-                        }
-                        totalPriceSet {
-                            presentmentMoney {
-                                amount
-                            }
-                            shopMoney {
-                                amount
-                            }
-                        }
-                        totalDiscountsSet {
-                            presentmentMoney {
-                                amount
-                            }
-                            shopMoney {
-                                amount
-                            }
-                        }
-                        customAttributes {
-                            key
-                            value
-                        }
-                        discountApplications(first: 10) {
-                            edges {
-                                node {
-                                    index
-                                    allocationMethod
-                                    targetSelection
-                                    targetType
-                                    value
-                                }
-                            }
-                        }
-                        fulfillments {
-                            id
-                            createdAt
-                            name
-                            order {
-                                id
-                            }
-                            originAddress {
-                                address1
-                                address2
-                                city
-                                countryCode
-                                provinceCode
-                                zip
-                            }
-                            status
-                            updatedAt
-                            fulfillmentLineItems(first: 10) {
-                                edges {
-                                    cursor
-                                    node {
-                                        id
-                                        quantity
-                                        originalTotalSet {
-                                            shopMoney {
-                                                amount
-                                                currencyCode
-                                            }
-                                            presentmentMoney {
-                                                amount
-                                                currencyCode
-                                            }
-                                        }
-                                        lineItem {
-                                            id
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        lineItems(first: 50) {
-                            edges {
-                                cursor
-                                node {
-                                    id
-                                    currentQuantity
-                                    fulfillmentStatus
-                                    name
-                                    product {
-                                        id
-                                    }
-                                    quantity
-                                    requiresShipping
-                                    sku
-                                    taxable
-                                    title
-                                    totalDiscountSet {
-                                        shopMoney {
-                                            amount
-                                            currencyCode
-                                        }
-                                        presentmentMoney {
-                                            amount
-                                            currencyCode
-                                        }
-                                    }
-                                    variant {
-                                        id
-                                        title
-                                    }
-                                    vendor
-                                    taxLines {
-                                        title
-                                        price
-                                        rate
-                                        priceSet {
-                                            shopMoney {
-                                                amount
-                                                currencyCode
-                                            }
-                                            presentmentMoney {
-                                                amount
-                                                currencyCode
-                                            }
-                                        }
-                                    }
-                                    discountAllocations {
-                                        discountApplication {
-                                            allocationMethod
-                                            targetSelection
-                                            targetType
-                                            value
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        refunds {
-                            id
-                            createdAt
-                            note
-                            order {
-                                id
-                            }
-                            refundLineItems(first: 10) {
-                                edges {
-                                    cursor
-                                    node {
-                                        id
-                                        quantity
-                                        lineItem {
-                                            id
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        billingAddress {
-                            firstName
-                            address1
-                            phone
-                            city
-                            zip
-                            province
-                            country
-                            lastName
-                            address2
-                            company
-                            latitude
-                            longitude
-                            name
-                            countryCode
-                            provinceCode
-                        }
-                        shippingAddress {
-                            id
-                            address1
-                            address2
-                            city
-                            countryCode
-                            provinceCode
-                            zip
-                            name
-                            phone
-                            province
-                            country
-                            latitude
-                            longitude
-                        }
-                        shippingLines(first: 10) {
-                            edges {
-                                cursor
-                                node {
-                                    id
-                                    title
-                                    carrierIdentifier
-                                    requestedFulfillmentService {
-                                        id
-                                    }
-                                    shippingRateHandle
-                                    discountedPriceSet {
-                                        shopMoney {
-                                            amount
-                                            currencyCode
-                                        }
-                                        presentmentMoney {
-                                            amount
-                                            currencyCode
-                                        }
-                                    }
-                                    price
-                                    requestedFulfillmentService {
-                                        id
-                                    }
-                                    shippingRateHandle
-                                    title
-                                }
-                            }
+        $orderFields = implode("\n", $param['fields']);
+
+        $orderQuery = <<<QUERY
+            query {
+                orders(first: 200, query: "$queryString") {
+                    edges {
+                        cursor
+                        node {
+                            $orderFields
                         }
                     }
                 }
             }
-        }
         QUERY;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($ordersQuery);
@@ -432,7 +184,7 @@ class OrdersEndpoints
     /** 
      * To get Order by its ID use this function.
      */
-    public function getOrder($orderId)
+    public function getOrder($param)
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/order?example=Retrieve+a+specific+order
@@ -446,265 +198,17 @@ class OrdersEndpoints
         //     note
         // }
 
-        $orderQuery = <<<'GRAPHQL'
-        query GetOrderById($id: ID!) {
-            order(id: $id) {
-                id
-                cancelReason
-                cancelledAt
-                closedAt
-                processedAt
-                createdAt
-                updatedAt
-                currencyCode
-                discountCodes
-                displayFinancialStatus
-                displayFulfillmentStatus
-                name
-                note
-                confirmationNumber
-                paymentGatewayNames
-                phone
-                tags
-                email
-                taxLines {
-                    title
-                    price
-                    rate
-                    priceSet {
-                        shopMoney {
-                            amount
-                            currencyCode
-                        }
-                        presentmentMoney {
-                            amount
-                            currencyCode
-                        }
-                    }
-                }
-                totalOutstandingSet {
-                    presentmentMoney {
-                        amount
-                    }
-                    shopMoney {
-                        amount
-                    }
-                }
-                totalPriceSet {
-                    presentmentMoney {
-                        amount
-                    }
-                    shopMoney {
-                        amount
-                    }
-                }
-                totalDiscountsSet {
-                    presentmentMoney {
-                        amount
-                    }
-                    shopMoney {
-                        amount
-                    }
-                }
-                customAttributes {
-                    key
-                    value
-                }
-                discountApplications(first: 10) {
-                    edges {
-                        node {
-                            index
-                            allocationMethod
-                            targetSelection
-                            targetType
-                            value
-                        }
-                    }
-                }
-                fulfillments {
-                    id
-                    createdAt
-                    name
-                    order {
-                        id
-                    }
-                    originAddress {
-                        address1
-                        address2
-                        city
-                        countryCode
-                        provinceCode
-                        zip
-                    }
-                    status
-                    updatedAt
-                    fulfillmentLineItems(first: 10) {
-                        edges {
-                            cursor
-                            node {
-                                id
-                                quantity
-                                originalTotalSet {
-                                    shopMoney {
-                                        amount
-                                        currencyCode
-                                    }
-                                    presentmentMoney {
-                                        amount
-                                        currencyCode
-                                    }
-                                }
-                                lineItem {
-                                    id
-                                }
-                            }
-                        }
-                    }
-                }
-                lineItems(first: 50) {
-                    edges {
-                        cursor
-                        node {
-                            id
-                            currentQuantity
-                            fulfillmentStatus
-                            name
-                            product {
-                                id
-                            }
-                            quantity
-                            requiresShipping
-                            sku
-                            taxable
-                            title
-                            totalDiscountSet {
-                                shopMoney {
-                                    amount
-                                    currencyCode
-                                }
-                                presentmentMoney {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                            variant {
-                                id
-                                title
-                            }
-                            vendor
-                            taxLines {
-                                title
-                                price
-                                rate
-                                priceSet {
-                                    shopMoney {
-                                        amount
-                                        currencyCode
-                                    }
-                                    presentmentMoney {
-                                        amount
-                                        currencyCode
-                                    }
-                                }
-                            }
-                            discountAllocations {
-                                discountApplication {
-                                    allocationMethod
-                                    targetSelection
-                                    targetType
-                                    value
-                                }
-                            }
-                        }
-                    }
-                }
-                refunds {
-                    id
-                    createdAt
-                    note
-                    order {
-                        id
-                    }
-                    refundLineItems(first: 10) {
-                        edges {
-                            cursor
-                            node {
-                                id
-                                quantity
-                                lineItem {
-                                    id
-                                }
-                            }
-                        }
-                    }
-                }
-                billingAddress {
-                    firstName
-                    address1
-                    phone
-                    city
-                    zip
-                    province
-                    country
-                    lastName
-                    address2
-                    company
-                    latitude
-                    longitude
-                    name
-                    countryCode
-                    provinceCode
-                }
-                shippingAddress {
-                    id
-                    address1
-                    address2
-                    city
-                    countryCode
-                    provinceCode
-                    zip
-                    name
-                    phone
-                    province
-                    country
-                    latitude
-                    longitude
-                }
-                shippingLines(first: 10) {
-                    edges {
-                        cursor
-                        node {
-                            id
-                            title
-                            carrierIdentifier
-                            requestedFulfillmentService {
-                                id
-                            }
-                            shippingRateHandle
-                            discountedPriceSet {
-                                shopMoney {
-                                    amount
-                                    currencyCode
-                                }
-                                presentmentMoney {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                            price
-                            requestedFulfillmentService {
-                                id
-                            }
-                            shippingRateHandle
-                            title
-                        }
-                    }
+        $orderFields = implode("\n", $param['fields']);
+
+        $orderQuery = <<<QUERY
+            query GetOrderById(\$id: ID!) {
+                order(id: \$id) {
+                    $orderFields
                 }
             }
-        }
-        GRAPHQL;
+        QUERY;
 
-        $orderVariables = ['id' => "gid://shopify/Order/{$orderId}"];
+        $orderVariables = ['id' => "gid://shopify/Order/{$param['id']}"];
 
         $responseData = $this->graphqlService->graphqlQueryThalia($orderQuery, $orderVariables);
 
@@ -801,74 +305,21 @@ class OrdersEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/transaction#get-orders-order-id-transactions
         */
 
+        $orderTransectionFields = implode("\n", $param['fields']);
+
         $orderTransactionVariable = [
             "orderId" => 'gid://shopify/Order/' . $param['orderId']
         ];
 
-        $orderTransactionQuery = <<<'GRAPHQL'
-        query TransactionsForOrder($orderId: ID!) {
-            order(id: $orderId) {
-                transactions(first: 10) {
-                    id
-                    order {
-                        id
+        $orderTransactionQuery = <<<QUERY
+            query TransactionsForOrder(\$orderId: ID!) {
+                order(id: \$orderId) {
+                    transactions(first: 10) {
+                        $orderTransectionFields
                     }
-                    kind
-                    gateway
-                    status
-                    createdAt
-                    test
-                    authorizationCode
-                    authorizationExpiresAt
-                    parentTransaction {
-                    id
-                    }
-                    processedAt
-                    errorCode
-                    receiptJson
-                    fees {
-                        amount {
-                            amount
-                            currencyCode
-                        }
-                    }
-                    amountSet {
-                        presentmentMoney {
-                            amount
-                            currencyCode
-                        }
-                        shopMoney {
-                            amount
-                            currencyCode
-                        }
-                    }
-                    paymentDetails {
-                        ... on CardPaymentDetails {
-                            paymentMethodName
-                        }
-                        ... on ShopPayInstallmentsPaymentDetails {
-                            paymentMethodName
-                        }
-                    }
-                    paymentIcon {
-                        url
-                    }
-                    paymentId
-                    totalUnsettledSet {
-                        presentmentMoney {
-                            amount
-                            currencyCode
-                        }
-                        shopMoney {
-                            amount
-                            currencyCode
-                        }
-                    }
-                    formattedGateway
                 }
             }
-        }
-        GRAPHQL;
+        QUERY;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($orderTransactionQuery, $orderTransactionVariable);
 
@@ -1032,5 +483,266 @@ class OrdersEndpoints
         }
     }
 
-
+    public function testquerFormmate()
+    {
+        $param = [
+            'id' => 6341354586423,
+            'query' => [
+                'status' =>  'any',
+            ],
+            'fields' => [
+                'id',
+                'cancelReason',
+                'cancelledAt',
+                'closedAt',
+                'processedAt',
+                'createdAt',
+                'updatedAt',
+                'currencyCode',
+                'discountCodes',
+                'displayFinancialStatus',
+                'displayFulfillmentStatus',
+                'name',
+                'note',
+                'confirmationNumber',
+                'paymentGatewayNames',
+                'phone',
+                'tags',
+                'email',
+                'taxLines {
+                    title
+                    price
+                    rate
+                    priceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                        presentmentMoney {
+                            amount
+                            currencyCode
+                        }
+                    }
+                }',
+                'totalOutstandingSet {
+                    presentmentMoney {
+                        amount
+                    }
+                    shopMoney {
+                        amount
+                    }
+                }',
+                'totalPriceSet {
+                    presentmentMoney {
+                        amount
+                    }
+                    shopMoney {
+                        amount
+                    }
+                }',
+                'totalDiscountsSet {
+                    presentmentMoney {
+                        amount
+                    }
+                    shopMoney {
+                        amount
+                    }
+                }',
+                'customAttributes {
+                    key
+                    value
+                }',
+                'discountApplications(first: 10) {
+                    edges {
+                        node {
+                            index
+                            allocationMethod
+                            targetSelection
+                            targetType
+                            value
+                        }
+                    }
+                }',
+                'fulfillments {
+                    id
+                    createdAt
+                    name
+                    order {
+                        id
+                    }
+                    originAddress {
+                        address1
+                        address2
+                        city
+                        countryCode
+                        provinceCode
+                        zip
+                    }
+                    status
+                    updatedAt
+                    fulfillmentLineItems(first: 10) {
+                        edges {
+                            cursor
+                            node {
+                                id
+                                quantity
+                                originalTotalSet {
+                                    shopMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                    presentmentMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                }
+                                lineItem {
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }',
+                'lineItems(first: 50) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                            currentQuantity
+                            fulfillmentStatus
+                            name
+                            product {
+                                id
+                            }
+                            quantity
+                            requiresShipping
+                            sku
+                            taxable
+                            title
+                            totalDiscountSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            variant {
+                                id
+                                title
+                            }
+                            vendor
+                            taxLines {
+                                title
+                                price
+                                rate
+                                priceSet {
+                                    shopMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                    presentmentMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                }
+                            }
+                            discountAllocations {
+                                discountApplication {
+                                    allocationMethod
+                                    targetSelection
+                                    targetType
+                                    value
+                                }
+                            }
+                        }
+                    }
+                }',
+                'refunds {
+                    id
+                    createdAt
+                    note
+                    order {
+                        id
+                    }
+                    refundLineItems(first: 10) {
+                        edges {
+                            cursor
+                            node {
+                                id
+                                quantity
+                                lineItem {
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }',
+                'billingAddress {
+                    firstName
+                    address1
+                    phone
+                    city
+                    zip
+                    province
+                    country
+                    lastName
+                    address2
+                    company
+                    latitude
+                    longitude
+                    name
+                    countryCode
+                    provinceCode
+                }',
+                'shippingAddress {
+                    id
+                    address1
+                    address2
+                    city
+                    countryCode
+                    provinceCode
+                    zip
+                    name
+                    phone
+                    province
+                    country
+                    latitude
+                    longitude
+                }',
+                'shippingLines(first: 10) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                            title
+                            carrierIdentifier
+                            requestedFulfillmentService {
+                                id
+                            }
+                            shippingRateHandle
+                            discountedPriceSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            price
+                            requestedFulfillmentService {
+                                id
+                            }
+                            shippingRateHandle
+                            title
+                        }
+                    }
+                }'
+            ]
+        ];
+    }
 }
