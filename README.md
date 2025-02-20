@@ -1,7 +1,7 @@
 # Shopify REST to GraphQL (PHP/Laravel Package)
 
 This package designed to help developers migrate from Shopify's REST API to the more modern and efficient GraphQL API. The package provides a set of utility functions and endpoints that map REST API functionality to GraphQL queries and mutations, making it easier to transition your Laravel application to use Shopify's GraphQL API.
-NOTE :: This is experimental package 
+NOTE : This is experimental package 
 
 ## Features
  - Easy Integration: Simplifies the integration of Shopify's GraphQL API into your Laravel application.
