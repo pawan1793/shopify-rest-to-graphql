@@ -355,7 +355,7 @@ class OrdersEndpoints
                 $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $order['node']['id']);
                 $orderResponse['admin_graphql_api_id'] = $order['node']['id'];
                 $orderResponse['cancel_reason'] = $order['node']['cancelReason'];
-                $orderResponse['cancelledAt'] = $order['node']['cancelledAt'];
+                $orderResponse['cancelled_at'] = $order['node']['cancelledAt'];
                 $orderResponse['closed_at'] = $order['node']['closedAt'];
                 $orderResponse['processed_at'] = $order['node']['processedAt'];
                 $orderResponse['created_at'] = $order['node']['createdAt'];
@@ -721,7 +721,7 @@ class OrdersEndpoints
             $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']);
             $orderResponse['admin_graphql_api_id'] = $orderData['id'];
             $orderResponse['cancel_reason'] = $orderData['cancelReason'];
-            $orderResponse['cancelledAt'] = $orderData['cancelledAt'];
+            $orderResponse['cancelled_at'] = $orderData['cancelledAt'];
             $orderResponse['closed_at'] = $orderData['closedAt'];
             $orderResponse['processed_at'] = $orderData['processedAt'];
             $orderResponse['created_at'] = $orderData['createdAt'];
@@ -913,20 +913,52 @@ class OrdersEndpoints
     /** 
      * To get Order Count use this function.
      */
-    public function OrdersCount()
+    public function OrdersCount($param)
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/ordersCount?example=Retrieve+an+order+count
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#get-orders-count
         */
 
-        $orderscountquery = <<<'GRAPHQL'
+        $filters = [];
+
+        if (!empty($param['query']['status'])) {
+            $filters[] = "status:{$param['query']['status']}";
+        }
+
+        if (!empty($param['query']['created_at'])) {
+            $filters[] = "created_at:{$param['query']['created_at']}";
+        }
+
+        if (!empty($param['query']['updated_at'])) {
+            $filters[] = "updated_at:{$param['query']['updated_at']}";
+        }
+        
+        if (!empty($param['query']['id'])) {
+            $filters[] = "id:{$param['query']['id']}";
+        }
+        
+        if (!empty($param['query']['name'])) {
+            $filters[] = "name:{$param['query']['name']}";
+        }
+        
+        if (!empty($param['query']['financial_status'])) {
+            $filters[] = "financial_status:{$param['query']['financial_status']}";
+        }
+        
+        if (!empty($param['query']['fulfillment_status'])) {
+            $filters[] = "fulfillment_status:{$param['query']['fulfillment_status']}";
+        }
+
+        $queryString = !empty($filters) ? implode(" AND ", $filters) : "";
+
+        $orderscountquery = <<<QUERY
         query OrdersCount {
-            ordersCount(limit: 10000) {
+            ordersCount(limit: 10000, query: "$queryString") {
                 count
             }
         }
-        GRAPHQL;
+        QUERY;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($orderscountquery);
 
