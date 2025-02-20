@@ -86,16 +86,22 @@ class MetafieldsEndpoints
     }
 
     // METAFIELD CREATE FUNCTION
-    public function metafieldsSet($ownerId,$params)
+    public function metafieldsSet($ownerId,$params,$endpoint='product')
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/metafieldsSet
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#post-blogs-blog-id-metafields
         */
-
-        if (strpos($ownerId, 'gid://shopify/Product') !== true) {
+        if($endpoint =='product') {
             $ownerId = "gid://shopify/Product/{$ownerId}";
-        }
+
+        } else if($endpoint =="shop") {   
+            $ownerId = "gid://shopify/Shop/{$ownerId}";
+
+        }else if($endpoint == "variant") {
+            $ownerId = "gid://shopify/ProductVariant/{$ownerId}";
+
+        }    
        
         $graphqlmetafields = array();
         foreach($params['metafields'] as $metafield){
