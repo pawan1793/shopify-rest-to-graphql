@@ -113,7 +113,7 @@ class OrdersEndpoints
             }
         QUERY;
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($ordersQuery);
+        $responseData = $this->graphqlService->graphqlQueryThalia($orderQuery);
 
         if (isset($responseData['errors']) && !empty($responseData['errors'])) {
 
