@@ -47,18 +47,18 @@ class OrdersEndpoints
         $cursorparam = '';
         $limit = 250;
 
-        if(isset($params['limit'])){
-            $limit = $params['limit'];
+        if(isset($param['limit'])){
+            $limit = $param['limit'];
         }
 
-        if(isset($params['cursor'])){
-            if(isset($params['direction']) && $params['direction'] == 'next'){
-                $cursorparam = "after: \"{$params['cursor']}\"";
+        if(isset($param['cursor'])){
+            if(isset($param['direction']) && $param['direction'] == 'next'){
+                $cursorparam = "after: \"{$param['cursor']}\"";
             }
 
-            if(isset($params['direction']) && $params['direction'] == 'prev'){
+            if(isset($param['direction']) && $param['direction'] == 'prev'){
                 $position = 'last';
-                $cursorparam = "before: \"{$params['cursor']}\"";
+                $cursorparam = "before: \"{$param['cursor']}\"";
             }
         }
 
