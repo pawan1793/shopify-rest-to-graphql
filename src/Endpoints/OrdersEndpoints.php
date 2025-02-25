@@ -43,6 +43,25 @@ class OrdersEndpoints
         //     note
         // }
 
+        $position = 'first';
+        $cursorparam = '';
+        $limit = 250;
+
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+        }
+
+        if(isset($params['cursor'])){
+            if(isset($params['direction']) && $params['direction'] == 'next'){
+                $cursorparam = "after: \"{$params['cursor']}\"";
+            }
+
+            if(isset($params['direction']) && $params['direction'] == 'prev'){
+                $position = 'last';
+                $cursorparam = "before: \"{$params['cursor']}\"";
+            }
+        }
+
         $filters = [];
 
         if (!empty($param['query']['status'])) {
@@ -79,12 +98,16 @@ class OrdersEndpoints
 
         $orderQuery = <<<QUERY
             query {
-                orders(first: 200, query: "$queryString") {
+                orders($position: $limit, query: "$queryString") {
                     edges {
                         cursor
                         node {
                             $orderFields
                         }
+                    }
+                    pageInfo {
+                        hasNextPage
+                        hasPreviousPage
                     }
                 }
             }
@@ -104,78 +127,85 @@ class OrdersEndpoints
 
             foreach($ordersData as $key => $order) {
                 $orderResponse = [];
-                $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $order['node']['id']);
-                $orderResponse['admin_graphql_api_id'] = $order['node']['id'];
-                $orderResponse['cancel_reason'] = $order['node']['cancelReason'];
-                $orderResponse['cancelled_at'] = $order['node']['cancelledAt'];
-                $orderResponse['closed_at'] = $order['node']['closedAt'];
-                $orderResponse['processed_at'] = $order['node']['processedAt'];
-                $orderResponse['created_at'] = $order['node']['createdAt'];
-                $orderResponse['updated_at'] = $order['node']['updatedAt'];
-                $orderResponse['currency'] = $order['node']['currencyCode'];
-                $orderResponse['discount_codes'] = $order['node']['discountCodes'];
-                $orderResponse['fulfillment_status'] = $order['node']['displayFulfillmentStatus'];
-                $orderResponse['financial_status'] = $order['node']['displayFinancialStatus'];
-                $orderResponse['name'] = $order['node']['name'];
-                $orderResponse['note'] = $order['node']['note'];
-                $orderResponse['confirmation_number'] = $order['node']['confirmationNumber'];
-                $orderResponse['payment_gateway_names'] = $order['node']['paymentGatewayNames'];
-                $orderResponse['phone'] = $order['node']['phone'];
-                $orderResponse['tags'] = $order['node']['tags'];
-                $orderResponse['email'] = $order['node']['email'];
-                // $orderResponse['customer'] = $order['node']['customer'];
-                $orderResponse['tax_lines'] = $order['node']['taxLines'];
-                $orderResponse['total_outstanding'] = $order['node']['totalOutstandingSet']['presentmentMoney']['amount'];
-                $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'];
-                $orderResponse['total_discounts'] = $order['node']['totalDiscountsSet']['presentmentMoney']['amount'];
-                $orderResponse['note_attributes'] = $order['node']['customAttributes'];
+                $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $order['node']['id']) ?? '';
+                $orderResponse['admin_graphql_api_id'] = $order['node']['id'] ?? '';
+                $orderResponse['cancel_reason'] = $order['node']['cancelReason'] ?? '';
+                $orderResponse['cancelled_at'] = $order['node']['cancelledAt'] ?? '';
+                $orderResponse['closed_at'] = $order['node']['closedAt'] ?? '';
+                $orderResponse['processed_at'] = $order['node']['processedAt'] ?? '';
+                $orderResponse['created_at'] = $order['node']['createdAt'] ?? '';
+                $orderResponse['updated_at'] = $order['node']['updatedAt'] ?? '';
+                $orderResponse['currency'] = $order['node']['currencyCode'] ?? '';
+                $orderResponse['discount_codes'] = $order['node']['discountCodes'] ?? '';
+                $orderResponse['fulfillment_status'] = $order['node']['displayFulfillmentStatus'] ?? '';
+                $orderResponse['financial_status'] = $order['node']['displayFinancialStatus'] ?? '';
+                $orderResponse['name'] = $order['node']['name'] ?? '';
+                $orderResponse['note'] = $order['node']['note'] ?? '';
+                $orderResponse['confirmation_number'] = $order['node']['confirmationNumber'] ?? '';
+                $orderResponse['payment_gateway_names'] = $order['node']['paymentGatewayNames'] ?? '';
+                $orderResponse['phone'] = $order['node']['phone'] ?? '';
+                $orderResponse['tags'] = $order['node']['tags'] ?? '';
+                $orderResponse['email'] = $order['node']['email'] ?? '';
+                // $orderResponse['customer'] = $order['node']['customer'] ?? '';
+                $orderResponse['tax_lines'] = $order['node']['taxLines'] ?? '';
+                $orderResponse['total_outstanding'] = $order['node']['totalOutstandingSet']['presentmentMoney']['amount'] ?? '';
+                $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'] ?? '';
+                $orderResponse['total_discounts'] = $order['node']['totalDiscountsSet']['presentmentMoney']['amount'] ?? '';
+                $orderResponse['note_attributes'] = $order['node']['customAttributes'] ?? '';
                 $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['discountApplications']['edges']) : '';
-                $orderResponse['fulfillments'] = $order['node']['fulfillments'];
+                $orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
                 $orderResponse['line_items'] = array_map(function($item) {
                     return [
-                    'id' => str_replace('gid://shopify/LineItem/', '', $item['node']['id']),
-                    'admin_graphql_api_id' => $item['node']['id'],
-                    'current_quantity' => $item['node']['currentQuantity'],
-                    'fulfillment_status' => $item['node']['fulfillmentStatus'],
-                    'name' => $item['node']['name'],
-                    'product_id' => str_replace('gid://shopify/Product/', '', $item['node']['product']['id']),
-                    'quantity' => $item['node']['quantity'],
-                    'requires_shipping' => $item['node']['requiresShipping'],
-                    'sku' => $item['node']['sku'],
-                    'taxable' => $item['node']['taxable'],
-                    'title' => $item['node']['title'],
-                    'total_discount_set' => $item['node']['totalDiscountSet'],
-                    'variant_id' => (isset($item['node']['variant'])) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
-                    'variant_title' => (isset($item['node']['variant'])) ? $item['node']['variant']['title'] : '',
-                    'vendor' => $item['node']['vendor'],
-                    'tax_lines' => $item['node']['taxLines'],
-                    'discount_allocations' => $item['node']['discountAllocations']
+                        'id' => str_replace('gid://shopify/LineItem/', '', $item['node']['id']) ?? '',
+                        'admin_graphql_api_id' => $item['node']['id'] ?? '',
+                        'current_quantity' => $item['node']['currentQuantity'] ?? '',
+                        'fulfillment_status' => $item['node']['fulfillmentStatus'] ?? '',
+                        'name' => $item['node']['name'] ?? '',
+                        'product_id' => str_replace('gid://shopify/Product/', '', $item['node']['product']['id']) ?? '',
+                        'quantity' => $item['node']['quantity'] ?? '',
+                        'requires_shipping' => $item['node']['requiresShipping'] ?? '',
+                        'sku' => $item['node']['sku'] ?? '',
+                        'taxable' => $item['node']['taxable'] ?? '',
+                        'title' => $item['node']['title'] ?? '',
+                        'total_discount_set' => $item['node']['totalDiscountSet'] ?? '',
+                        'variant_id' => (isset($item['node']['variant'])) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
+                        'variant_title' => (isset($item['node']['variant'])) ? $item['node']['variant']['title'] : '',
+                        'vendor' => $item['node']['vendor'] ?? '',
+                        'tax_lines' => $item['node']['taxLines'] ?? '',
+                        'discount_allocations' => $item['node']['discountAllocations'] ?? ''
                     ];
                 }, $order['node']['lineItems']['edges']);
                 $orderResponse['refunds'] = array_map(function($refund) {
                     return [
-                        'id' => str_replace('gid://shopify/Refund/', '', $refund['id']),
-                        'admin_graphql_api_id' => $refund['id'],
-                        'created_at' => $refund['createdAt'],
-                        'note' => $refund['note'],
-                        'order_id' => str_replace('gid://shopify/Order/', '', $refund['order']['id']),
+                        'id' => str_replace('gid://shopify/Refund/', '', $refund['id']) ?? '',
+                        'admin_graphql_api_id' => $refund['id'] ?? '',
+                        'created_at' => $refund['createdAt'] ?? '',
+                        'note' => $refund['note'] ?? '',
+                        'order_id' => str_replace('gid://shopify/Order/', '', $refund['order']['id']) ?? '',
                         'refund_line_items' => array_map(function($refundLineItem) {
                             return [
-                                'id' => str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']),
-                                'line_item_id' => str_replace('gid://shopify/LineItem/', '', $refundLineItem['node']['lineItem']['id']),
-                                'quantity' => $refundLineItem['node']['quantity']
+                                'id' => str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']) ?? '',
+                                'line_item_id' => str_replace('gid://shopify/LineItem/', '', $refundLineItem['node']['lineItem']['id']) ?? '',
+                                'quantity' => $refundLineItem['node']['quantity'] ?? ''
                             ];
                         }, $refund['refundLineItems']['edges'])
                     ];
                 }, $order['node']['refunds']);
-                $orderResponse['billing_address'] = $order['node']['billingAddress'];
-                $orderResponse['shipping_address'] = $order['node']['shippingAddress'];
+                $orderResponse['billing_address'] = $order['node']['billingAddress'] ?? '';
+                $orderResponse['shipping_address'] = $order['node']['shippingAddress'] ?? '';
                 $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['shippingLines']['edges']) : [];
 
                 $ordersResponse[] = $orderResponse;
             }
 
-            return $ordersResponse;
+            $pageInfo = $responseData['data']['orders']['pageInfo'];
+
+            $responseData = [
+                'data' => $ordersResponse,
+                'pageInfo' => $pageInfo,
+            ];
+
+            return $responseData;
 
         }
 
