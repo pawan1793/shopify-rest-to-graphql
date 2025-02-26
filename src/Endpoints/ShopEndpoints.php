@@ -29,16 +29,34 @@ class ShopEndpoints
     /** 
      * To get Shop Info use this function.
      */
-    public function shopInfo()
+    public function shopInfo($param = [])
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/shop
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/shop
         */
 
+        global $graphqlService;
+        $productTypeFields = '';
+        if (!empty($param['fields'])) {
+            $productTypeFields = implode("\n", array_map(fn($field) => $field, $param['fields']));
+        }
+
+        $productTypeQuery = '';
+        if (!empty($productTypeFields)) {
+          $productTypeQuery =
+            'productTypes(first: 250) {
+                edges {
+                    node
+                }
+            }';
+        } else {
+            $productTypeQuery = '';
+        }
 
 
-        $shopquery = <<<'GRAPHQL'
+
+        $shopquery = "
             query ShopShow {
                 shop {
                 alerts {
@@ -97,11 +115,7 @@ class ShopEndpoints
                     host
                     id
                 }
-                productTypes(first: 250) {
-                    edges {
-                    node
-                    }
-                }
+                $productTypeQuery
                 setupRequired
                 shipsToCountries
                 taxesIncluded
@@ -112,8 +126,7 @@ class ShopEndpoints
                 url
                 weightUnit
                 }
-            }
-            GRAPHQL;
+            }";
 
         $responseData = $this->graphqlService->graphqlQueryThalia($shopquery);
 
