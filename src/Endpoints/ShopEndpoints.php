@@ -44,7 +44,7 @@ class ShopEndpoints
 
         $productTypeQuery = '';
         if (!empty($productTypeFields)) {
-            $productTypeQuery =
+          $productTypeQuery =
             'productTypes(first: 250) {
                 edges {
                     node
