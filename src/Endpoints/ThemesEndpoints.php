@@ -101,7 +101,7 @@ class ThemesEndpoints
         */
 
         $themeVariable = [
-            'roles' => $param['role'],
+            'roles' => strtoupper($param['role']),
         ];
 
         $themeQuery = <<<'GRAPHQL'
