@@ -194,6 +194,7 @@ class OrdersEndpoints
                 $orderResponse['billing_address'] = $order['node']['billingAddress'] ?? '';
                 $orderResponse['shipping_address'] = $order['node']['shippingAddress'] ?? '';
                 $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['shippingLines']['edges']) : [];
+                $orderResponse['cursor'] = $order['node']['cursor'] ?? '';
 
                 $ordersResponse[] = $orderResponse;
             }
