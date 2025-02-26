@@ -44,20 +44,19 @@ class ShopEndpoints
 
         $productTypeQuery = '';
         if (!empty($productTypeFields)) {
-            $productTypeQuery = <<<GRAPHQL
-        productTypes(first: 250) {
-            edges {
-                node
-            }
-        }
-        GRAPHQL;
+            $productTypeQuery =
+            'productTypes(first: 250) {
+                edges {
+                    node
+                }
+            }';
         } else {
             $productTypeQuery = '';
         }
 
 
 
-        $shopquery = <<<'GRAPHQL'
+        $shopquery = "
             query ShopShow {
                 shop {
                 alerts {
@@ -127,8 +126,7 @@ class ShopEndpoints
                 url
                 weightUnit
                 }
-            }
-            GRAPHQL;
+            }";
 
         $responseData = $this->graphqlService->graphqlQueryThalia($shopquery);
 
