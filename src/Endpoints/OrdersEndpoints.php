@@ -98,7 +98,7 @@ class OrdersEndpoints
 
         $orderQuery = <<<QUERY
             query {
-                orders($position: $limit, query: "$queryString") {
+                orders($position: $limit, query: "$queryString", $cursorparam) {
                     edges {
                         cursor
                         node {
