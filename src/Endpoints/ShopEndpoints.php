@@ -6,6 +6,9 @@ use Thalia\ShopifyRestToGraphql\GraphqlService;
 use Thalia\ShopifyRestToGraphql\GraphqlException;
 class ShopEndpoints
 {
+
+    const PlanNames = ["affiliate" => "Development", "staff" => "Staff", "cancelled" => "Cancelled", "staff_business" => "Staff Business", "trial" => "Trial", "dormant" => "Dormant", "frozen" => "Frozen", "singtel_trial" => "Singtel Trial", "partner_test" => "Developer Preview", "basic" => "Basic", "npo_lite" => "Npo Lite", "npo_full" => "Npo Full", "singtel_basic" => "Singtel Basic", "singtel_starter" => "Singtel Starter", "uafrica_basic" => "Uafrica Basic", "fraudulent" => "Fraudulent", "starter" => "Starter", "comped" => "Comped", "shopify_alumni" => "Shopify Alumni", "professional" => "Shopify", "custom" => "Custom", "unlimited" => "Shopify Plus", "singtel_unlimited" => "Singtel Unlimited", "singtel_professional" => "Singtel Professional", "business" => "Business", "uafrica_professional" => "Uafrica Professional", "shopify_plus" => "Shopify Plus", "enterprise" => "Enterprise"];
+
     private $graphqlService;
 
     private $shopDomain;
@@ -138,7 +141,7 @@ class ShopEndpoints
 
             $responseData = $responseData['data']['shop'];
             $responseData['id'] = str_replace('gid://shopify/Shop/', '', $responseData['id']);
-            $responseData['plan_name'] = $responseData['plan']['displayName'];
+            $responseData['plan_name'] = array_flip(self::PlanNames)[$responseData['plan']['displayName']] ?? '';
             $responseData['myshopify_domain'] = $responseData['myshopifyDomain'];
             $responseData['domain'] = $responseData['myshopifyDomain'];
             $responseData['shop_owner'] = $responseData['name'];
