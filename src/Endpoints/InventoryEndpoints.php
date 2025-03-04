@@ -105,9 +105,9 @@ class InventoryEndpoints
                 $response['location_name'] = $location['node']['location']['name'];
                 $response['available'] = $location['node']['quantities'][0]['quantity'];
 
-            }
+                $finalarray[$lkey] = $response;
 
-           $finalarray[$lkey] = $response;
+            }
 
         }
 
