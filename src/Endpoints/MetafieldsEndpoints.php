@@ -269,7 +269,8 @@ class MetafieldsEndpoints
                         if (!empty($responseData['data']['product']['metafield'])) {
 
                             $productMetafieldData = $responseData['data']['product']['metafield'];
-                            $productMetafieldData['id'] = str_replace("gid://shopify/Metafield/", "", $responseData['id']);
+                            $productMetafieldData['id'] = str_replace("gid://shopify/Metafield/", "", $productMetafieldData['id']);
+                            $productMetafieldData[] = $productMetafieldData;
 
                         }
 

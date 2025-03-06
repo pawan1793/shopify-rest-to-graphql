@@ -167,12 +167,13 @@ class OrdersEndpoints
                         'sku' => $item['node']['sku'] ?? '',
                         'taxable' => $item['node']['taxable'] ?? '',
                         'title' => $item['node']['title'] ?? '',
-                        'total_discount_set' => $item['node']['totalDiscountSet'] ?? '',
+                        'price' => $item['node']['originalTotalSet'] ? $item['node']['originalTotalSet']['shopMoney']['amount'] : null,
+                        'total_discount_set' => $item['node']['totalDiscountSet'] ? $item['node']['totalDiscountSet']['shopMoney'] : [],
                         'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                         'variant_title' => $item['node']['variant']['title'] ?? '',
                         'vendor' => $item['node']['vendor'] ?? '',
-                        'tax_lines' => $item['node']['taxLines'] ?? '',
-                        'discount_allocations' => $item['node']['discountAllocations'] ?? ''
+                        'tax_lines' => $item['node']['taxLines'] ?? [],
+                        'discount_allocations' => $item['node']['discountAllocations'] ?? []
                     ];
                 }, $order['node']['lineItems']['edges']) : [];
                 $orderResponse['refunds'] = isset($order['node']['refunds']) && is_array($order['node']['refunds']) ? array_map(function ($refund) {
@@ -293,12 +294,13 @@ class OrdersEndpoints
                     'sku' => $item['node']['sku'] ?? '',
                     'taxable' => $item['node']['taxable'] ?? '',
                     'title' => $item['node']['title'] ?? '',
-                    'total_discount_set' => $item['node']['totalDiscountSet'] ?? '',
+                    'price' => $item['node']['originalTotalSet'] ? $item['node']['originalTotalSet']['shopMoney']['amount'] : null,
+                    'total_discount_set' => $item['node']['totalDiscountSet'] ? $item['node']['totalDiscountSet']['shopMoney'] : [],
                     'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                     'variant_title' => $item['node']['variant']['title'] ?? '',
                     'vendor' => $item['node']['vendor'] ?? '',
-                    'tax_lines' => $item['node']['taxLines'] ?? '',
-                    'discount_allocations' => $item['node']['discountAllocations'] ?? ''
+                    'tax_lines' => $item['node']['taxLines'] ?? [],
+                    'discount_allocations' => $item['node']['discountAllocations'] ?? []
                 ];
             }, $orderData['lineItems']['edges']) : [];
             $orderResponse['refunds'] = isset($orderData['refunds']) && is_array($orderData['refunds']) ? array_map(function ($refund) {
@@ -650,6 +652,16 @@ class OrdersEndpoints
                             sku
                             taxable
                             title
+                            originalTotalSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
                             totalDiscountSet {
                                 shopMoney {
                                     amount
