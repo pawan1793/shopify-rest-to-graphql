@@ -108,6 +108,7 @@ class WebhooksEndpoints
         "orders/paid" => "ORDERS_PAID",
         "orders/partially_fulfilled" => "ORDERS_PARTIALLY_FULFILLED",
         "orders/updated" => "ORDERS_UPDATED",
+        "orders/edited" => "ORDERS_EDITED",
         "products/create" => "PRODUCTS_CREATE",
         "products/delete" => "PRODUCTS_DELETE",
         "products/update" => "PRODUCTS_UPDATE",
