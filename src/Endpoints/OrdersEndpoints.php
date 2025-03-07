@@ -152,7 +152,15 @@ class OrdersEndpoints
                 $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'] ?? '';
                 $orderResponse['total_discounts'] = $order['node']['totalDiscountsSet']['presentmentMoney']['amount'] ?? '';
                 $orderResponse['note_attributes'] = $order['node']['customAttributes'] ?? '';
-                $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['discountApplications']['edges']) : '';
+                $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) && is_array($order['node']['discountApplications']['edges']) ? array_map(function($discount) { 
+                    return[
+                        'index' => $discount['node']['index'] ?? '',
+                        'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
+                        'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
+                        'target_Type' => strtolower($discount['node']['targetType']) ?? '',
+                        'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                    ];
+                }, $order['node']['discountApplications']['edges']) : [];
                 $orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
                 $orderResponse['line_items'] = isset($order['node']['lineItems']['edges']) && is_array($order['node']['lineItems']['edges']) ? array_map(function($item) {
                     return [
@@ -167,8 +175,8 @@ class OrdersEndpoints
                         'sku' => $item['node']['sku'] ?? '',
                         'taxable' => $item['node']['taxable'] ?? '',
                         'title' => $item['node']['title'] ?? '',
-                        'price' => $item['node']['originalTotalSet'] ? $item['node']['originalTotalSet']['shopMoney']['amount'] : null,
-                        'total_discount_set' => $item['node']['totalDiscountSet'] ? $item['node']['totalDiscountSet']['shopMoney'] : [],
+                        'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
+                        'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                         'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                         'variant_title' => $item['node']['variant']['title'] ?? '',
                         'vendor' => $item['node']['vendor'] ?? '',
@@ -279,7 +287,15 @@ class OrdersEndpoints
             $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
             $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
             $orderResponse['note_attributes'] = $orderData['customAttributes'];
-            $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) ? array_map(fn($edge) => $edge['node'], $orderData['discountApplications']['edges']) : '';
+            $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) && is_array($order['node']['discountApplications']['edges']) ? array_map(function($discount) { 
+                return[
+                    'index' => $discount['node']['index'] ?? '',
+                    'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
+                    'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
+                    'target_Type' => strtolower($discount['node']['targetType']) ?? '',
+                    'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                ];
+            }, $order['node']['discountApplications']['edges']) : [];
             $orderResponse['fulfillments'] = $orderData['fulfillments'];
             $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function($item) {
                 return [
@@ -294,8 +310,8 @@ class OrdersEndpoints
                     'sku' => $item['node']['sku'] ?? '',
                     'taxable' => $item['node']['taxable'] ?? '',
                     'title' => $item['node']['title'] ?? '',
-                    'price' => $item['node']['originalTotalSet'] ? $item['node']['originalTotalSet']['shopMoney']['amount'] : null,
-                    'total_discount_set' => $item['node']['totalDiscountSet'] ? $item['node']['totalDiscountSet']['shopMoney'] : [],
+                    'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
+                    'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                     'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                     'variant_title' => $item['node']['variant']['title'] ?? '',
                     'vendor' => $item['node']['vendor'] ?? '',
@@ -592,7 +608,14 @@ class OrdersEndpoints
                             allocationMethod
                             targetSelection
                             targetType
-                            value
+                            value {
+                                ... on MoneyV2 {
+                                    amount
+                                }
+                                ... on PricingPercentageValue {
+                                    percentage
+                                }
+                            }
                         }
                     }
                 }',
