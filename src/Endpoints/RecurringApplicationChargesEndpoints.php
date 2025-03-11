@@ -152,4 +152,50 @@ class RecurringApplicationChargesEndpoints
         return $response;
     }
 
+    /** 
+     * To Cancel Recurring Application Charges use this function.
+    */
+    public function cancelAppSubscription($recurringChargeId)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/appSubscriptionCancel?example=Cancels+a+recurring+application+charge
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#delete-recurring-application-charges-recurring-application-charge-id
+        */
+
+        global $graphqlService;
+
+        $cancelappsubscriptionquery = <<<'GRAPHQL'
+            mutation AppSubscriptionCancel($id: ID!) {
+                appSubscriptionCancel(id: $id) {
+                    userErrors {
+                    field
+                    message
+                    }
+                    appSubscription {
+                    id
+                    status
+                    }
+                }
+            }
+            GRAPHQL;
+
+        $chargevariables = ["id" => "gid://shopify/AppSubscription/{$recurringChargeId}"];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($cancelappsubscriptionquery,$chargevariables);
+
+
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+
+            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+        } else {
+
+            $responseData = $responseData;
+
+        }
+
+        return $responseData;
+    }
+
+
 }

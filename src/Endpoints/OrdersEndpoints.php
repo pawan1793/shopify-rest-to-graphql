@@ -788,4 +788,60 @@ class OrdersEndpoints
             ]
         ];
     }
+
+    /** 
+     * To Order update use this function.
+    */
+    public function updateOrderTags($params)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/orderUpdate?example=Update+an+order
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#put-orders-order-id
+        */
+
+        global $graphqlService;
+
+        $orderupdatequery = <<<'GRAPHQL'
+        mutation OrderUpdate($input: OrderInput!) {
+            orderUpdate(input: $input) {
+                order {
+                    canMarkAsPaid
+                    cancelReason
+                    cancelledAt
+                    clientIp
+                    confirmed
+                    customer {
+                    displayName
+                    email
+                    }
+                    discountCodes
+                }
+                userErrors {
+                    field
+                    message
+                }
+            }
+        }
+        GRAPHQL;
+
+        $orderTagsVariables = [
+            'input' => [
+                'id' => "gid://shopify/Order/". $params['order']['id'],
+                'tags' =>  $params['order']['tags']
+            ],
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($orderupdatequery, $orderTagsVariables);
+
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+
+            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+        } else {
+
+            $orderUpdateData = $responseData;
+
+            return $orderUpdateData;
+        }
+    }
 }
