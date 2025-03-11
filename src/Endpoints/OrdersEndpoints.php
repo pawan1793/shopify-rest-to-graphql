@@ -840,8 +840,8 @@ class OrdersEndpoints
         } else {
 
             $orderUpdateData = $responseData;
-
-            return $orderUpdateData;
         }
+
+        return $orderUpdateData;
     }
 }
