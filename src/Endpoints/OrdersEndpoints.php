@@ -157,8 +157,9 @@ class OrdersEndpoints
                         'index' => $discount['node']['index'] ?? '',
                         'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
                         'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
-                        'target_Type' => strtolower($discount['node']['targetType']) ?? '',
+                        'target_type' => strtolower($discount['node']['targetType']) ?? '',
                         'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                        'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                     ];
                 }, $order['node']['discountApplications']['edges']) : [];
                 $orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
@@ -181,7 +182,11 @@ class OrdersEndpoints
                         'variant_title' => $item['node']['variant']['title'] ?? '',
                         'vendor' => $item['node']['vendor'] ?? '',
                         'tax_lines' => $item['node']['taxLines'] ?? [],
-                        'discount_allocations' => $item['node']['discountAllocations'] ?? []
+                        'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($allocation) {
+                            return [
+                                'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                            ];
+                        }, $item['node']['discountAllocations']) : [],
                     ];
                 }, $order['node']['lineItems']['edges']) : [];
                 $orderResponse['refunds'] = isset($order['node']['refunds']) && is_array($order['node']['refunds']) ? array_map(function ($refund) {
@@ -287,15 +292,16 @@ class OrdersEndpoints
             $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
             $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
             $orderResponse['note_attributes'] = $orderData['customAttributes'];
-            $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) && is_array($order['node']['discountApplications']['edges']) ? array_map(function($discount) { 
+            $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) && is_array($orderData['discountApplications']['edges']) ? array_map(function($discount) { 
                 return[
                     'index' => $discount['node']['index'] ?? '',
                     'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
                     'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
-                    'target_Type' => strtolower($discount['node']['targetType']) ?? '',
+                    'target_type' => strtolower($discount['node']['targetType']) ?? '',
                     'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                    'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];
-            }, $order['node']['discountApplications']['edges']) : [];
+            }, $orderData['discountApplications']['edges']) : [];
             $orderResponse['fulfillments'] = $orderData['fulfillments'];
             $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function($item) {
                 return [
@@ -316,7 +322,11 @@ class OrdersEndpoints
                     'variant_title' => $item['node']['variant']['title'] ?? '',
                     'vendor' => $item['node']['vendor'] ?? '',
                     'tax_lines' => $item['node']['taxLines'] ?? [],
-                    'discount_allocations' => $item['node']['discountAllocations'] ?? []
+                    'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($allocation) {
+                        return [
+                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                        ];
+                    }, $item['node']['discountAllocations']) : [],
                 ];
             }, $orderData['lineItems']['edges']) : [];
             $orderResponse['refunds'] = isset($orderData['refunds']) && is_array($orderData['refunds']) ? array_map(function ($refund) {
@@ -716,12 +726,14 @@ class OrdersEndpoints
                                 }
                             }
                             discountAllocations {
-                                discountApplication {
-                                    allocationMethod
-                                    targetSelection
-                                    targetType
-                                    value
-                                }
+                                allocatedAmountSet {
+                                    presentmentMoney {
+                                        amount
+                                    }
+                                    shopMoney {
+                                        amount
+                                    }
+                                },
                             }
                         }
                     }
