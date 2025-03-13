@@ -146,7 +146,13 @@ class OrdersEndpoints
                 $orderResponse['phone'] = $order['node']['phone'] ?? '';
                 $orderResponse['tags'] = $order['node']['tags'] ?? '';
                 $orderResponse['email'] = $order['node']['email'] ?? '';
-                // $orderResponse['customer'] = $order['node']['customer'] ?? '';
+                $orderResponse['customer'] = isset($order['node']['customer']) && is_array($order['node']['customer']) ? [
+                    'first_name' => $order['node']['customer']['firstName'] ?? null,
+                    'last_name' => $order['node']['customer']['lastName'] ?? null,
+                    'note' => $order['node']['customer']['note'] ?? null,
+                    'email' => $order['node']['customer']['email'] ?? null,
+                    'phone' => $order['node']['customer']['phone'] ?? null,
+                ] : [];
                 $orderResponse['tax_lines'] = $order['node']['taxLines'] ?? '';
                 $orderResponse['total_outstanding'] = $order['node']['totalOutstandingSet']['presentmentMoney']['amount'] ?? '';
                 $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'] ?? '';
@@ -176,6 +182,10 @@ class OrdersEndpoints
                         'sku' => $item['node']['sku'] ?? '',
                         'taxable' => $item['node']['taxable'] ?? '',
                         'title' => $item['node']['title'] ?? '',
+                        'properties' => isset($item['node']['customAttributes']) && is_array($item['node']['customAttributes']) ? [
+                            'name' => $item['node']['customAttributes']['key'] ?? null,
+                            'value' => $item['node']['customAttributes']['value'] ?? null,
+                        ] : [],
                         'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
                         'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                         'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
@@ -196,6 +206,12 @@ class OrdersEndpoints
                         'created_at' => $refund['createdAt'] ?? '',
                         'note' => $refund['note'] ?? '',
                         'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
+                        'order_adjustments'=> isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
+                            return [
+                                'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                                'kind' => $adjustmentItem['node']['reason'] ?? '',
+                            ];
+                        }, $refund['orderAdjustments']['edges']) : [],
                         'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
                             return [
                                 'id' => isset($refundLineItem['node']['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']) : '',
@@ -286,7 +302,13 @@ class OrdersEndpoints
             $orderResponse['phone'] = $orderData['phone'];
             $orderResponse['tags'] = $orderData['tags'];
             $orderResponse['email'] = $orderData['email'];
-            // $orderResponse['customer'] = $orderData['customer'];
+            $orderResponse['customer'] = isset($orderData['customer']) && is_array($orderData['customer']) ? [
+                'first_name' => $orderData['customer']['firstName'] ?? null,
+                'last_name' => $orderData['customer']['lastName'] ?? null,
+                'note' => $orderData['customer']['note'] ?? null,
+                'email' => $orderData['customer']['email'] ?? null,
+                'phone' => $orderData['customer']['phone'] ?? null,
+            ] : [];
             $orderResponse['tax_lines'] = $orderData['taxLines'];
             $orderResponse['total_outstanding'] = $orderData['totalOutstandingSet']['presentmentMoney']['amount'];
             $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
@@ -316,6 +338,10 @@ class OrdersEndpoints
                     'sku' => $item['node']['sku'] ?? '',
                     'taxable' => $item['node']['taxable'] ?? '',
                     'title' => $item['node']['title'] ?? '',
+                    'properties' => isset($item['node']['customAttributes']) && is_array($item['node']['customAttributes']) ? [
+                        'name' => $item['node']['customAttributes']['key'] ?? null,
+                        'value' => $item['node']['customAttributes']['value'] ?? null,
+                    ] : [],
                     'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
                     'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                     'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
@@ -336,6 +362,12 @@ class OrdersEndpoints
                     'created_at' => $refund['createdAt'] ?? '',
                     'note' => $refund['note'] ?? '',
                     'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
+                    'order_adjustments'=> isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
+                        return [
+                            'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                            'kind' => $adjustmentItem['node']['reason'] ?? '',
+                        ];
+                    }, $refund['orderAdjustments']['edges']) : [],
                     'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
                         return [
                             'id' => isset($refundLineItem['node']['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']) : '',
@@ -568,6 +600,13 @@ class OrdersEndpoints
                 'phone',
                 'tags',
                 'email',
+                'customer {
+                    firstName
+                    lastName
+                    note
+                    email
+                    phone
+                }',
                 'taxLines {
                     title
                     price
@@ -685,6 +724,10 @@ class OrdersEndpoints
                             sku
                             taxable
                             title
+                            customAttributes {
+                                key
+                                value
+                            }
                             originalTotalSet {
                                 shopMoney {
                                     amount
@@ -744,6 +787,15 @@ class OrdersEndpoints
                     note
                     order {
                         id
+                    }
+                    orderAdjustments(first: 10) {
+                        edges {
+                            cursor
+                            node {
+                                id
+                                reason
+                            }
+                        }
                     }
                     refundLineItems(first: 10) {
                         edges {
