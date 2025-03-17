@@ -219,6 +219,10 @@ class MetafieldsEndpoints
 
                         throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
+                    }elseif (isset($responseData['data']) && $responseData['data']['product'] == null ) {
+
+                        return array();
+
                     } else {
 
                         $productMetafieldsData = [];
