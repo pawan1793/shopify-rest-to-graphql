@@ -47,16 +47,16 @@ class OrdersEndpoints
         $cursorparam = '';
         $limit = 250;
 
-        if(isset($param['limit'])){
+        if (isset($param['limit'])) {
             $limit = $param['limit'];
         }
 
-        if(isset($param['cursor'])){
-            if(isset($param['direction']) && $param['direction'] == 'next'){
+        if (isset($param['cursor'])) {
+            if (isset($param['direction']) && $param['direction'] == 'next') {
                 $cursorparam = "after: \"{$param['cursor']}\"";
             }
 
-            if(isset($param['direction']) && $param['direction'] == 'prev'){
+            if (isset($param['direction']) && $param['direction'] == 'prev') {
                 $position = 'last';
                 $cursorparam = "before: \"{$param['cursor']}\"";
             }
@@ -75,19 +75,19 @@ class OrdersEndpoints
         if (!empty($param['query']['updated_at'])) {
             $filters[] = "updated_at:{$param['query']['updated_at']}";
         }
-        
+
         if (!empty($param['query']['id'])) {
             $filters[] = "id:{$param['query']['id']}";
         }
-        
+
         if (!empty($param['query']['name'])) {
             $filters[] = "name:{$param['query']['name']}";
         }
-        
+
         if (!empty($param['query']['financial_status'])) {
             $filters[] = "financial_status:{$param['query']['financial_status']}";
         }
-        
+
         if (!empty($param['query']['fulfillment_status'])) {
             $filters[] = "fulfillment_status:{$param['query']['fulfillment_status']}";
         }
@@ -125,7 +125,7 @@ class OrdersEndpoints
 
             $ordersResponse = array();
 
-            foreach($ordersData as $key => $order) {
+            foreach ($ordersData as $key => $order) {
                 $orderResponse = [];
                 $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $order['node']['id']) ?? '';
                 $orderResponse['admin_graphql_api_id'] = $order['node']['id'] ?? '';
@@ -158,18 +158,21 @@ class OrdersEndpoints
                 $orderResponse['total_price'] = $order['node']['totalPriceSet']['presentmentMoney']['amount'] ?? '';
                 $orderResponse['total_discounts'] = $order['node']['totalDiscountsSet']['presentmentMoney']['amount'] ?? '';
                 $orderResponse['note_attributes'] = $order['node']['customAttributes'] ?? '';
-                $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) && is_array($order['node']['discountApplications']['edges']) ? array_map(function($discount) { 
-                    return[
+                $orderResponse['discount_applications'] = isset($order['node']['discountApplications']['edges']) && is_array($order['node']['discountApplications']['edges']) ? array_map(function ($discount) {
+                    return [
                         'index' => $discount['node']['index'] ?? '',
                         'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
                         'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
                         'target_type' => strtolower($discount['node']['targetType']) ?? '',
-                        'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                        'value' => isset($discount['node']['value']['amount'])
+                            ? strtolower($discount['node']['value']['amount'])
+                            : (isset($discount['node']['value']['percentage']) ? strtolower($discount['node']['value']['percentage']) : ''),
+
                         'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                     ];
                 }, $order['node']['discountApplications']['edges']) : [];
                 $orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
-                $orderResponse['line_items'] = isset($order['node']['lineItems']['edges']) && is_array($order['node']['lineItems']['edges']) ? array_map(function($item) {
+                $orderResponse['line_items'] = isset($order['node']['lineItems']['edges']) && is_array($order['node']['lineItems']['edges']) ? array_map(function ($item) {
                     return [
                         'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
                         'admin_graphql_api_id' => $item['node']['id'] ?? '',
@@ -192,7 +195,7 @@ class OrdersEndpoints
                         'variant_title' => $item['node']['variant']['title'] ?? '',
                         'vendor' => $item['node']['vendor'] ?? '',
                         'tax_lines' => $item['node']['taxLines'] ?? [],
-                        'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($allocation) {
+                        'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function ($allocation) {
                             return [
                                 'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
                             ];
@@ -206,7 +209,7 @@ class OrdersEndpoints
                         'created_at' => $refund['createdAt'] ?? '',
                         'note' => $refund['note'] ?? '',
                         'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
-                        'order_adjustments'=> isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
+                        'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                             return [
                                 'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
                                 'kind' => $adjustmentItem['node']['reason'] ?? '',
@@ -314,8 +317,8 @@ class OrdersEndpoints
             $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
             $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
             $orderResponse['note_attributes'] = $orderData['customAttributes'];
-            $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) && is_array($orderData['discountApplications']['edges']) ? array_map(function($discount) { 
-                return[
+            $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) && is_array($orderData['discountApplications']['edges']) ? array_map(function ($discount) {
+                return [
                     'index' => $discount['node']['index'] ?? '',
                     'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
                     'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
@@ -325,7 +328,7 @@ class OrdersEndpoints
                 ];
             }, $orderData['discountApplications']['edges']) : [];
             $orderResponse['fulfillments'] = $orderData['fulfillments'];
-            $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function($item) {
+            $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function ($item) {
                 return [
                     'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
                     'admin_graphql_api_id' => $item['node']['id'] ?? '',
@@ -348,7 +351,7 @@ class OrdersEndpoints
                     'variant_title' => $item['node']['variant']['title'] ?? '',
                     'vendor' => $item['node']['vendor'] ?? '',
                     'tax_lines' => $item['node']['taxLines'] ?? [],
-                    'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($allocation) {
+                    'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function ($allocation) {
                         return [
                             'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
                         ];
@@ -362,7 +365,7 @@ class OrdersEndpoints
                     'created_at' => $refund['createdAt'] ?? '',
                     'note' => $refund['note'] ?? '',
                     'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
-                    'order_adjustments'=> isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
+                    'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                         return [
                             'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
                             'kind' => $adjustmentItem['node']['reason'] ?? '',
@@ -475,19 +478,19 @@ class OrdersEndpoints
         if (!empty($param['query']['updated_at'])) {
             $filters[] = "updated_at:{$param['query']['updated_at']}";
         }
-        
+
         if (!empty($param['query']['id'])) {
             $filters[] = "id:{$param['query']['id']}";
         }
-        
+
         if (!empty($param['query']['name'])) {
             $filters[] = "name:{$param['query']['name']}";
         }
-        
+
         if (!empty($param['query']['financial_status'])) {
             $filters[] = "financial_status:{$param['query']['financial_status']}";
         }
-        
+
         if (!empty($param['query']['fulfillment_status'])) {
             $filters[] = "fulfillment_status:{$param['query']['fulfillment_status']}";
         }
@@ -579,7 +582,7 @@ class OrdersEndpoints
         $param = [
             'id' => 6341354586423,
             'query' => [
-                'status' =>  'any',
+                'status' => 'any',
             ],
             'fields' => [
                 'id',
@@ -878,7 +881,7 @@ class OrdersEndpoints
 
     /** 
      * To Order update use this function.
-    */
+     */
     public function updateOrderTags($params)
     {
         /*
@@ -913,8 +916,8 @@ class OrdersEndpoints
 
         $orderTagsVariables = [
             'input' => [
-                'id' => "gid://shopify/Order/". $params['order']['id'],
-                'tags' =>  $params['order']['tags']
+                'id' => "gid://shopify/Order/" . $params['order']['id'],
+                'tags' => $params['order']['tags']
             ],
         ];
 
