@@ -323,7 +323,10 @@ class OrdersEndpoints
                     'allocation_method' => strtolower($discount['node']['allocationMethod']) ?? '',
                     'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
                     'target_type' => strtolower($discount['node']['targetType']) ?? '',
-                    'value' => isset($discount['node']['value']['amount']) ? strtolower($discount['node']['value']['amount']) : (strtolower($discount['node']['value']['percentage']) ?? ''),
+                    'value' => isset($discount['node']['value']['amount'])
+                        ? strtolower($discount['node']['value']['amount'])
+                        : (isset($discount['node']['value']['percentage']) ? strtolower($discount['node']['value']['percentage']) : ''),
+
                     'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];
             }, $orderData['discountApplications']['edges']) : [];
