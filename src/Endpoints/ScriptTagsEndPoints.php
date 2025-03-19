@@ -173,7 +173,7 @@ class ScriptTagsEndPoints
                 GRAPHQL;
 
         $scriptid = $params['script_tag']['id'];
-        
+
         $variables = [
            "id" => "gid://shopify/ScriptTag/{$scriptid}",
             "input" => [
@@ -185,20 +185,20 @@ class ScriptTagsEndPoints
 
         $responseData = $this->graphqlService->graphqlQueryThalia($query, $variables);
 
-        if (isset($responseData['data']['scriptTagCreate']['userErrors']) && !empty($responseData['data']['scriptTagCreate']['userErrors'])) {
+        if (isset($responseData['data']['scriptTagUpdate']['userErrors']) && !empty($responseData['data']['scriptTagUpdate']['userErrors'])) {
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['scriptTagCreate']['userErrors']);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['scriptTagUpdate']['userErrors']);
 
         } else {
             $response = [
                 "script_tag" => [
-                    "id" => (int) preg_replace('/\D/', '', $responseData["data"]["scriptTagCreate"]["scriptTag"]["id"]),
-                    "src" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["src"],
+                    "id" => (int) preg_replace('/\D/', '', $responseData["data"]["scriptTagUpdate"]["scriptTag"]["id"]),
+                    "src" => $responseData["data"]["scriptTagUpdate"]["scriptTag"]["src"],
                     "event" => "onload", // Assuming default value as "event" is not in input
-                    "created_at" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["createdAt"],
-                    "updated_at" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["updatedAt"],
-                    "display_scope" => strtolower($responseData["data"]["scriptTagCreate"]["scriptTag"]["displayScope"]),
-                    "cache" => (bool) $responseData["data"]["scriptTagCreate"]["scriptTag"]["cache"]
+                    "created_at" => $responseData["data"]["scriptTagUpdate"]["scriptTag"]["createdAt"],
+                    "updated_at" => $responseData["data"]["scriptTagUpdate"]["scriptTag"]["updatedAt"],
+                    "display_scope" => strtolower($responseData["data"]["scriptTagUpdate"]["scriptTag"]["displayScope"]),
+                    "cache" => (bool) $responseData["data"]["scriptTagUpdate"]["scriptTag"]["cache"]
                 ]
             ];
 
