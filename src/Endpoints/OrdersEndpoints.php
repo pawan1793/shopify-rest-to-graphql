@@ -189,7 +189,7 @@ class OrdersEndpoints
                             'name' => $item['node']['customAttributes']['key'] ?? null,
                             'value' => $item['node']['customAttributes']['value'] ?? null,
                         ] : [],
-                        'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
+                        'price' => $item['node']['originalUnitPriceSet']['shopMoney']['amount'] ?? '',
                         'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                         'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                         'variant_title' => $item['node']['variant']['title'] ?? '',
@@ -348,7 +348,7 @@ class OrdersEndpoints
                         'name' => $item['node']['customAttributes']['key'] ?? null,
                         'value' => $item['node']['customAttributes']['value'] ?? null,
                     ] : [],
-                    'price' => $item['node']['originalTotalSet']['shopMoney']['amount'] ?? '',
+                    'price' => $item['node']['originalUnitPriceSet']['shopMoney']['amount'] ?? '',
                     'total_discount_set' => $item['node']['totalDiscountSet']['shopMoney'] ?? '',
                     'variant_id' => isset($item['node']['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $item['node']['variant']['id']) : '',
                     'variant_title' => $item['node']['variant']['title'] ?? '',
@@ -733,6 +733,16 @@ class OrdersEndpoints
                             customAttributes {
                                 key
                                 value
+                            }
+                            originalUnitPriceSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
                             }
                             originalTotalSet {
                                 shopMoney {
