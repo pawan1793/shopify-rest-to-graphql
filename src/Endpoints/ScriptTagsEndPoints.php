@@ -146,6 +146,69 @@ class ScriptTagsEndPoints
 
     }
 
+
+    public function scriptTagUpdate($params)
+    {
+        /*
+          Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/scriptTagUpdate
+          Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/scripttag#update-script-tags
+      */
+        $query = <<<'GRAPHQL'
+                mutation ScriptTagUpdate($id: ID!, $input: ScriptTagInput!) {
+                    scriptTagUpdate(id: $id, input: $input) {
+                        scriptTag {
+                            id
+                            cache
+                            createdAt
+                            displayScope
+                            src
+                            updatedAt
+                        }
+                        userErrors {
+                            field
+                            message
+                        }
+                    }
+                }
+                GRAPHQL;
+
+        $scriptid = $params['script_tag']['id'];
+        
+        $variables = [
+           "id" => "gid://shopify/ScriptTag/{$scriptid}",
+            "input" => [
+                "src" => $params['script_tag']['src'],
+                "displayScope" => "ONLINE_STORE",
+                "cache" => true,
+            ],
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query, $variables);
+
+        if (isset($responseData['data']['scriptTagCreate']['userErrors']) && !empty($responseData['data']['scriptTagCreate']['userErrors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['scriptTagCreate']['userErrors']);
+
+        } else {
+            $response = [
+                "script_tag" => [
+                    "id" => (int) preg_replace('/\D/', '', $responseData["data"]["scriptTagCreate"]["scriptTag"]["id"]),
+                    "src" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["src"],
+                    "event" => "onload", // Assuming default value as "event" is not in input
+                    "created_at" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["createdAt"],
+                    "updated_at" => $responseData["data"]["scriptTagCreate"]["scriptTag"]["updatedAt"],
+                    "display_scope" => strtolower($responseData["data"]["scriptTagCreate"]["scriptTag"]["displayScope"]),
+                    "cache" => (bool) $responseData["data"]["scriptTagCreate"]["scriptTag"]["cache"]
+                ]
+            ];
+
+            return $response;
+
+        }
+
+
+    }
+
     public function deleteScriptTags($scriptid)
     {
         /*
