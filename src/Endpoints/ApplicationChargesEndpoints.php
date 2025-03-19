@@ -54,8 +54,12 @@ class ApplicationChargesEndpoints
 
         if (!empty($applicationcharge['test'])) {
             $chargevariables['test'] = $applicationcharge['test'];
+        }else{
+            $chargevariables['test'] = false;
         }
 
+        
+       
         $applicationchargequery = <<<'GRAPHQL'
             mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!, $test: Boolean!) {
                 appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price, test: $test) {
@@ -73,6 +77,7 @@ class ApplicationChargesEndpoints
             GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($applicationchargequery, $chargevariables);
+        \Log::info($responseData);
         $response = array();
 
         if (isset($responseData['data']['appPurchaseOneTimeCreate']['userErrors']) && !empty($responseData['data']['appPurchaseOneTimeCreate']['userErrors'])) {
