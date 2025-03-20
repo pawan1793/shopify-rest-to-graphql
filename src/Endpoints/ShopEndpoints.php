@@ -7,7 +7,7 @@ use Thalia\ShopifyRestToGraphql\GraphqlException;
 class ShopEndpoints
 {
 
-    const PlanNames = ["affiliate" => "Development", "staff" => "Staff", "cancelled" => "Cancelled", "staff_business" => "Staff Business", "trial" => "Trial", "dormant" => "Dormant", "frozen" => "Frozen", "singtel_trial" => "Singtel Trial", "partner_test" => "Developer Preview", "basic" => "Basic", "npo_lite" => "Npo Lite", "npo_full" => "Npo Full", "singtel_basic" => "Singtel Basic", "singtel_starter" => "Singtel Starter", "uafrica_basic" => "Uafrica Basic", "fraudulent" => "Fraudulent", "starter" => "Starter", "comped" => "Comped", "shopify_alumni" => "Shopify Alumni", "professional" => "Shopify", "custom" => "Custom", "unlimited" => "Shopify Plus", "singtel_unlimited" => "Singtel Unlimited", "singtel_professional" => "Singtel Professional", "business" => "Business", "uafrica_professional" => "Uafrica Professional", "shopify_plus" => "Shopify Plus", "enterprise" => "Enterprise"];
+    const PlanNames = ["affiliate" => "Development", "staff" => "Staff", "cancelled" => "Cancelled", "staff_business" => "Staff Business", "trial" => "Trial", "dormant" => "Dormant", "frozen" => "Frozen", "singtel_trial" => "Singtel Trial", "partner_test" => "Developer Preview", "basic" => "Basic", "npo_lite" => "Npo Lite", "npo_full" => "Npo Full", "singtel_basic" => "Singtel Basic", "singtel_starter" => "Singtel Starter", "uafrica_basic" => "Uafrica Basic", "fraudulent" => "Fraudulent", "starter" => "Starter", "comped" => "Comped", "shopify_alumni" => "Shopify Alumni", "professional" => "Shopify", "custom" => "Custom", "unlimited" => "Advanced", "singtel_unlimited" => "Singtel Unlimited", "singtel_professional" => "Singtel Professional", "business" => "Business", "uafrica_professional" => "Uafrica Professional", "shopify_plus" => "Shopify Plus", "enterprise" => "Enterprise"];
 
     private $graphqlService;
 
@@ -20,7 +20,6 @@ class ShopEndpoints
         if ($shopDomain === null || $accessToken === null) {
             throw new \InvalidArgumentException('Shop domain and access token must be provided.');
         }
-
 
         $this->shopDomain = $shopDomain;
         $this->accessToken = $accessToken;
@@ -40,6 +39,7 @@ class ShopEndpoints
         */
 
         global $graphqlService;
+
         $productTypeFields = '';
         if (!empty($param['fields'])) {
             $productTypeFields = implode("\n", array_map(fn($field) => $field, $param['fields']));
@@ -57,15 +57,13 @@ class ShopEndpoints
             $productTypeQuery = '';
         }
 
-
-
         $shopquery = "
-            query ShopShow {
-                shop {
+        query ShopShow {
+            shop {
                 alerts {
                     action {
-                    title
-                    url
+                        title
+                        url
                     }
                     description
                 }
@@ -106,6 +104,8 @@ class ShopEndpoints
                 marketingSmsConsentEnabledAtCheckout
                 myshopifyDomain
                 name
+                orderNumberFormatPrefix
+                orderNumberFormatSuffix
                 paymentSettings {
                     supportedDigitalWallets
                 }
@@ -128,8 +128,8 @@ class ShopEndpoints
                 updatedAt
                 url
                 weightUnit
-                }
-            }";
+            }
+        }";
 
         $responseData = $this->graphqlService->graphqlQueryThalia($shopquery);
 
@@ -147,12 +147,10 @@ class ShopEndpoints
             $responseData['shop_owner'] = $responseData['name'];
             $responseData['iana_timezone'] = $responseData['ianaTimezone'];
             $responseData['currency'] = $responseData['currencyCode'];
-            
 
         }
 
         return $responseData;
     }
-
-
+    
 }
