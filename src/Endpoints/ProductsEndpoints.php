@@ -53,86 +53,86 @@ class ProductsEndpoints
         $productlimit = isset($params['limit']) ? $params['limit'] : 250;
 
         $productsquery = <<<GRAPHQL
-    query GetProducts {
-        products(first: $productlimit, $query) {
-            nodes {
-                id
-                title
-                descriptionHtml
-                vendor
-                productType
-                createdAt
-                handle
-                updatedAt
-                publishedAt
-                templateSuffix
-                tags
-                status
-                options(first: 5) {
-                    id
-                    name
-                    position
-                    values
-                }
-                media(first: 100) {
-                    edges {
-                        node {
-                            ... on MediaImage {
-                                id
-                                image {
+                        query GetProducts {
+                            products(first: $productlimit, $query) {
+                                nodes {
                                     id
-                                    altText
-                                    width
-                                    height
-                                    originalSrc
-                                }
-                            }
-                        }
-                    }                              
-                }
-                variants(first: 200) {
-                    edges {
-                        node {
-                            id
-                            title
-                            price
-                            position
-                            inventoryPolicy
-                            inventoryQuantity
-                            compareAtPrice
-                            createdAt
-                            updatedAt
-                            taxable
-                            barcode
-                            sku
-                            taxCode
-                            inventoryItem {
-                                id
-                                tracked
-                                requiresShipping
-                                countryCodeOfOrigin
-                                measurement {
-                                    weight {
-                                        unit
-                                        value
+                                    title
+                                    descriptionHtml
+                                    vendor
+                                    productType
+                                    createdAt
+                                    handle
+                                    updatedAt
+                                    publishedAt
+                                    templateSuffix
+                                    tags
+                                    status
+                                    options(first: 5) {
+                                        id
+                                        name
+                                        position
+                                        values
+                                    }
+                                    media(first: 100) {
+                                        edges {
+                                            node {
+                                                ... on MediaImage {
+                                                    id
+                                                    image {
+                                                        id
+                                                        altText
+                                                        width
+                                                        height
+                                                        originalSrc
+                                                    }
+                                                }
+                                            }
+                                        }                              
+                                    }
+                                    variants(first: 200) {
+                                        edges {
+                                            node {
+                                                id
+                                                title
+                                                price
+                                                position
+                                                inventoryPolicy
+                                                inventoryQuantity
+                                                compareAtPrice
+                                                createdAt
+                                                updatedAt
+                                                taxable
+                                                barcode
+                                                sku
+                                                taxCode
+                                                inventoryItem {
+                                                    id
+                                                    tracked
+                                                    requiresShipping
+                                                    countryCodeOfOrigin
+                                                    measurement {
+                                                        weight {
+                                                            unit
+                                                            value
+                                                        }
+                                                    }
+                                                }
+                                                image {
+                                                    id
+                                                    url
+                                                }
+                                                selectedOptions {
+                                                    name
+                                                    value
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            image {
-                                id
-                                url
-                            }
-                            selectedOptions {
-                                name
-                                value
-                            }
                         }
-                    }
-                }
-            }
-        }
-    }
-    GRAPHQL;
+                        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($productsquery);
 
@@ -267,84 +267,84 @@ class ProductsEndpoints
 
 
         $productquery = <<<GRAPHQL
-    query GetProduct {
-        product(id: "gid://shopify/Product/$productId") {
-            id
-            title
-            descriptionHtml
-            vendor
-            productType
-            createdAt
-            handle
-            updatedAt
-            publishedAt
-            templateSuffix
-            tags
-            status
-            options(first: 5) {
-                id
-                name
-                position
-                values
-            }
-            media(first: 100) {
-                edges {
-                    node {
-                        ... on MediaImage {
-                            id
-                            image {
-                                id
-                                altText
-                                width
-                                height
-                                originalSrc
-                            }
-                        }
-                    }
-                }                              
-            }
-            variants(first: 200) {
-                edges {
-                    node {
+                query GetProduct {
+                    product(id: "gid://shopify/Product/$productId") {
                         id
                         title
-                        price
-                        position
-                        inventoryPolicy
-                        inventoryQuantity
-                        compareAtPrice
+                        descriptionHtml
+                        vendor
+                        productType
                         createdAt
+                        handle
                         updatedAt
-                        taxable
-                        barcode
-                        sku
-                        taxCode
-                        inventoryItem {
+                        publishedAt
+                        templateSuffix
+                        tags
+                        status
+                        options(first: 5) {
                             id
-                            tracked
-                            requiresShipping
-                            countryCodeOfOrigin
-                            measurement {
-                                weight {
-                                    unit
-                                    value
+                            name
+                            position
+                            values
+                        }
+                        media(first: 100) {
+                            edges {
+                                node {
+                                    ... on MediaImage {
+                                        id
+                                        image {
+                                            id
+                                            altText
+                                            width
+                                            height
+                                            originalSrc
+                                        }
+                                    }
+                                }
+                            }                              
+                        }
+                        variants(first: 200) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    price
+                                    position
+                                    inventoryPolicy
+                                    inventoryQuantity
+                                    compareAtPrice
+                                    createdAt
+                                    updatedAt
+                                    taxable
+                                    barcode
+                                    sku
+                                    taxCode
+                                    inventoryItem {
+                                        id
+                                        tracked
+                                        requiresShipping
+                                        countryCodeOfOrigin
+                                        measurement {
+                                            weight {
+                                                unit
+                                                value
+                                            }
+                                        }
+                                    }
+                                    image {
+                                        id
+                                        url
+                                    }
+                                    selectedOptions {
+                                        name
+                                        value
+                                    }
                                 }
                             }
                         }
-                        image {
-                            id
-                            url
-                        }
-                        selectedOptions {
-                            name
-                            value
-                        }
                     }
                 }
-            }
-        }
-    }
-    GRAPHQL;
+                GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($productquery);
 
@@ -471,12 +471,12 @@ class ProductsEndpoints
 
 
         $countQuery = <<<GRAPHQL
-    query ProductVariantsCount {
-        productVariantsCount {
-            count
-        }
-    }
-    GRAPHQL;
+            query ProductVariantsCount {
+                productVariantsCount {
+                    count
+                }
+            }
+            GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($countQuery);
 
@@ -491,5 +491,91 @@ class ProductsEndpoints
         }
     }
 
+    public function deleteAllProductImages($productId)
+    {
+
+
+        if (strpos($productId, 'gid://shopify/Product') !== true) {
+            $productId = "gid://shopify/Product/{$productId}";
+        }
+        $productquery = <<<GRAPHQL
+                            query GetProductImages {
+                                product(id: "{$productId}") {
+                                    media(query: "media_type:IMAGE",first: 100) {
+                                        nodes {
+                                            id
+                                            alt
+                                            ... on MediaImage {
+                                                createdAt
+                                                image {
+                                                    url
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($productquery);
+
+
+
+        $imageIds = [];
+
+        if (isset($responseData["data"]["product"]["media"]["nodes"])) {
+            foreach ($responseData["data"]["product"]["media"]["nodes"] as $node) {
+                if (isset($node["id"])) {
+                    $imageIds[] = $node["id"];
+                }
+            }
+        }
+
+        $variables = [
+            "mediaIds" => $imageIds,
+            "productId" => $productId,
+        ];
+
+
+
+
+        $meidaquery = <<<'GRAPHQL'
+                           mutation productDeleteMedia($mediaIds: [ID!]!, $productId: ID!) {
+                                productDeleteMedia(mediaIds: $mediaIds, productId: $productId) {
+                                    deletedMediaIds
+                                    deletedProductImageIds
+                                    mediaUserErrors {
+                                        field
+                                        message
+                                    }
+                                    product {
+                                        id
+                                        title
+                                        media(first: 5) {
+                                            nodes {
+                                            alt
+                                            mediaContentType
+                                            status
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($meidaquery, $variables);
+
+
+
+        if (isset($responseData['data']['productDeleteMedia']['mediaUserErrors']) && !empty($responseData['data']['productDeleteMedia']['mediaUserErrors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
+
+        }
+
+        return $responseData;
+
+
+    }
 
 }
