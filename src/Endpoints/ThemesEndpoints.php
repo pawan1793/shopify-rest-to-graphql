@@ -229,9 +229,9 @@ class ThemesEndpoints
         ];
 
         $themeFilesQuery = <<<'GRAPHQL'
-        query ThemeFilesPaginated($themeId: ID!) {
+        query ThemeFilesPaginated($themeId: ID!, $after: String) {
             theme(id: $themeId) {
-                files(first: 50) {
+                files(first: 250, after: $after) {
                     edges {
                         node {
                             filename
@@ -269,15 +269,19 @@ class ThemesEndpoints
         }
         GRAPHQL;
 
-        $responseData = $this->graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
+        $themeFilesResponse = [];
+        $pageInfo = null;
+        $afterCursor = null;
 
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+        do {
+            $themeFilesVariable['after'] = $afterCursor;
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['errors']);
+            $responseData = $this->graphqlService->graphqlQueryThalia($themeFilesQuery, $themeFilesVariable);
 
-        } else {
 
-            $themeFilesResponse = [];
+            if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['errors']);
+            }
 
             foreach ($responseData['data']['theme']['files']['edges'] as $response) {
                 $themeFilesResponse[] = [
@@ -293,15 +297,16 @@ class ThemesEndpoints
             }
 
             $pageInfo = $responseData['data']['theme']['files']['pageInfo'];
+            $afterCursor = $pageInfo['endCursor'];
 
-            $responseData = [
-                'data' => $themeFilesResponse,
-                'pageInfo' => $pageInfo,
-            ];
+        } while ($pageInfo['hasNextPage']);
 
-        }
 
-        return $responseData;
+        return [
+            'data' => $themeFilesResponse,
+            'pageInfo' => $pageInfo,
+        ];
+
     }
 
     /** 
