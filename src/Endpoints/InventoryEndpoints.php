@@ -171,7 +171,7 @@ class InventoryEndpoints
         $response['id'] = str_replace('gid://shopify/InventoryItem/', '', $responseData['id']);
         $response['sku'] = $responseData['sku'];
         $response['requires_shipping'] = $responseData['requiresShipping'];
-        $response['cost'] = $responseData['unitCost']['amount'];
+        $response['cost'] = $responseData['unitCost']['amount'] ?? 0;
         $response['country_code_of_origin'] = $responseData['countryCodeOfOrigin'];
         $response['province_code_of_origin'] = $responseData['provinceCodeOfOrigin'];
         $response['harmonized_system_code'] = $responseData['harmonizedSystemCode'];

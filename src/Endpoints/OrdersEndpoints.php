@@ -224,9 +224,51 @@ class OrdersEndpoints
                         }, $refund['refundLineItems']['edges']) : []
                     ];
                 }, $order['node']['refunds']) : [];
-                $orderResponse['billing_address'] = $order['node']['billingAddress'] ?? '';
-                $orderResponse['shipping_address'] = $order['node']['shippingAddress'] ?? '';
-                $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['shippingLines']['edges']) : [];
+                $orderResponse['billing_address'] = isset($order['node']['billingAddress']) && is_array($order['node']['billingAddress']) ? [
+                    'first_name' => $order['node']['billingAddress']['firstName'] ?? null,
+                    'las_name' => $order['node']['billingAddress']['lastName'] ?? null,
+                    'address1' => $order['node']['billingAddress']['address1'] ?? null,
+                    'address2' => $order['node']['billingAddress']['address2'] ?? null,
+                    'phone' => $order['node']['billingAddress']['phone'] ?? null,
+                    'city' => $order['node']['billingAddress']['city'] ?? null,
+                    'zip' => $order['node']['billingAddress']['zip'] ?? null,
+                    'province' => $order['node']['billingAddress']['province'] ?? null,
+                    'country' => $order['node']['billingAddress']['country'] ?? null,
+                    'company' => $order['node']['billingAddress']['company'] ?? null,
+                    'latitude' => $order['node']['billingAddress']['latitude'] ?? null,
+                    'longitude' => $order['node']['billingAddress']['longitude'] ?? null,
+                    'name' => $order['node']['billingAddress']['name'] ?? null,
+                    'country_code' => $order['node']['billingAddress']['countryCode'] ?? null,
+                    'provinceCode' => $order['node']['billingAddress']['provinceCode'] ?? null,
+                ] : [];
+                $orderResponse['shipping_address'] = isset($order['node']['shippingAddress']) && is_array($order['node']['shippingAddress']) ? [
+                    'id' => $order['node']['shippingAddress']['id'] ?? null,
+                    'name' => $order['node']['shippingAddress']['name'] ?? null,
+                    'address1' => $order['node']['shippingAddress']['address1'] ?? null,
+                    'address2' => $order['node']['shippingAddress']['address2'] ?? null,
+                    'phone' => $order['node']['shippingAddress']['phone'] ?? null,
+                    'city' => $order['node']['shippingAddress']['city'] ?? null,
+                    'zip' => $order['node']['shippingAddress']['zip'] ?? null,
+                    'province' => $order['node']['shippingAddress']['province'] ?? null,
+                    'country' => $order['node']['shippingAddress']['country'] ?? null,
+                    'latitude' => $order['node']['shippingAddress']['latitude'] ?? null,
+                    'longitude' => $order['node']['shippingAddress']['longitude'] ?? null,
+                    'name' => $order['node']['shippingAddress']['name'] ?? null,
+                    'country_code' => $order['node']['shippingAddress']['countryCode'] ?? null,
+                    'provinceCode' => $order['node']['shippingAddress']['provinceCode'] ?? null,
+                ] : [];
+                $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) && is_array($order['node']['shippingLines']['edges']) ? array_map(function($item) {
+                    return [
+                        'id' => $item['node']['id'] ?? '',
+                        'title' => $item['node']['title'] ?? '',
+                        'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                        'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
+                            return [
+                                'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                            ];
+                        }, $item['node']['discountAllocations']) : [],
+                    ];
+                }, $order['shippingLines']['edges']) : [];
                 $orderResponse['cursor'] = $order['cursor'] ?? '';
 
                 $ordersResponse[] = $orderResponse;
@@ -383,9 +425,51 @@ class OrdersEndpoints
                     }, $refund['refundLineItems']['edges']) : []
                 ];
             }, $orderData['refunds']) : [];
-            $orderResponse['billing_address'] = $orderData['billingAddress'];
-            $orderResponse['shipping_address'] = $orderData['shippingAddress'];
-            $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $orderData['shippingLines']['edges']) : [];
+            $orderResponse['billing_address'] = isset($orderData['node']['billingAddress']) && is_array($orderData['node']['billingAddress']) ? [
+                'first_name' => $orderData['node']['billingAddress']['firstName'] ?? null,
+                'las_name' => $orderData['node']['billingAddress']['lastName'] ?? null,
+                'address1' => $orderData['node']['billingAddress']['address1'] ?? null,
+                'address2' => $orderData['node']['billingAddress']['address2'] ?? null,
+                'phone' => $orderData['node']['billingAddress']['phone'] ?? null,
+                'city' => $orderData['node']['billingAddress']['city'] ?? null,
+                'zip' => $orderData['node']['billingAddress']['zip'] ?? null,
+                'province' => $orderData['node']['billingAddress']['province'] ?? null,
+                'country' => $orderData['node']['billingAddress']['country'] ?? null,
+                'company' => $orderData['node']['billingAddress']['company'] ?? null,
+                'latitude' => $orderData['node']['billingAddress']['latitude'] ?? null,
+                'longitude' => $orderData['node']['billingAddress']['longitude'] ?? null,
+                'name' => $orderData['node']['billingAddress']['name'] ?? null,
+                'country_code' => $orderData['node']['billingAddress']['countryCode'] ?? null,
+                'provinceCode' => $orderData['node']['billingAddress']['provinceCode'] ?? null,
+            ] : [];
+            $orderResponse['shipping_address'] = isset($orderData['node']['shippingAddress']) && is_array($orderData['node']['shippingAddress']) ? [
+                'id' => $orderData['node']['shippingAddress']['id'] ?? null,
+                'name' => $orderData['node']['shippingAddress']['name'] ?? null,
+                'address1' => $orderData['node']['shippingAddress']['address1'] ?? null,
+                'address2' => $orderData['node']['shippingAddress']['address2'] ?? null,
+                'phone' => $orderData['node']['shippingAddress']['phone'] ?? null,
+                'city' => $orderData['node']['shippingAddress']['city'] ?? null,
+                'zip' => $orderData['node']['shippingAddress']['zip'] ?? null,
+                'province' => $orderData['node']['shippingAddress']['province'] ?? null,
+                'country' => $orderData['node']['shippingAddress']['country'] ?? null,
+                'latitude' => $orderData['node']['shippingAddress']['latitude'] ?? null,
+                'longitude' => $orderData['node']['shippingAddress']['longitude'] ?? null,
+                'name' => $orderData['node']['shippingAddress']['name'] ?? null,
+                'country_code' => $orderData['node']['shippingAddress']['countryCode'] ?? null,
+                'provinceCode' => $orderData['node']['shippingAddress']['provinceCode'] ?? null,
+            ] : [];
+            $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) && is_array($orderData['shippingLines']['edges']) ? array_map(function($item) {
+                return [
+                    'id' => $item['node']['id'] ?? '',
+                    'title' => $item['node']['title'] ?? '',
+                    'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                    'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
+                        return [
+                            'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                        ];
+                    }, $item['node']['discountAllocations']) : [],
+                ];
+            }, $orderData['shippingLines']['edges']) : [];
 
             return $orderResponse;
         }
@@ -864,11 +948,22 @@ class OrdersEndpoints
                         node {
                             id
                             title
-                            carrierIdentifier
-                            requestedFulfillmentService {
-                                id
+                            originalPriceSet {
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
                             }
-                            shippingRateHandle
+                            discountAllocations {
+                                allocatedAmountSet {
+                                    presentmentMoney {
+                                        amount
+                                    }
+                                    shopMoney {
+                                        amount
+                                    }
+                                }
+                            }
                             discountedPriceSet {
                                 shopMoney {
                                     amount
@@ -879,12 +974,6 @@ class OrdersEndpoints
                                     currencyCode
                                 }
                             }
-                            price
-                            requestedFulfillmentService {
-                                id
-                            }
-                            shippingRateHandle
-                            title
                         }
                     }
                 }'
