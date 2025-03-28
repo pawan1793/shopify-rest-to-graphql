@@ -36,13 +36,6 @@ class OrdersEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#get-orders
         */
 
-        // Add it after email
-        // customer {
-        //     firstName
-        //     lastName
-        //     note
-        // }
-
         $position = 'first';
         $cursorparam = '';
         $limit = 250;
@@ -98,7 +91,7 @@ class OrdersEndpoints
 
         $orderQuery = <<<QUERY
             query {
-                orders($position: $limit, query: "$queryString", $cursorparam) {
+                orders($position: $limit, query: "$queryString" $cursorparam) {
                     edges {
                         cursor
                         node {
@@ -225,37 +218,38 @@ class OrdersEndpoints
                     ];
                 }, $order['node']['refunds']) : [];
                 $orderResponse['billing_address'] = isset($order['node']['billingAddress']) && is_array($order['node']['billingAddress']) ? [
-                    'first_name' => $order['node']['billingAddress']['firstName'] ?? null,
-                    'las_name' => $order['node']['billingAddress']['lastName'] ?? null,
-                    'address1' => $order['node']['billingAddress']['address1'] ?? null,
-                    'address2' => $order['node']['billingAddress']['address2'] ?? null,
-                    'phone' => $order['node']['billingAddress']['phone'] ?? null,
-                    'city' => $order['node']['billingAddress']['city'] ?? null,
-                    'zip' => $order['node']['billingAddress']['zip'] ?? null,
-                    'province' => $order['node']['billingAddress']['province'] ?? null,
-                    'country' => $order['node']['billingAddress']['country'] ?? null,
-                    'company' => $order['node']['billingAddress']['company'] ?? null,
-                    'latitude' => $order['node']['billingAddress']['latitude'] ?? null,
-                    'longitude' => $order['node']['billingAddress']['longitude'] ?? null,
-                    'name' => $order['node']['billingAddress']['name'] ?? null,
-                    'country_code' => $order['node']['billingAddress']['countryCode'] ?? null,
-                    'provinceCode' => $order['node']['billingAddress']['provinceCode'] ?? null,
+                    'id' => $order['node']['billingAddress']['id'] ?? '',
+                    'first_name' => $order['node']['billingAddress']['firstName'] ?? '',
+                    'las_name' => $order['node']['billingAddress']['lastName'] ?? '',
+                    'address1' => $order['node']['billingAddress']['address1'] ?? '',
+                    'address2' => $order['node']['billingAddress']['address2'] ?? '',
+                    'phone' => $order['node']['billingAddress']['phone'] ?? '',
+                    'city' => $order['node']['billingAddress']['city'] ?? '',
+                    'zip' => $order['node']['billingAddress']['zip'] ?? '',
+                    'province' => $order['node']['billingAddress']['province'] ?? '',
+                    'country' => $order['node']['billingAddress']['country'] ?? '',
+                    'company' => $order['node']['billingAddress']['company'] ?? '',
+                    'latitude' => $order['node']['billingAddress']['latitude'] ?? '',
+                    'longitude' => $order['node']['billingAddress']['longitude'] ?? '',
+                    'name' => $order['node']['billingAddress']['name'] ?? '',
+                    'country_code' => $order['node']['billingAddress']['countryCodeV2'] ?? '',
+                    'province_code' => $order['node']['billingAddress']['provinceCode'] ?? '',
                 ] : [];
                 $orderResponse['shipping_address'] = isset($order['node']['shippingAddress']) && is_array($order['node']['shippingAddress']) ? [
-                    'id' => $order['node']['shippingAddress']['id'] ?? null,
-                    'name' => $order['node']['shippingAddress']['name'] ?? null,
-                    'address1' => $order['node']['shippingAddress']['address1'] ?? null,
-                    'address2' => $order['node']['shippingAddress']['address2'] ?? null,
-                    'phone' => $order['node']['shippingAddress']['phone'] ?? null,
-                    'city' => $order['node']['shippingAddress']['city'] ?? null,
-                    'zip' => $order['node']['shippingAddress']['zip'] ?? null,
-                    'province' => $order['node']['shippingAddress']['province'] ?? null,
-                    'country' => $order['node']['shippingAddress']['country'] ?? null,
-                    'latitude' => $order['node']['shippingAddress']['latitude'] ?? null,
-                    'longitude' => $order['node']['shippingAddress']['longitude'] ?? null,
-                    'name' => $order['node']['shippingAddress']['name'] ?? null,
-                    'country_code' => $order['node']['shippingAddress']['countryCode'] ?? null,
-                    'provinceCode' => $order['node']['shippingAddress']['provinceCode'] ?? null,
+                    'id' => $order['node']['shippingAddress']['id'] ?? '',
+                    'name' => $order['shippingAddress']['name'] ?? '',
+                    'address1' => $order['node']['shippingAddress']['address1'] ?? '',
+                    'address2' => $order['node']['shippingAddress']['address2'] ?? '',
+                    'phone' => $order['node']['shippingAddress']['phone'] ?? '',
+                    'city' => $order['node']['shippingAddress']['city'] ?? '',
+                    'zip' => $order['node']['shippingAddress']['zip'] ?? '',
+                    'province' => $order['node']['shippingAddress']['province'] ?? '',
+                    'country' => $order['node']['shippingAddress']['country'] ?? '',
+                    'latitude' => $order['node']['shippingAddress']['latitude'] ?? '',
+                    'longitude' => $order['node']['shippingAddress']['longitude'] ?? '',
+                    'name' => $order['node']['shippingAddress']['name'] ?? '',
+                    'country_code' => $order['node']['shippingAddress']['countryCodeV2'] ?? '',
+                    'province_code' => $order['node']['shippingAddress']['provinceCode'] ?? '',
                 ] : [];
                 $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) && is_array($order['node']['shippingLines']['edges']) ? array_map(function($item) {
                     return [
@@ -264,11 +258,17 @@ class OrdersEndpoints
                         'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                         'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                             return [
-                                'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                                'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
                             ];
                         }, $item['node']['discountAllocations']) : [],
+                        'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
+                            return [
+                                'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                            ];
+                        }, $item['node']['discountedPriceSet']) : [],
+                        'is_removed' => $item['node']['isRemoved'] ?? '',
                     ];
-                }, $order['shippingLines']['edges']) : [];
+                }, $order['node']['shippingLines']['edges']) : [];
                 $orderResponse['cursor'] = $order['cursor'] ?? '';
 
                 $ordersResponse[] = $orderResponse;
@@ -296,13 +296,6 @@ class OrdersEndpoints
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/order?example=Retrieve+a+specific+order
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#get-orders-order-id
         */
-
-        // Add it after email
-        // customer {
-        //     firstName
-        //     lastName
-        //     note
-        // }
 
         $orderFields = implode("\n", $param['fields']);
 
@@ -425,38 +418,41 @@ class OrdersEndpoints
                     }, $refund['refundLineItems']['edges']) : []
                 ];
             }, $orderData['refunds']) : [];
-            $orderResponse['billing_address'] = isset($orderData['node']['billingAddress']) && is_array($orderData['node']['billingAddress']) ? [
-                'first_name' => $orderData['node']['billingAddress']['firstName'] ?? null,
-                'las_name' => $orderData['node']['billingAddress']['lastName'] ?? null,
-                'address1' => $orderData['node']['billingAddress']['address1'] ?? null,
-                'address2' => $orderData['node']['billingAddress']['address2'] ?? null,
-                'phone' => $orderData['node']['billingAddress']['phone'] ?? null,
-                'city' => $orderData['node']['billingAddress']['city'] ?? null,
-                'zip' => $orderData['node']['billingAddress']['zip'] ?? null,
-                'province' => $orderData['node']['billingAddress']['province'] ?? null,
-                'country' => $orderData['node']['billingAddress']['country'] ?? null,
-                'company' => $orderData['node']['billingAddress']['company'] ?? null,
-                'latitude' => $orderData['node']['billingAddress']['latitude'] ?? null,
-                'longitude' => $orderData['node']['billingAddress']['longitude'] ?? null,
-                'name' => $orderData['node']['billingAddress']['name'] ?? null,
-                'country_code' => $orderData['node']['billingAddress']['countryCode'] ?? null,
-                'provinceCode' => $orderData['node']['billingAddress']['provinceCode'] ?? null,
+            $orderResponse['billing_address'] = isset($orderData['billingAddress']) && is_array($orderData['billingAddress']) ? [
+                'id' => $orderData['billingAddress']['id'] ?? '',
+                'first_name' => $orderData['billingAddress']['firstName'] ?? '',
+                'last_name' => $orderData['billingAddress']['lastName'] ?? '',
+                'address1' => $orderData['billingAddress']['address1'] ?? '',
+                'address2' => $orderData['billingAddress']['address2'] ?? '',
+                'phone' => $orderData['billingAddress']['phone'] ?? '',
+                'city' => $orderData['billingAddress']['city'] ?? '',
+                'zip' => $orderData['billingAddress']['zip'] ?? '',
+                'province' => $orderData['billingAddress']['province'] ?? '',
+                'country' => $orderData['billingAddress']['country'] ?? '',
+                'company' => $orderData['billingAddress']['company'] ?? '',
+                'latitude' => $orderData['billingAddress']['latitude'] ?? '',
+                'longitude' => $orderData['billingAddress']['longitude'] ?? '',
+                'name' => $orderData['billingAddress']['name'] ?? '',
+                'country_code' => $orderData['billingAddress']['countryCodeV2'] ?? '',
+                'province_code' => $orderData['billingAddress']['provinceCode'] ?? '',
             ] : [];
-            $orderResponse['shipping_address'] = isset($orderData['node']['shippingAddress']) && is_array($orderData['node']['shippingAddress']) ? [
-                'id' => $orderData['node']['shippingAddress']['id'] ?? null,
-                'name' => $orderData['node']['shippingAddress']['name'] ?? null,
-                'address1' => $orderData['node']['shippingAddress']['address1'] ?? null,
-                'address2' => $orderData['node']['shippingAddress']['address2'] ?? null,
-                'phone' => $orderData['node']['shippingAddress']['phone'] ?? null,
-                'city' => $orderData['node']['shippingAddress']['city'] ?? null,
-                'zip' => $orderData['node']['shippingAddress']['zip'] ?? null,
-                'province' => $orderData['node']['shippingAddress']['province'] ?? null,
-                'country' => $orderData['node']['shippingAddress']['country'] ?? null,
-                'latitude' => $orderData['node']['shippingAddress']['latitude'] ?? null,
-                'longitude' => $orderData['node']['shippingAddress']['longitude'] ?? null,
-                'name' => $orderData['node']['shippingAddress']['name'] ?? null,
-                'country_code' => $orderData['node']['shippingAddress']['countryCode'] ?? null,
-                'provinceCode' => $orderData['node']['shippingAddress']['provinceCode'] ?? null,
+            $orderResponse['shipping_address'] = isset($orderData['shippingAddress']) && is_array($orderData['shippingAddress']) ? [
+                'id' => $orderData['shippingAddress']['id'] ?? '',
+                'first_name' => $orderData['shippingAddress']['firstName'] ?? '',
+                'last_name' => $orderData['shippingAddress']['lastName'] ?? '',
+                'address1' => $orderData['shippingAddress']['address1'] ?? '',
+                'address2' => $orderData['shippingAddress']['address2'] ?? '',
+                'phone' => $orderData['shippingAddress']['phone'] ?? '',
+                'city' => $orderData['shippingAddress']['city'] ?? '',
+                'zip' => $orderData['shippingAddress']['zip'] ?? '',
+                'province' => $orderData['shippingAddress']['province'] ?? '',
+                'country' => $orderData['shippingAddress']['country'] ?? '',
+                'company' => $orderData['shippingAddress']['company'] ?? '',
+                'latitude' => $orderData['shippingAddress']['latitude'] ?? '',
+                'longitude' => $orderData['shippingAddress']['longitude'] ?? '',
+                'name' => $orderData['shippingAddress']['name'] ?? '',
+                'country_code' => $orderData['shippingAddress']['countryCodeV2'] ?? '',
+                'province_code' => $orderData['shippingAddress']['provinceCode'] ?? '',
             ] : [];
             $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) && is_array($orderData['shippingLines']['edges']) ? array_map(function($item) {
                 return [
@@ -465,9 +461,15 @@ class OrdersEndpoints
                     'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                     'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                         return [
-                            'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                            'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
                         ];
                     }, $item['node']['discountAllocations']) : [],
+                    'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
+                        return [
+                            'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                        ];
+                    }, $item['node']['discountedPriceSet']) : [],
+                    'is_removed' => $item['node']['isRemoved'] ?? '',
                 ];
             }, $orderData['shippingLines']['edges']) : [];
 
@@ -924,7 +926,7 @@ class OrdersEndpoints
                     latitude
                     longitude
                     name
-                    countryCode
+                    countryCodeV2
                     provinceCode
                 }',
                 'shippingAddress {
@@ -932,7 +934,7 @@ class OrdersEndpoints
                     address1
                     address2
                     city
-                    countryCode
+                    countryCodeV2
                     provinceCode
                     zip
                     name
@@ -974,6 +976,7 @@ class OrdersEndpoints
                                     currencyCode
                                 }
                             }
+                            isRemoved
                         }
                     }
                 }'
