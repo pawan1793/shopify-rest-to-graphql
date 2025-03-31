@@ -130,8 +130,8 @@ class OrdersEndpoints
                 $orderResponse['updated_at'] = $order['node']['updatedAt'] ?? '';
                 $orderResponse['currency'] = $order['node']['currencyCode'] ?? '';
                 $orderResponse['discount_codes'] = $order['node']['discountCodes'] ?? '';
-                $orderResponse['fulfillment_status'] = $order['node']['displayFulfillmentStatus'] ?? '';
-                $orderResponse['financial_status'] = $order['node']['displayFinancialStatus'] ?? '';
+                $orderResponse['fulfillment_status'] = ucfirst(strtolower($order['node']['displayFulfillmentStatus'])) ?? '';
+                $orderResponse['financial_status'] = ucfirst(strtolower($order['node']['displayFinancialStatus'])) ?? '';
                 $orderResponse['name'] = $order['node']['name'] ?? '';
                 $orderResponse['note'] = $order['node']['note'] ?? '';
                 $orderResponse['confirmation_number'] = $order['node']['confirmationNumber'] ?? '';
@@ -331,8 +331,8 @@ class OrdersEndpoints
             $orderResponse['updated_at'] = $orderData['updatedAt'];
             $orderResponse['currency'] = $orderData['currencyCode'];
             $orderResponse['discount_codes'] = $orderData['discountCodes'];
-            $orderResponse['fulfillment_status'] = $orderData['displayFulfillmentStatus'];
-            $orderResponse['financial_status'] = $orderData['displayFinancialStatus'];
+            $orderResponse['fulfillment_status'] = ucfirst(strtolower($orderData['displayFulfillmentStatus']));;
+            $orderResponse['financial_status'] = ucfirst(strtolower($orderData['displayFinancialStatus']));
             $orderResponse['name'] = $orderData['name'];
             $orderResponse['note'] = $orderData['note'];
             $orderResponse['confirmation_number'] = $orderData['confirmationNumber'];

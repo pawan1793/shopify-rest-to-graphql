@@ -83,15 +83,15 @@ class FulfillmentsEndpoints
     public function createFulfillment($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/fulfillmentCreateV2?example=Creates+a+fulfillment+for+one+or+many+fulfillment+orders
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentcreate
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/fulfillment#post-fulfillments
         */
 
 
 
         $query = <<<'GRAPHQL'
-                mutation FulfillmentCreate($fulfillment: FulfillmentV2Input!) {
-                fulfillmentCreateV2(fulfillment: $fulfillment) {
+                mutation FulfillmentCreate($fulfillment: FulfillmentInput!) {
+                fulfillmentCreate(fulfillment: $fulfillment) {
                     fulfillment {
                     id
                     fulfillmentLineItems(first: 10) {
@@ -104,37 +104,14 @@ class FulfillmentsEndpoints
                                 id
                             }
                             }
-                            quantity
-                            originalTotalSet {
-                            shopMoney {
-                                amount
-                                currencyCode
-                            }
-                            }
                         }
                         }
                     }
                     status
-                    estimatedDeliveryAt
-                    location {
-                        id
-                        legacyResourceId
-                    }
-                    service {
-                        handle
-                    }
                     trackingInfo(first: 10) {
                         company
                         number
                         url
-                    }
-                    originAddress {
-                        address1
-                        address2
-                        city
-                        countryCode
-                        provinceCode
-                        zip
                     }
                     }
                     userErrors {
@@ -146,15 +123,12 @@ class FulfillmentsEndpoints
                 GRAPHQL;
 
         $param = $params['fulfillment']['line_items_by_fulfillment_order'][0];
+        $param['fulfillment_order_id'] =str_replace("gid://shopify/Fulfillment/", "", $param['fulfillment_order_id']);
 
         $variables = [
             "fulfillment" => [
                 "lineItemsByFulfillmentOrder" => [
                     "fulfillmentOrderId" => "gid://shopify/FulfillmentOrder/" . $param['fulfillment_order_id'],
-                    "fulfillmentOrderLineItems" => [
-                        "id" => "gid://shopify/FulfillmentOrderLineItem/" . $param['fulfillment_order_line_items'][0]['id'],
-                        "quantity" => $param['fulfillment_order_line_items'][0]['quantity'],
-                    ],
                 ],
                 "notifyCustomer" => $params['fulfillment']['notify_customer'],
             ],
@@ -164,6 +138,12 @@ class FulfillmentsEndpoints
                 "company" => $params['fulfillment']['tracking_info']['company'] ?? '',
                 "number" => $params['fulfillment']['tracking_info']['number'] ?? '',
                 "url" => $params['fulfillment']['tracking_info']['url'] ?? '',
+            ];
+        }
+        if (isset($param['fulfillment_order_line_items'][0]['id'])){
+            $variables['fulfillment']['lineItemsByFulfillmentOrder']['fulfillmentOrderLineItems'] = [
+                "id" =>  "gid://shopify/FulfillmentOrderLineItem/" . $param['fulfillment_order_line_items'][0]['id'] ?? '',
+                "quantity" =>  $param['fulfillment_order_line_items'][0]['quantity'] ?? '',
             ];
         }
 
@@ -176,7 +156,7 @@ class FulfillmentsEndpoints
 
         } else {
 
-            $response = $responseData['data']['fulfillmentCreateV2']['fulfillment'];
+            $response = $responseData['data']['fulfillmentCreate']['fulfillment'];
             $response['id'] = str_replace('gid://shopify/FulfillmentLineItem/', '', $response['id']);
         }
 
@@ -212,6 +192,7 @@ class FulfillmentsEndpoints
                 }
                 GRAPHQL;
 
+        $fulfillmentid =str_replace("gid://shopify/Fulfillment/", "", $fulfillmentid);
 
         $variables = [
             "fulfillmentId" => "gid://shopify/Fulfillment/" . $fulfillmentid,
