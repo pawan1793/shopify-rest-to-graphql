@@ -204,7 +204,7 @@ class OrdersEndpoints
                         'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                         'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                             return [
-                                'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                                'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
                                 'kind' => $adjustmentItem['node']['reason'] ?? '',
                             ];
                         }, $refund['orderAdjustments']['edges']) : [],
@@ -405,7 +405,7 @@ class OrdersEndpoints
                     'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                     'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                         return [
-                            'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                            'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
                             'kind' => $adjustmentItem['node']['reason'] ?? '',
                         ];
                     }, $refund['orderAdjustments']['edges']) : [],
@@ -894,7 +894,11 @@ class OrdersEndpoints
                         edges {
                             cursor
                             node {
-                                id
+                                amountSet {
+                                    presentmentMoney {
+                                        amount
+                                    }
+                                }
                                 reason
                             }
                         }
