@@ -321,25 +321,25 @@ class OrdersEndpoints
 
             $orderResponse = array();
 
-            $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']);
-            $orderResponse['admin_graphql_api_id'] = $orderData['id'];
-            $orderResponse['cancel_reason'] = $orderData['cancelReason'];
-            $orderResponse['cancelled_at'] = $orderData['cancelledAt'];
-            $orderResponse['closed_at'] = $orderData['closedAt'];
-            $orderResponse['processed_at'] = $orderData['processedAt'];
-            $orderResponse['created_at'] = $orderData['createdAt'];
-            $orderResponse['updated_at'] = $orderData['updatedAt'];
-            $orderResponse['currency'] = $orderData['currencyCode'];
-            $orderResponse['discount_codes'] = $orderData['discountCodes'];
-            $orderResponse['fulfillment_status'] = ucfirst(strtolower($orderData['displayFulfillmentStatus']));;
-            $orderResponse['financial_status'] = ucfirst(strtolower($orderData['displayFinancialStatus']));
-            $orderResponse['name'] = $orderData['name'];
-            $orderResponse['note'] = $orderData['note'];
-            $orderResponse['confirmation_number'] = $orderData['confirmationNumber'];
-            $orderResponse['payment_gateway_names'] = $orderData['paymentGatewayNames'];
-            $orderResponse['phone'] = $orderData['phone'];
-            $orderResponse['tags'] = $orderData['tags'];
-            $orderResponse['email'] = $orderData['email'];
+            $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']) ?? '';
+            $orderResponse['admin_graphql_api_id'] = $orderData['id'] ?? '';
+            $orderResponse['cancel_reason'] = $orderData['cancelReason'] ?? '';
+            $orderResponse['cancelled_at'] = $orderData['cancelledAt'] ?? '';
+            $orderResponse['closed_at'] = $orderData['closedAt'] ?? '';
+            $orderResponse['processed_at'] = $orderData['processedAt'] ?? '';
+            $orderResponse['created_at'] = $orderData['createdAt'] ?? '';
+            $orderResponse['updated_at'] = $orderData['updatedAt'] ?? '';
+            $orderResponse['currency'] = $orderData['currencyCode'] ?? '';
+            $orderResponse['discount_codes'] = $orderData['discountCodes'] ?? '';
+            $orderResponse['fulfillment_status'] = ucfirst(strtolower($orderData['displayFulfillmentStatus'])) ?? '';
+            $orderResponse['financial_status'] = ucfirst(strtolower($orderData['displayFinancialStatus'])) ?? '';
+            $orderResponse['name'] = $orderData['name'] ?? '';
+            $orderResponse['note'] = $orderData['note'] ?? '';
+            $orderResponse['confirmation_number'] = $orderData['confirmationNumber'] ?? '';
+            $orderResponse['payment_gateway_names'] = $orderData['paymentGatewayNames'] ?? '';
+            $orderResponse['phone'] = $orderData['phone'] ?? '';
+            $orderResponse['tags'] = $orderData['tags'] ?? '';
+            $orderResponse['email'] = $orderData['email'] ?? '';
             $orderResponse['customer'] = isset($orderData['customer']) && is_array($orderData['customer']) ? [
                 'first_name' => $orderData['customer']['firstName'] ?? null,
                 'last_name' => $orderData['customer']['lastName'] ?? null,
@@ -347,11 +347,11 @@ class OrdersEndpoints
                 'email' => $orderData['customer']['email'] ?? null,
                 'phone' => $orderData['customer']['phone'] ?? null,
             ] : [];
-            $orderResponse['tax_lines'] = $orderData['taxLines'];
-            $orderResponse['total_outstanding'] = $orderData['totalOutstandingSet']['presentmentMoney']['amount'];
-            $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
-            $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
-            $orderResponse['note_attributes'] = $orderData['customAttributes'];
+            $orderResponse['tax_lines'] = $orderData['taxLines'] ?? '';
+            $orderResponse['total_outstanding'] = $orderData['totalOutstandingSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['note_attributes'] = $orderData['customAttributes'] ?? '';
             $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) && is_array($orderData['discountApplications']['edges']) ? array_map(function ($discount) {
                 return [
                     'index' => $discount['node']['index'] ?? '',
@@ -365,7 +365,7 @@ class OrdersEndpoints
                     'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];
             }, $orderData['discountApplications']['edges']) : [];
-            $orderResponse['fulfillments'] = $orderData['fulfillments'];
+            $orderResponse['fulfillments'] = $orderData['fulfillments'] ?? '';
             $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function ($item) {
                 return [
                     'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
