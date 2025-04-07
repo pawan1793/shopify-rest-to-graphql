@@ -57,43 +57,14 @@ class DiscountsEndpoints
             query {
                 discountNodes($position: $limit, $cursorparam) {
                     edges {
+                        cursor
                         node {
                             id
                             discount {
                                 __typename
-                                ... on DiscountAutomaticApp {
+                                ... on DiscountAutomaticBasic {
                                     title
-                                    startsAt
-                                    endsAt
-                                }
-                                ... on DiscountCodeBasic {
-                                    title
-                                    startsAt
-                                    endsAt
-                                    codes(first: 5) {
-                                        edges {
-                                            node {
-                                            code
-                                            }
-                                        }
-                                    }
-                                    customerSelection {
-                                        ... on DiscountCustomerAll {
-                                            allCustomers
-                                        }
-                                    }
                                     customerGets {
-                                        value {
-                                            ... on DiscountPercentage {
-                                                percentage
-                                            }
-                                            ... on DiscountAmount {
-                                                amount {
-                                                    amount
-                                                    currencyCode
-                                                }
-                                            }
-                                        }
                                         items {
                                             ... on DiscountProducts {
                                                 products(first: 10) {
@@ -103,7 +74,16 @@ class DiscountsEndpoints
                                                         }
                                                     }
                                                 }
-                                                productVariants(first: 10) {
+                                            }
+                                        }
+                                    }
+                                }
+                                ... on DiscountCodeBasic {
+                                    title
+                                    customerGets {
+                                        items {
+                                            ... on DiscountProducts {
+                                                products(first: 10) {
                                                     edges {
                                                         node {
                                                             id
@@ -111,8 +91,31 @@ class DiscountsEndpoints
                                                     }
                                                 }
                                             }
-                                            ... on DiscountCollections {
-                                                collections(first: 10) {
+                                        }
+                                    }
+                                }
+                                ... on DiscountCodeBxgy {
+                                    title
+                                    customerGets {
+                                        items {
+                                            ... on DiscountProducts {
+                                                products(first: 10) {
+                                                    edges {
+                                                        node {
+                                                            id
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                ... on DiscountAutomaticBxgy {
+                                    title
+                                    customerGets {
+                                        items {
+                                            ... on DiscountProducts {
+                                                products(first: 10) {
                                                     edges {
                                                         node {
                                                             id
@@ -145,62 +148,25 @@ class DiscountsEndpoints
             $discounts = [];
 
             if (isset($responseData['data']['discountNodes']['edges'])) {
-                foreach ($responseData['data']['discountNodes']['edges'] as $edge) {
+                foreach ($responseData['data']['discountNodes']['edges'] as $key => $edge) {
                     $node = $edge['node'];
+
                     $discountData = [
                         'id' => $node['id'],
                         'title' => $node['discount']['title'] ?? null,
                         'type' => $node['discount']['__typename'] ?? null,
-                        'starts_at' => $node['discount']['startsAt'] ?? null,
-                        'ends_at' => $node['discount']['endsAt'] ?? null,
-                        'codes' => [],
-                        'value' => null,
-                        'value_type' => null,
                         'entitled_products' => [],
-                        'entitled_variants' => [],
-                        'entitled_collections' => [],
+                        'cursor' => $edge['cursor'],
                     ];
-
-                    // Get discount codes if available
-                    if (isset($node['discount']['codes']['edges'])) {
-                        foreach ($node['discount']['codes']['edges'] as $codeEdge) {
-                            $discountData['codes'][] = $codeEdge['node']['code'];
-                        }
-                    }
-
-                    // Get discount value (fixed amount or percentage)
-                    if (isset($node['discount']['customerGets']['value'])) {
-                        if (isset($node['discount']['customerGets']['value']['percentage'])) {
-                            $discountData['value'] = $node['discount']['customerGets']['value']['percentage'];
-                            $discountData['value_type'] = 'percentage';
-                        } elseif (isset($node['discount']['customerGets']['value']['amount']['amount'])) {
-                            $discountData['value'] = $node['discount']['customerGets']['value']['amount']['amount'];
-                            $discountData['value_type'] = 'fixed_amount';
-                        }
-                    }
 
                     // Get entitled products
                     if (isset($node['discount']['customerGets']['items']['products']['edges'])) {
                         foreach ($node['discount']['customerGets']['items']['products']['edges'] as $productEdge) {
-                            $discountData['entitled_products'][] = $productEdge['node']['id'];
+                            $discountData['entitled_products'][] = str_replace('gid://shopify/Product/', '', $productEdge['node']['id']);
                         }
                     }
 
-                    // Get entitled variants
-                    if (isset($node['discount']['customerGets']['items']['productVariants']['edges'])) {
-                        foreach ($node['discount']['customerGets']['items']['productVariants']['edges'] as $variantEdge) {
-                            $discountData['entitled_variants'][] = $variantEdge['node']['id'];
-                        }
-                    }
-
-                    // Get entitled collections
-                    if (isset($node['discount']['customerGets']['items']['collections']['edges'])) {
-                        foreach ($node['discount']['customerGets']['items']['collections']['edges'] as $collectionEdge) {
-                            $discountData['entitled_collections'][] = $collectionEdge['node']['id'];
-                        }
-                    }
-
-                    $discounts[] = $discountData;
+                    $discounts[$key] = $discountData;
                 }
 
                 $pageInfo = $responseData['data']['discountNodes']['pageInfo'];

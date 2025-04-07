@@ -36,13 +36,6 @@ class OrdersEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#get-orders
         */
 
-        // Add it after email
-        // customer {
-        //     firstName
-        //     lastName
-        //     note
-        // }
-
         $position = 'first';
         $cursorparam = '';
         $limit = 250;
@@ -98,7 +91,7 @@ class OrdersEndpoints
 
         $orderQuery = <<<QUERY
             query {
-                orders($position: $limit, query: "$queryString", $cursorparam) {
+                orders($position: $limit, query: "$queryString" $cursorparam) {
                     edges {
                         cursor
                         node {
@@ -137,8 +130,8 @@ class OrdersEndpoints
                 $orderResponse['updated_at'] = $order['node']['updatedAt'] ?? '';
                 $orderResponse['currency'] = $order['node']['currencyCode'] ?? '';
                 $orderResponse['discount_codes'] = $order['node']['discountCodes'] ?? '';
-                $orderResponse['fulfillment_status'] = $order['node']['displayFulfillmentStatus'] ?? '';
-                $orderResponse['financial_status'] = $order['node']['displayFinancialStatus'] ?? '';
+                $orderResponse['fulfillment_status'] = ucfirst(strtolower($order['node']['displayFulfillmentStatus'])) ?? '';
+                $orderResponse['financial_status'] = ucfirst(strtolower($order['node']['displayFinancialStatus'])) ?? '';
                 $orderResponse['name'] = $order['node']['name'] ?? '';
                 $orderResponse['note'] = $order['node']['note'] ?? '';
                 $orderResponse['confirmation_number'] = $order['node']['confirmationNumber'] ?? '';
@@ -211,7 +204,7 @@ class OrdersEndpoints
                         'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                         'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                             return [
-                                'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                                'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
                                 'kind' => $adjustmentItem['node']['reason'] ?? '',
                             ];
                         }, $refund['orderAdjustments']['edges']) : [],
@@ -224,9 +217,58 @@ class OrdersEndpoints
                         }, $refund['refundLineItems']['edges']) : []
                     ];
                 }, $order['node']['refunds']) : [];
-                $orderResponse['billing_address'] = $order['node']['billingAddress'] ?? '';
-                $orderResponse['shipping_address'] = $order['node']['shippingAddress'] ?? '';
-                $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $order['node']['shippingLines']['edges']) : [];
+                $orderResponse['billing_address'] = isset($order['node']['billingAddress']) && is_array($order['node']['billingAddress']) ? [
+                    'id' => $order['node']['billingAddress']['id'] ?? '',
+                    'first_name' => $order['node']['billingAddress']['firstName'] ?? '',
+                    'las_name' => $order['node']['billingAddress']['lastName'] ?? '',
+                    'address1' => $order['node']['billingAddress']['address1'] ?? '',
+                    'address2' => $order['node']['billingAddress']['address2'] ?? '',
+                    'phone' => $order['node']['billingAddress']['phone'] ?? '',
+                    'city' => $order['node']['billingAddress']['city'] ?? '',
+                    'zip' => $order['node']['billingAddress']['zip'] ?? '',
+                    'province' => $order['node']['billingAddress']['province'] ?? '',
+                    'country' => $order['node']['billingAddress']['country'] ?? '',
+                    'company' => $order['node']['billingAddress']['company'] ?? '',
+                    'latitude' => $order['node']['billingAddress']['latitude'] ?? '',
+                    'longitude' => $order['node']['billingAddress']['longitude'] ?? '',
+                    'name' => $order['node']['billingAddress']['name'] ?? '',
+                    'country_code' => $order['node']['billingAddress']['countryCodeV2'] ?? '',
+                    'province_code' => $order['node']['billingAddress']['provinceCode'] ?? '',
+                ] : [];
+                $orderResponse['shipping_address'] = isset($order['node']['shippingAddress']) && is_array($order['node']['shippingAddress']) ? [
+                    'id' => $order['node']['shippingAddress']['id'] ?? '',
+                    'name' => $order['shippingAddress']['name'] ?? '',
+                    'address1' => $order['node']['shippingAddress']['address1'] ?? '',
+                    'address2' => $order['node']['shippingAddress']['address2'] ?? '',
+                    'phone' => $order['node']['shippingAddress']['phone'] ?? '',
+                    'city' => $order['node']['shippingAddress']['city'] ?? '',
+                    'zip' => $order['node']['shippingAddress']['zip'] ?? '',
+                    'province' => $order['node']['shippingAddress']['province'] ?? '',
+                    'country' => $order['node']['shippingAddress']['country'] ?? '',
+                    'latitude' => $order['node']['shippingAddress']['latitude'] ?? '',
+                    'longitude' => $order['node']['shippingAddress']['longitude'] ?? '',
+                    'name' => $order['node']['shippingAddress']['name'] ?? '',
+                    'country_code' => $order['node']['shippingAddress']['countryCodeV2'] ?? '',
+                    'province_code' => $order['node']['shippingAddress']['provinceCode'] ?? '',
+                ] : [];
+                $orderResponse['shipping_lines'] = isset($order['node']['shippingLines']['edges']) && is_array($order['node']['shippingLines']['edges']) ? array_map(function($item) {
+                    return [
+                        'id' => $item['node']['id'] ?? '',
+                        'title' => $item['node']['title'] ?? '',
+                        'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                        'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
+                            return [
+                                'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                            ];
+                        }, $item['node']['discountAllocations']) : [],
+                        'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
+                            return [
+                                'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                            ];
+                        }, $item['node']['discountedPriceSet']) : [],
+                        'is_removed' => $item['node']['isRemoved'] ?? '',
+                    ];
+                }, $order['node']['shippingLines']['edges']) : [];
                 $orderResponse['cursor'] = $order['cursor'] ?? '';
 
                 $ordersResponse[] = $orderResponse;
@@ -255,13 +297,6 @@ class OrdersEndpoints
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/order#get-orders-order-id
         */
 
-        // Add it after email
-        // customer {
-        //     firstName
-        //     lastName
-        //     note
-        // }
-
         $orderFields = implode("\n", $param['fields']);
 
         $orderQuery = <<<QUERY
@@ -286,25 +321,25 @@ class OrdersEndpoints
 
             $orderResponse = array();
 
-            $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']);
-            $orderResponse['admin_graphql_api_id'] = $orderData['id'];
-            $orderResponse['cancel_reason'] = $orderData['cancelReason'];
-            $orderResponse['cancelled_at'] = $orderData['cancelledAt'];
-            $orderResponse['closed_at'] = $orderData['closedAt'];
-            $orderResponse['processed_at'] = $orderData['processedAt'];
-            $orderResponse['created_at'] = $orderData['createdAt'];
-            $orderResponse['updated_at'] = $orderData['updatedAt'];
-            $orderResponse['currency'] = $orderData['currencyCode'];
-            $orderResponse['discount_codes'] = $orderData['discountCodes'];
-            $orderResponse['fulfillment_status'] = $orderData['displayFulfillmentStatus'];
-            $orderResponse['financial_status'] = $orderData['displayFinancialStatus'];
-            $orderResponse['name'] = $orderData['name'];
-            $orderResponse['note'] = $orderData['note'];
-            $orderResponse['confirmation_number'] = $orderData['confirmationNumber'];
-            $orderResponse['payment_gateway_names'] = $orderData['paymentGatewayNames'];
-            $orderResponse['phone'] = $orderData['phone'];
-            $orderResponse['tags'] = $orderData['tags'];
-            $orderResponse['email'] = $orderData['email'];
+            $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']) ?? '';
+            $orderResponse['admin_graphql_api_id'] = $orderData['id'] ?? '';
+            $orderResponse['cancel_reason'] = $orderData['cancelReason'] ?? '';
+            $orderResponse['cancelled_at'] = $orderData['cancelledAt'] ?? '';
+            $orderResponse['closed_at'] = $orderData['closedAt'] ?? '';
+            $orderResponse['processed_at'] = $orderData['processedAt'] ?? '';
+            $orderResponse['created_at'] = $orderData['createdAt'] ?? '';
+            $orderResponse['updated_at'] = $orderData['updatedAt'] ?? '';
+            $orderResponse['currency'] = $orderData['currencyCode'] ?? '';
+            $orderResponse['discount_codes'] = $orderData['discountCodes'] ?? '';
+            $orderResponse['fulfillment_status'] = ucfirst(strtolower($orderData['displayFulfillmentStatus'])) ?? '';
+            $orderResponse['financial_status'] = ucfirst(strtolower($orderData['displayFinancialStatus'])) ?? '';
+            $orderResponse['name'] = $orderData['name'] ?? '';
+            $orderResponse['note'] = $orderData['note'] ?? '';
+            $orderResponse['confirmation_number'] = $orderData['confirmationNumber'] ?? '';
+            $orderResponse['payment_gateway_names'] = $orderData['paymentGatewayNames'] ?? '';
+            $orderResponse['phone'] = $orderData['phone'] ?? '';
+            $orderResponse['tags'] = $orderData['tags'] ?? '';
+            $orderResponse['email'] = $orderData['email'] ?? '';
             $orderResponse['customer'] = isset($orderData['customer']) && is_array($orderData['customer']) ? [
                 'first_name' => $orderData['customer']['firstName'] ?? null,
                 'last_name' => $orderData['customer']['lastName'] ?? null,
@@ -312,11 +347,11 @@ class OrdersEndpoints
                 'email' => $orderData['customer']['email'] ?? null,
                 'phone' => $orderData['customer']['phone'] ?? null,
             ] : [];
-            $orderResponse['tax_lines'] = $orderData['taxLines'];
-            $orderResponse['total_outstanding'] = $orderData['totalOutstandingSet']['presentmentMoney']['amount'];
-            $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'];
-            $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'];
-            $orderResponse['note_attributes'] = $orderData['customAttributes'];
+            $orderResponse['tax_lines'] = $orderData['taxLines'] ?? '';
+            $orderResponse['total_outstanding'] = $orderData['totalOutstandingSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['total_price'] = $orderData['totalPriceSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['total_discounts'] = $orderData['totalDiscountsSet']['presentmentMoney']['amount'] ?? '';
+            $orderResponse['note_attributes'] = $orderData['customAttributes'] ?? '';
             $orderResponse['discount_applications'] = isset($orderData['discountApplications']['edges']) && is_array($orderData['discountApplications']['edges']) ? array_map(function ($discount) {
                 return [
                     'index' => $discount['node']['index'] ?? '',
@@ -330,7 +365,7 @@ class OrdersEndpoints
                     'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];
             }, $orderData['discountApplications']['edges']) : [];
-            $orderResponse['fulfillments'] = $orderData['fulfillments'];
+            $orderResponse['fulfillments'] = $orderData['fulfillments'] ?? '';
             $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function ($item) {
                 return [
                     'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
@@ -370,7 +405,7 @@ class OrdersEndpoints
                     'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                     'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                         return [
-                            'amount' => isset($adjustmentItem['node']['amountSet']) ?? '',
+                            'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
                             'kind' => $adjustmentItem['node']['reason'] ?? '',
                         ];
                     }, $refund['orderAdjustments']['edges']) : [],
@@ -383,9 +418,60 @@ class OrdersEndpoints
                     }, $refund['refundLineItems']['edges']) : []
                 ];
             }, $orderData['refunds']) : [];
-            $orderResponse['billing_address'] = $orderData['billingAddress'];
-            $orderResponse['shipping_address'] = $orderData['shippingAddress'];
-            $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) ? array_map(fn($edge) => $edge['node'], $orderData['shippingLines']['edges']) : [];
+            $orderResponse['billing_address'] = isset($orderData['billingAddress']) && is_array($orderData['billingAddress']) ? [
+                'id' => $orderData['billingAddress']['id'] ?? '',
+                'first_name' => $orderData['billingAddress']['firstName'] ?? '',
+                'last_name' => $orderData['billingAddress']['lastName'] ?? '',
+                'address1' => $orderData['billingAddress']['address1'] ?? '',
+                'address2' => $orderData['billingAddress']['address2'] ?? '',
+                'phone' => $orderData['billingAddress']['phone'] ?? '',
+                'city' => $orderData['billingAddress']['city'] ?? '',
+                'zip' => $orderData['billingAddress']['zip'] ?? '',
+                'province' => $orderData['billingAddress']['province'] ?? '',
+                'country' => $orderData['billingAddress']['country'] ?? '',
+                'company' => $orderData['billingAddress']['company'] ?? '',
+                'latitude' => $orderData['billingAddress']['latitude'] ?? '',
+                'longitude' => $orderData['billingAddress']['longitude'] ?? '',
+                'name' => $orderData['billingAddress']['name'] ?? '',
+                'country_code' => $orderData['billingAddress']['countryCodeV2'] ?? '',
+                'province_code' => $orderData['billingAddress']['provinceCode'] ?? '',
+            ] : [];
+            $orderResponse['shipping_address'] = isset($orderData['shippingAddress']) && is_array($orderData['shippingAddress']) ? [
+                'id' => $orderData['shippingAddress']['id'] ?? '',
+                'first_name' => $orderData['shippingAddress']['firstName'] ?? '',
+                'last_name' => $orderData['shippingAddress']['lastName'] ?? '',
+                'address1' => $orderData['shippingAddress']['address1'] ?? '',
+                'address2' => $orderData['shippingAddress']['address2'] ?? '',
+                'phone' => $orderData['shippingAddress']['phone'] ?? '',
+                'city' => $orderData['shippingAddress']['city'] ?? '',
+                'zip' => $orderData['shippingAddress']['zip'] ?? '',
+                'province' => $orderData['shippingAddress']['province'] ?? '',
+                'country' => $orderData['shippingAddress']['country'] ?? '',
+                'company' => $orderData['shippingAddress']['company'] ?? '',
+                'latitude' => $orderData['shippingAddress']['latitude'] ?? '',
+                'longitude' => $orderData['shippingAddress']['longitude'] ?? '',
+                'name' => $orderData['shippingAddress']['name'] ?? '',
+                'country_code' => $orderData['shippingAddress']['countryCodeV2'] ?? '',
+                'province_code' => $orderData['shippingAddress']['provinceCode'] ?? '',
+            ] : [];
+            $orderResponse['shipping_lines'] = isset($orderData['shippingLines']['edges']) && is_array($orderData['shippingLines']['edges']) ? array_map(function($item) {
+                return [
+                    'id' => $item['node']['id'] ?? '',
+                    'title' => $item['node']['title'] ?? '',
+                    'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                    'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
+                        return [
+                            'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                        ];
+                    }, $item['node']['discountAllocations']) : [],
+                    'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
+                        return [
+                            'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                        ];
+                    }, $item['node']['discountedPriceSet']) : [],
+                    'is_removed' => $item['node']['isRemoved'] ?? '',
+                ];
+            }, $orderData['shippingLines']['edges']) : [];
 
             return $orderResponse;
         }
@@ -808,7 +894,11 @@ class OrdersEndpoints
                         edges {
                             cursor
                             node {
-                                id
+                                amountSet {
+                                    presentmentMoney {
+                                        amount
+                                    }
+                                }
                                 reason
                             }
                         }
@@ -840,7 +930,7 @@ class OrdersEndpoints
                     latitude
                     longitude
                     name
-                    countryCode
+                    countryCodeV2
                     provinceCode
                 }',
                 'shippingAddress {
@@ -848,7 +938,7 @@ class OrdersEndpoints
                     address1
                     address2
                     city
-                    countryCode
+                    countryCodeV2
                     provinceCode
                     zip
                     name
@@ -864,11 +954,22 @@ class OrdersEndpoints
                         node {
                             id
                             title
-                            carrierIdentifier
-                            requestedFulfillmentService {
-                                id
+                            originalPriceSet {
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
                             }
-                            shippingRateHandle
+                            discountAllocations {
+                                allocatedAmountSet {
+                                    presentmentMoney {
+                                        amount
+                                    }
+                                    shopMoney {
+                                        amount
+                                    }
+                                }
+                            }
                             discountedPriceSet {
                                 shopMoney {
                                     amount
@@ -879,12 +980,7 @@ class OrdersEndpoints
                                     currencyCode
                                 }
                             }
-                            price
-                            requestedFulfillmentService {
-                                id
-                            }
-                            shippingRateHandle
-                            title
+                            isRemoved
                         }
                     }
                 }'
