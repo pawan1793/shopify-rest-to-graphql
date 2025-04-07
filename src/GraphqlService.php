@@ -1069,9 +1069,7 @@ class GraphqlService
 
         if (1) {
 
-            try {
-                // Send GraphQL request
-                $responseData = $this->graphqlQueryThalia($productquery, $variables);
+            $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
 
 
@@ -1088,12 +1086,6 @@ class GraphqlService
 
 
                 }
-            } catch (\Exception $e) {
-
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
-
-
-            }
 
         }
 
@@ -1208,19 +1200,19 @@ class GraphqlService
                 if (!isset($variant['id'])) {
 
                     $optionValues = array();
-                    if (isset($variant['option1'])) {
+                    if (isset($variant['option1']) && isset($graphqloptionids['option1']['values'][$variant['option1']])) {
                         $optiondata['optionId'] = $graphqloptionids['option1']['id'];
                         $optiondata['id'] = $graphqloptionids['option1']['values'][$variant['option1']];
                         $optionValues[0] = $optiondata;
                     }
 
-                    if (isset($variant['option2'])) {
+                    if (isset($variant['option2']) && isset($graphqloptionids['option2']['values'][$variant['option2']])) {
                         $optiondata['optionId'] = $graphqloptionids['option2']['id'];
                         $optiondata['id'] = $graphqloptionids['option2']['values'][$variant['option2']];
                         $optionValues[1] = $optiondata;
                     }
 
-                    if (isset($variant['option3'])) {
+                    if (isset($variant['option3']) && isset($graphqloptionids['option2']['values'][$variant['option2']])) {
                         $optiondata['optionId'] = $graphqloptionids['option3']['id'];
                         $optiondata['id'] = $graphqloptionids['option3']['values'][$variant['option3']];
                         $optionValues[2] = $optiondata;
