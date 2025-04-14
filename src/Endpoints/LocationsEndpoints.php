@@ -37,7 +37,7 @@ class LocationsEndpoints
 
         $locationquery = <<<'GRAPHQL'
             query {
-                locations(first: 250) {
+                locations(first: 250, includeLegacy: true) {
                     edges {
                         node {
                             id
