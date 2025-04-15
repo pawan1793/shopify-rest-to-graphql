@@ -303,10 +303,13 @@ class GraphqlService
         if (!empty($variant['sku'])) {
             $variantdata['inventoryItem']['sku'] = $variant['sku'];
         }
-
+        
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
             $variantdata['inventoryItem']['tracked'] = true;
+            if(isset($variant['inventory_management']) && $variant['inventory_management'] == ''){
+                 $variantdata['inventoryItem']['tracked'] = false;
+            }
         }
 
 
