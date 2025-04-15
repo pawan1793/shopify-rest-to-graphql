@@ -11,9 +11,19 @@ NOTE : This is experimental package
 - [Overview](#overview)
 - [Installation](#installation)
 - [Usage](#usage)
+- [GraphqlService Class](#graphqlservice-class)
 - [Endpoints](#endpoints)
-  - [ApplicationCharges](#ApplicationCharges)
-  - [Collections](#Collections)
+  - [Products](#products)
+  - [Variants](#variants)
+  - [Collections](#collections)
+  - [Orders](#orders)
+  - [Inventory](#inventory)
+  - [ApplicationCharges](#applicationcharges)
+  - [Metafields](#metafields)
+  - [Fulfillments](#fulfillments)
+  - [Webhooks](#webhooks)
+  - [Themes](#themes)
+  - [Other Endpoints](#other-endpoints)
 - [Contributing](#contributing)
 
 
@@ -80,25 +90,251 @@ Example Usage for calling graphql query
     }
     ```
 
+## GraphqlService Class
+
+The `GraphqlService` class is the core of this package and provides direct interaction with Shopify's GraphQL API.
+
+### Available Methods
+
+#### General GraphQL
+
+- `graphqlQueryThalia(string $query, array $variables = [])`: Execute any GraphQL query with optional variables
+- `graphQLQuery($query, $shop, $accessToken)`: Alternative method to execute GraphQL queries with different credentials
+
+#### Products
+
+- `graphqlPostProduct($params)`: Create a new product
+- `graphqlPostProductWithVariants($params)`: Create a product with multiple variants
+- `graphqlUpdateProduct($params)`: Update an existing product
+- `graphqlGetProducts($params)`: Get a list of products with filtering options
+- `graphqlGetProductsCount()`: Get the total count of products
+- `graphqlGetProduct($shopifyid)`: Get a single product by ID
+- `graphqlGetProductWithoutInventory($shopifyid)`: Get a product without inventory information
+- `graphqlDeleteProduct($shopifyid)`: Delete a product
+- `graphqlCheckProductOnShopify($shopifyid)`: Check if a product exists on Shopify
+- `reOrderProductImages($params)`: Reorder product images
+
+#### Variants
+
+- `graphqlDeleteVariant($shopifyid, $variantid)`: Delete a variant
+- `graphqlGetProductVariants($shopifyid)`: Get all variants for a product
+- `graphqlGetVariant($variantid)`: Get a single variant by ID
+- `getProductIdFromVairant($variantid)`: Get product ID that a variant belongs to
+- `graphqlUpdateVariant($shopifyId, $variantId, $params)`: Update a variant
+
+#### Other
+
+- `getCollectionHandle($collection_id)`: Get a collection's handle by ID
+
+### Example: Creating a Product
+
+```php
+$productData = [
+    'product' => [
+        'title' => 'New Product',
+        'body_html' => '<p>Product description</p>',
+        'vendor' => 'My Vendor',
+        'product_type' => 'Clothing',
+        'tags' => 'tag1,tag2',
+        'variants' => [
+            [
+                'price' => '19.99',
+                'sku' => 'SKU123',
+                'inventory_management' => 'shopify'
+            ]
+        ],
+        'images' => [
+            [
+                'src' => 'https://example.com/image.jpg',
+                'alt' => 'Product Image'
+            ]
+        ]
+    ]
+];
+
+$response = $shopifyGraphql->graphqlPostProduct($productData);
+```
+
+### Example: Updating a Product
+
+```php
+$updateData = [
+    'product' => [
+        'id' => '1234567890',
+        'title' => 'Updated Product Title',
+        'tags' => 'updated,tags',
+        'variants' => [
+            [
+                'id' => '9876543210',
+                'price' => '29.99'
+            ]
+        ]
+    ]
+];
+
+$response = $shopifyGraphql->graphqlUpdateProduct($updateData);
+```
+
+### Example: Getting Products
+
+```php
+$params = [
+    'limit' => 10,
+    'vendor' => 'Example Vendor',
+    'published_status' => 'published',
+    'fields' => 'id,title,variants,tags'
+];
+
+$products = $shopifyGraphql->graphqlGetProducts($params);
+```
+
 ## Endpoints
-### ApplicationCharges
-- `appPurchaseOneTimeCreate($params)`: Charges a shop for features or services one time. This type of charge is recommended for apps that aren't billed on a recurring basis. Test and demo shops aren't charged.
-- `currentAppInstallationForOneTime($chargeId)`: Returns charge deatils based on chargeId.
+
+The package provides endpoint classes that map to different Shopify resources. Each endpoint class offers methods that correspond to REST API operations but utilize GraphQL under the hood.
+
+### Products
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\ProductsEndpoints;
+
+$productsEndpoint = new ProductsEndpoints($shop, $accessToken);
+```
+
+- `getProducts($params)`: Get a list of products with filtering options
+- `getProduct($productId)`: Get a single product by ID
+- `productVariantsCount()`: Get the total count of product variants
+- `deleteAllProductImages($productId)`: Delete all images for a product
+
+### Variants
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\VariantsEndpoints;
+
+$variantsEndpoint = new VariantsEndpoints($shop, $accessToken);
+```
+
+- `productVariantsBulkUpdate($shopifyId, $variantId, $params)`: Update a variant
+- `productVariantsBulkDelete($shopifyId, $variantId)`: Delete a variant
 
 ### Collections
-- `getSmartCollections()`: Returns a list of smart collections.
-- `getCollection($collectionId))`: Returns collection by ID.
 
-    ## Usage Example
-    
-    ```php
-    use Thalia\ShopifyRestToGraphql\Endpoints\CollectionsEndpoints; 
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\CollectionsEndpoints;
 
-    $collectionsEndpoint = new CollectionsEndpoints($shop, $accessToken);
-    $collections = $collectionsEndpoint->getCustomCollections();
-    print_r($collections);
-    ```
+$collectionsEndpoint = new CollectionsEndpoints($shop, $accessToken);
+```
 
+- `getSmartCollections()`: Get a list of smart collections
+- `getCollection($collectionId)`: Get a single collection by ID
+- `getCustomCollections()`: Get a list of custom collections
+
+### Orders
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\OrdersEndpoints;
+
+$ordersEndpoint = new OrdersEndpoints($shop, $accessToken);
+```
+
+- `getOrders($params)`: Get a list of orders with filtering options
+- `getOrder($orderId)`: Get a single order by ID
+- `createOrder($params)`: Create a new order
+- `updateOrder($orderId, $params)`: Update an existing order
+- `cancelOrder($orderId, $params)`: Cancel an order
+- `closeOrder($orderId)`: Close an order
+- `reopenOrder($orderId)`: Reopen a closed order
+
+### Inventory
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\InventoryEndpoints;
+
+$inventoryEndpoint = new InventoryEndpoints($shop, $accessToken);
+```
+
+- `getInventoryLevels($params)`: Get inventory levels
+- `adjustInventoryLevel($params)`: Adjust inventory level
+- `getInventoryItem($inventoryItemId)`: Get inventory item by ID
+- `updateInventoryItem($inventoryItemId, $params)`: Update inventory item
+
+### ApplicationCharges
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\ApplicationChargesEndpoints;
+
+$chargesEndpoint = new ApplicationChargesEndpoints($shop, $accessToken);
+```
+
+- `appPurchaseOneTimeCreate($params)`: Create a one-time application charge
+- `currentAppInstallationForOneTime($chargeId)`: Get details of a one-time charge
+
+### Metafields
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\MetafieldsEndpoints;
+
+$metafieldsEndpoint = new MetafieldsEndpoints($shop, $accessToken);
+```
+
+- `getMetafields($params)`: Get metafields
+- `getMetafield($metafieldId)`: Get a single metafield
+- `createMetafield($params)`: Create a metafield
+- `updateMetafield($metafieldId, $params)`: Update a metafield
+- `deleteMetafield($metafieldId)`: Delete a metafield
+
+### Fulfillments
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\FulfillmentsEndpoints;
+
+$fulfillmentsEndpoint = new FulfillmentsEndpoints($shop, $accessToken);
+```
+
+- `createFulfillment($params)`: Create a fulfillment
+- `updateFulfillment($fulfillmentId, $params)`: Update a fulfillment
+- `getFulfillment($fulfillmentId)`: Get a single fulfillment
+- `cancelFulfillment($fulfillmentId)`: Cancel a fulfillment
+
+### Webhooks
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\WebhooksEndpoints;
+
+$webhooksEndpoint = new WebhooksEndpoints($shop, $accessToken);
+```
+
+- `createWebhook($params)`: Create a webhook
+- `getWebhooks($params)`: Get webhooks
+- `getWebhook($webhookId)`: Get a single webhook
+- `updateWebhook($webhookId, $params)`: Update a webhook
+- `deleteWebhook($webhookId)`: Delete a webhook
+
+### Themes
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\ThemesEndpoints;
+
+$themesEndpoint = new ThemesEndpoints($shop, $accessToken);
+```
+
+- `getThemes()`: Get all themes
+- `getTheme($themeId)`: Get a single theme
+- `createTheme($params)`: Create a new theme
+- `updateTheme($themeId, $params)`: Update a theme
+- `deleteTheme($themeId)`: Delete a theme
+
+### Other Endpoints
+
+Additional endpoint classes include:
+
+- `ShopEndpoints`: Shop-related operations
+- `LocationsEndpoints`: Location management
+- `DiscountsEndpoints`: Discount operations
+- `ScriptTagsEndPoints`: Script tag operations
+- `RecurringApplicationChargesEndpoints`: Recurring charge operations
+- `OauthEndpoints`: OAuth operations
+- `OauthScopeEndpoints`: OAuth scope operations
+- `ShippingEndpoints`: Shipping operations
 
 ## Contributing
 We welcome contributions! To contribute:
