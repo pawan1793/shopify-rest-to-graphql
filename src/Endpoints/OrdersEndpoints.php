@@ -26,7 +26,7 @@ class OrdersEndpoints
 
     }
 
-    /** 
+    /**
      * To get Orders use this function.
      */
     public function getOrders($param)
@@ -287,7 +287,7 @@ class OrdersEndpoints
 
     }
 
-    /** 
+    /**
      * To get Order by its ID use this function.
      */
     public function getOrder($param)
@@ -478,7 +478,96 @@ class OrdersEndpoints
 
     }
 
-    /** 
+    /**
+     * To get Order Line Items by its Order Id use this function.
+     */
+    public function getOrderLineItems($param)
+    {
+        $orderId = $param['orderId'];
+        $limit = isset($param['limit']) ? (int)$param['limit'] : 50;
+
+        $lineItemsFields = implode("\n", $param['fields']);
+
+        $allLineItems = [];
+        $hasNextPage = true;
+        $afterCursor = null;
+
+        while ($hasNextPage) {
+            $cursorParam = $afterCursor ? "after: \"{$afterCursor}\"" : '';
+            $query = <<<QUERY
+                query GetOrderLineItems {
+                    order(id: "gid://shopify/Order/{$orderId}") {
+                        lineItems(first: $limit $cursorParam) {
+                            edges {
+                                cursor
+                                node {
+                                    $lineItemsFields
+                                }
+                            }
+                            pageInfo {
+                                hasNextPage
+                            }
+                        }
+                    }
+                }
+            QUERY;
+
+            $response = $this->graphqlService->graphqlQueryThalia($query);
+
+            if (isset($response['errors']) && !empty($response['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $response["errors"]);
+            }
+
+            $edges = $response['data']['order']['lineItems']['edges'] ?? [];
+
+            foreach ($edges as $edge) {
+                $node = $edge['node'];
+
+                $properties = [];
+                if (isset($node['customAttributes']) && is_array($node['customAttributes'])) {
+                    foreach ($node['customAttributes'] as $attr) {
+                        $properties[] = [
+                            'name' => $attr['key'] ?? null,
+                            'value' => $attr['value'] ?? null,
+                        ];
+                    }
+                }
+
+                $allLineItems[] = [
+                    'id' => isset($node['id']) ? str_replace('gid://shopify/LineItem/', '', $node['id']) : '',
+                    'admin_graphql_api_id' => $node['id'] ?? '',
+                    'current_quantity' => $node['currentQuantity'] ?? '',
+                    'fulfillment_status' => $node['fulfillmentStatus'] ?? '',
+                    'name' => $node['name'] ?? '',
+                    'product_id' => isset($node['product']['id']) ? str_replace('gid://shopify/Product/', '', $node['product']['id']) : '',
+                    'quantity' => $node['quantity'] ?? '',
+                    'requires_shipping' => $node['requiresShipping'] ?? '',
+                    'sku' => $node['sku'] ?? '',
+                    'taxable' => $node['taxable'] ?? '',
+                    'title' => $node['title'] ?? '',
+                    'price' => $node['originalUnitPriceSet']['presentmentMoney']['amount'] ?? '',
+                    'total_discount_set' => $node['totalDiscountSet']['presentmentMoney']['amount'] ?? '',
+                    'variant_id' => isset($node['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $node['variant']['id']) : '',
+                    'variant_title' => $node['variant']['title'] ?? '',
+                    'vendor' => $node['vendor'] ?? '',
+                    'tax_lines' => $node['taxLines'] ?? [],
+                    'discount_allocations' => isset($node['discountAllocations']) && is_array($node['discountAllocations']) ? array_map(function ($allocation) {
+                        return [
+                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                        ];
+                    }, $node['discountAllocations']) : [],
+                ];
+            }
+
+            $hasNextPage = $response['data']['order']['lineItems']['pageInfo']['hasNextPage'];
+            $lastEdge = end($edges);
+            $afterCursor = $lastEdge['cursor'] ?? null;
+        }
+
+        return $allLineItems;
+    }
+
+    /**
      * To get Order transection by its Order Id use this function.
      */
     public function transactionsForOrder($param)
@@ -544,7 +633,7 @@ class OrdersEndpoints
 
     }
 
-    /** 
+    /**
      * To get Order Count use this function.
      */
     public function OrdersCount($param)
@@ -606,7 +695,7 @@ class OrdersEndpoints
         }
     }
 
-    /** 
+    /**
      * To get Order Risk use this function.
      */
     public function OrderRiskAssessmentsList($orderId)
@@ -988,7 +1077,7 @@ class OrdersEndpoints
         ];
     }
 
-    /** 
+    /**
      * To Order update use this function.
      */
     public function updateOrderTags($params)
