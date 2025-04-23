@@ -130,8 +130,8 @@ class OrdersEndpoints
                 $orderResponse['updated_at'] = $order['node']['updatedAt'] ?? '';
                 $orderResponse['currency'] = $order['node']['currencyCode'] ?? '';
                 $orderResponse['discount_codes'] = $order['node']['discountCodes'] ?? '';
-                $orderResponse['fulfillment_status'] = ucfirst(strtolower($order['node']['displayFulfillmentStatus'])) ?? '';
-                $orderResponse['financial_status'] = ucfirst(strtolower($order['node']['displayFinancialStatus'])) ?? '';
+                $orderResponse['fulfillment_status'] = isset($order['node']['displayFulfillmentStatus']) ? ucfirst(strtolower($order['node']['displayFulfillmentStatus'])) : '';
+                $orderResponse['financial_status'] = isset($order['node']['displayFinancialStatus']) ? ucfirst(strtolower($order['node']['displayFinancialStatus'])) : '';
                 $orderResponse['name'] = $order['node']['name'] ?? '';
                 $orderResponse['note'] = $order['node']['note'] ?? '';
                 $orderResponse['confirmation_number'] = $order['node']['confirmationNumber'] ?? '';
@@ -158,9 +158,8 @@ class OrdersEndpoints
                         'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
                         'target_type' => strtolower($discount['node']['targetType']) ?? '',
                         'value' => isset($discount['node']['value']['amount'])
-                            ? strtolower($discount['node']['value']['amount'])
-                            : (isset($discount['node']['value']['percentage']) ? strtolower($discount['node']['value']['percentage']) : ''),
-
+                            ? $discount['node']['value']['amount']
+                            : (isset($discount['node']['value']['percentage']) ? $discount['node']['value']['percentage'] : ''),
                         'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                     ];
                 }, $order['node']['discountApplications']['edges']) : [];
@@ -220,7 +219,7 @@ class OrdersEndpoints
                 $orderResponse['billing_address'] = isset($order['node']['billingAddress']) && is_array($order['node']['billingAddress']) ? [
                     'id' => $order['node']['billingAddress']['id'] ?? '',
                     'first_name' => $order['node']['billingAddress']['firstName'] ?? '',
-                    'las_name' => $order['node']['billingAddress']['lastName'] ?? '',
+                    'last_name' => $order['node']['billingAddress']['lastName'] ?? '',
                     'address1' => $order['node']['billingAddress']['address1'] ?? '',
                     'address2' => $order['node']['billingAddress']['address2'] ?? '',
                     'phone' => $order['node']['billingAddress']['phone'] ?? '',
@@ -237,7 +236,7 @@ class OrdersEndpoints
                 ] : [];
                 $orderResponse['shipping_address'] = isset($order['node']['shippingAddress']) && is_array($order['node']['shippingAddress']) ? [
                     'id' => $order['node']['shippingAddress']['id'] ?? '',
-                    'name' => $order['shippingAddress']['name'] ?? '',
+                    'name' => $order['node']['shippingAddress']['name'] ?? '',
                     'address1' => $order['node']['shippingAddress']['address1'] ?? '',
                     'address2' => $order['node']['shippingAddress']['address2'] ?? '',
                     'phone' => $order['node']['shippingAddress']['phone'] ?? '',
@@ -331,8 +330,8 @@ class OrdersEndpoints
             $orderResponse['updated_at'] = $orderData['updatedAt'] ?? '';
             $orderResponse['currency'] = $orderData['currencyCode'] ?? '';
             $orderResponse['discount_codes'] = $orderData['discountCodes'] ?? '';
-            $orderResponse['fulfillment_status'] = ucfirst(strtolower($orderData['displayFulfillmentStatus'])) ?? '';
-            $orderResponse['financial_status'] = ucfirst(strtolower($orderData['displayFinancialStatus'])) ?? '';
+            $orderResponse['fulfillment_status'] = isset($orderData['displayFulfillmentStatus']) ? ucfirst(strtolower($orderData['displayFulfillmentStatus'])) : '';
+            $orderResponse['financial_status'] = isset($orderData['displayFinancialStatus']) ? ucfirst(strtolower($orderData['displayFinancialStatus'])) : '';
             $orderResponse['name'] = $orderData['name'] ?? '';
             $orderResponse['note'] = $orderData['note'] ?? '';
             $orderResponse['confirmation_number'] = $orderData['confirmationNumber'] ?? '';
@@ -359,8 +358,8 @@ class OrdersEndpoints
                     'target_selection' => strtolower($discount['node']['targetSelection']) ?? '',
                     'target_type' => strtolower($discount['node']['targetType']) ?? '',
                     'value' => isset($discount['node']['value']['amount'])
-                        ? strtolower($discount['node']['value']['amount'])
-                        : (isset($discount['node']['value']['percentage']) ? strtolower($discount['node']['value']['percentage']) : ''),
+                        ? $discount['node']['value']['amount']
+                        : (isset($discount['node']['value']['percentage']) ? $discount['node']['value']['percentage'] : ''),
 
                     'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];

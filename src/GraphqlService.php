@@ -59,14 +59,28 @@ class GraphqlService
 
 
             return json_decode($response->getBody(), true);
-        } catch (\Exception $e) {
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // Covers ClientException, ServerException
+            $responseBody = $e->hasResponse()
+                ? (string) $e->getResponse()->getBody()
+                : 'No response from server.';
 
-            $responseBody = (string) $e->getResponse()->getBody();
-          
             $responseArray = json_decode($responseBody, true);
-            $errors = isset($responseArray['errors']) ? (array) $responseArray['errors'] : ['Unknown error'];
-          
-            throw new GraphqlException("Shopify API request failed", $e->getCode(), $errors, $e);
+            $errors = $responseArray['errors'] ?? [['message' => $responseBody]];
+
+            throw new GraphqlException("Shopify API request failed", $e->getCode(), (array) $errors, $e);
+
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            // Handle network issues (DNS, timeout, etc.)
+            $errors = [['message' => 'Connection failed: ' . $e->getMessage()]];
+
+            throw new GraphqlException("Shopify API connection error", $e->getCode(), $errors, $e);
+
+        } catch (\Exception $e) {
+            // Generic fallback
+            $errors = [['message' => 'Unexpected error: ' . $e->getMessage()]];
+
+            throw new GraphqlException("Unexpected Shopify API error", $e->getCode(), $errors, $e);
         }
     }
 
