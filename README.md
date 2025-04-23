@@ -187,6 +187,29 @@ $params = [
 
 $products = $shopifyGraphql->graphqlGetProducts($params);
 ```
+### Example: Add Product Image
+
+```php
+        $images = [
+            [
+                'url' => 'https://fastly.picsum.photos/id/365/200/300.jpg?hmac=n_4DxqK0o938eabBZRnEywWtPwgF2MKoTfnRmJ7vlKQ',
+                'alt' => 'lorem ipsum',
+            ]
+        ];
+
+$response = $shopifyGraphql->graphqlCreateProductImage($image, $productShopifyId);
+```
+
+### Example: Delete Product Image
+
+```php
+        $imageIds = [
+            "4145546145154","5456564465234",
+        ];
+
+
+$response = $shopifyGraphql->graphqlDeleteProductImage($imageIds, $productShopifyId);
+```
 
 ## Endpoints
 
