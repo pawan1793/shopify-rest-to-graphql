@@ -180,8 +180,8 @@ class OrdersEndpoints
                 }, $order['node']['fulfillments']) : [];
 
                 $fulfillableQuantities = [];
-                if (isset($orderData['fulfillmentOrders']['edges']) && is_array($orderData['fulfillmentOrders']['edges'])) {
-                    foreach ($orderData['fulfillmentOrders']['edges'] as $fulfillmentOrder) {
+                if (isset($order['node']['fulfillmentOrders']['edges']) && is_array($order['node']['fulfillmentOrders']['edges'])) {
+                    foreach ($order['node']['fulfillmentOrders']['edges'] as $fulfillmentOrder) {
                         if (!empty($fulfillmentOrder['node']['lineItems']['edges'])) {
                             foreach ($fulfillmentOrder['node']['lineItems']['edges'] as $orderLineItem) {
                                 $lineItemId = str_replace('gid://shopify/LineItem/', '', $orderLineItem['node']['lineItem']['id']);
