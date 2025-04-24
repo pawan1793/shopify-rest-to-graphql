@@ -273,6 +273,7 @@ class OrdersEndpoints
                     'zip' => $order['node']['shippingAddress']['zip'] ?? '',
                     'province' => $order['node']['shippingAddress']['province'] ?? '',
                     'country' => $order['node']['shippingAddress']['country'] ?? '',
+                    'company' => $order['node']['shippingAddress']['company'] ?? '',
                     'latitude' => $order['node']['shippingAddress']['latitude'] ?? '',
                     'longitude' => $order['node']['shippingAddress']['longitude'] ?? '',
                     'name' => $order['node']['shippingAddress']['name'] ?? '',
