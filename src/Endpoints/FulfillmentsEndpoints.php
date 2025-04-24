@@ -157,7 +157,7 @@ class FulfillmentsEndpoints
         } else {
 
             $response = $responseData['data']['fulfillmentCreate']['fulfillment'];
-            $response['id'] = str_replace('gid://shopify/FulfillmentLineItem/', '', $response['id']);
+            $response['id'] = isset($response['id']) ? str_replace('gid://shopify/FulfillmentLineItem/', '', $response['id']) : null;
         }
 
         return $response;
@@ -215,7 +215,7 @@ class FulfillmentsEndpoints
 
         } else {
 
-            $responseData = $responseData['data']['fulfillmentTrackingInfoUpdate']['fulfillment']['trackingInfo'][0]['url'];
+            $responseData['tracking_url'] = $responseData['data']['fulfillmentTrackingInfoUpdate']['fulfillment']['trackingInfo'][0]['url'];
 
         }
 
@@ -257,7 +257,8 @@ class FulfillmentsEndpoints
                 }
                 GRAPHQL;
 
-
+        $fulfillmentid =str_replace("gid://shopify/Fulfillment/", "", $fulfillmentid);
+        
         $variables = [
             "fulfillmentEvent" => [
                 "fulfillmentId" => "gid://shopify/Fulfillment/" . $fulfillmentid,
@@ -391,52 +392,55 @@ class FulfillmentsEndpoints
 
         } else {
 
-            $fulfillmentOrdersData = $responseData['data']['order']['fulfillmentOrders']['nodes'];
+            if(isset($responseData['data']['order']['fulfillmentOrders']['nodes'])) {
+                $fulfillmentOrdersData = $responseData['data']['order']['fulfillmentOrders']['nodes'];
 
-            $restResponse = array();
-            foreach ($fulfillmentOrdersData as $key => $fulfillmentOrder) {
-                $restItem = [
-                    "id" => str_replace("gid://shopify/FulfillmentOrder/", "", $fulfillmentOrder["id"]) ?? '',
-                    "created_at" => $fulfillmentOrder["createdAt"] ?? '',
-                    "updated_at" => $fulfillmentOrder["updatedAt"] ?? '',
-                    "order_id" => $orderid ?? '',
-                    "assigned_location_id" => str_replace("gid://shopify/Location/", "", $fulfillmentOrder["assignedLocation"]["location"]["id"]),
-                    "request_status" => strtolower($fulfillmentOrder["requestStatus"]) ?? '',
-                    "status" => strtolower($fulfillmentOrder["status"]) ?? '',
-                    "fulfill_at" => $fulfillmentOrder["fulfillAt"] ?? '',
-                    "fulfill_by" => $fulfillmentOrder["fulfillBy"] ?? '',
-                    "destination" => $fulfillmentOrder["destination"] ?? [],
-                    "line_items" => [],
-                    "international_duties" => $fulfillmentOrder["internationalDuties"] ?? '',
-                    "fulfillment_holds" => $fulfillmentOrder["fulfillmentHolds"] ?? '',
-                    "assigned_location" => [
-                        "address1" => $fulfillmentOrder["assignedLocation"]["address1"] ?? '',
-                        "address2" => $fulfillmentOrder["assignedLocation"]["address2"] ?? '',
-                        "city" => $fulfillmentOrder["assignedLocation"]["city"] ?? '',
-                        "country_code" => $fulfillmentOrder["assignedLocation"]["countryCode"] ?? '',
-                        "location_id" => str_replace("gid://shopify/Location/", "", $fulfillmentOrder["assignedLocation"]["location"]["id"]) ?? '',
-                        "name" => $fulfillmentOrder["assignedLocation"]["name"] ?? '',
-                        "phone" => $fulfillmentOrder["assignedLocation"]["phone"] ?? '',
-                        "province" => $fulfillmentOrder["assignedLocation"]["province"] ?? '',
-                        "zip" => $fulfillmentOrder["assignedLocation"]["zip"] ?? ''
-                    ],
-                    "merchant_requests" => []
-                ];
-
-                foreach ($fulfillmentOrder["lineItems"]["nodes"] as $lineItem) {
-                    $restItem["line_items"][] = [
-                        "id" => str_replace("gid://shopify/FulfillmentOrderLineItem/", "", $lineItem["id"]) ?? '',
-                        "fulfillment_order_id" => $restItem["id"] ?? '',
-                        "quantity" => $lineItem["totalQuantity"] ?? '',
-                        "inventory_item_id" => str_replace("gid://shopify/InventoryItem/", "", $lineItem["inventoryItemId"]) ?? '',
-                        "fulfillable_quantity" => $lineItem["remainingQuantity"] ?? '',
-                        "variant_id" => str_replace("gid://shopify/ProductVariant/", "", $lineItem["variant"]["id"]) ?? ''
+                $restResponse = array();
+                foreach ($fulfillmentOrdersData as $key => $fulfillmentOrder) {
+                    $restItem = [
+                        "id" => str_replace("gid://shopify/FulfillmentOrder/", "", $fulfillmentOrder["id"]) ?? '',
+                        "created_at" => $fulfillmentOrder["createdAt"] ?? '',
+                        "updated_at" => $fulfillmentOrder["updatedAt"] ?? '',
+                        "order_id" => $orderid ?? '',
+                        "assigned_location_id" => str_replace("gid://shopify/Location/", "", $fulfillmentOrder["assignedLocation"]["location"]["id"]),
+                        "request_status" => strtolower($fulfillmentOrder["requestStatus"]) ?? '',
+                        "status" => strtolower($fulfillmentOrder["status"]) ?? '',
+                        "fulfill_at" => $fulfillmentOrder["fulfillAt"] ?? '',
+                        "fulfill_by" => $fulfillmentOrder["fulfillBy"] ?? '',
+                        "destination" => $fulfillmentOrder["destination"] ?? [],
+                        "line_items" => [],
+                        "international_duties" => $fulfillmentOrder["internationalDuties"] ?? '',
+                        "fulfillment_holds" => $fulfillmentOrder["fulfillmentHolds"] ?? '',
+                        "assigned_location" => [
+                            "address1" => $fulfillmentOrder["assignedLocation"]["address1"] ?? '',
+                            "address2" => $fulfillmentOrder["assignedLocation"]["address2"] ?? '',
+                            "city" => $fulfillmentOrder["assignedLocation"]["city"] ?? '',
+                            "country_code" => $fulfillmentOrder["assignedLocation"]["countryCode"] ?? '',
+                            "location_id" => str_replace("gid://shopify/Location/", "", $fulfillmentOrder["assignedLocation"]["location"]["id"]) ?? '',
+                            "name" => $fulfillmentOrder["assignedLocation"]["name"] ?? '',
+                            "phone" => $fulfillmentOrder["assignedLocation"]["phone"] ?? '',
+                            "province" => $fulfillmentOrder["assignedLocation"]["province"] ?? '',
+                            "zip" => $fulfillmentOrder["assignedLocation"]["zip"] ?? ''
+                        ],
+                        "merchant_requests" => []
                     ];
+
+                    foreach ($fulfillmentOrder["lineItems"]["nodes"] as $lineItem) {
+                        $restItem["line_items"][] = [
+                            "id" => str_replace("gid://shopify/FulfillmentOrderLineItem/", "", $lineItem["id"]) ?? '',
+                            "fulfillment_order_id" => $restItem["id"] ?? '',
+                            "quantity" => $lineItem["totalQuantity"] ?? '',
+                            "inventory_item_id" => str_replace("gid://shopify/InventoryItem/", "", $lineItem["inventoryItemId"]) ?? '',
+                            "fulfillable_quantity" => $lineItem["remainingQuantity"] ?? '',
+                            "variant_id" => isset($lineItem["variant"]["id"]) ? str_replace("gid://shopify/ProductVariant/", "", $lineItem["variant"]["id"]) : ''
+                        ];
+                    }
+
+                    $restResponse[] = $restItem;
                 }
-
-                $restResponse[] = $restItem;
+            } else {
+                return false;
             }
-
 
         }
 
