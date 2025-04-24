@@ -163,12 +163,41 @@ class OrdersEndpoints
                         'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                     ];
                 }, $order['node']['discountApplications']['edges']) : [];
-                $orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
-                $orderResponse['line_items'] = isset($order['node']['lineItems']['edges']) && is_array($order['node']['lineItems']['edges']) ? array_map(function ($item) {
+                //$orderResponse['fulfillments'] = $order['node']['fulfillments'] ?? '';
+                $orderResponse['fulfillments'] = isset($order['node']['fulfillments']) && is_array($order['node']['fulfillments']) ? array_map(function ($fulfillment) {
+                    return [
+                        'id' => str_replace('gid://shopify/Fulfillment/', '', $fulfillment['id'] ?? ''),
+                        'admin_graphql_api_id' => $fulfillment['id'] ?? '',
+                        'created_at' => $fulfillment['createdAt'] ?? '',
+                        'shipment_status' => $fulfillment['displayStatus'] ?? '',
+                        'name' => $fulfillment['name'] ?? '',
+                        'status' => $fulfillment['status'] ?? '',
+                        'updated_at' => $fulfillment['updatedAt'] ?? '',
+                        'tracking_number' => isset($fulfillment['trackingInfo'][0]['number']) ? $fulfillment['trackingInfo'][0]['number'] : '',
+                        'tracking_url' => isset($fulfillment['trackingInfo'][0]['url']) ? $fulfillment['trackingInfo'][0]['url'] : '',
+                        'tracking_company' => isset($fulfillment['trackingInfo'][0]['company']) ? $fulfillment['trackingInfo'][0]['company'] : '',
+                    ];
+                }, $order['node']['fulfillments']) : [];
+
+                $fulfillableQuantities = [];
+                if (isset($orderData['fulfillmentOrders']['edges']) && is_array($orderData['fulfillmentOrders']['edges'])) {
+                    foreach ($orderData['fulfillmentOrders']['edges'] as $fulfillmentOrder) {
+                        if (!empty($fulfillmentOrder['node']['lineItems']['edges'])) {
+                            foreach ($fulfillmentOrder['node']['lineItems']['edges'] as $orderLineItem) {
+                                $lineItemId = str_replace('gid://shopify/LineItem/', '', $orderLineItem['node']['lineItem']['id']);
+                                $remainingQty = $orderLineItem['node']['remainingQuantity'] ?? 0;
+                                $fulfillableQuantities[$lineItemId] = $remainingQty;
+                            }
+                        }
+                    }
+                }
+                $orderResponse['line_items'] = isset($order['node']['lineItems']['edges']) && is_array($order['node']['lineItems']['edges']) ? array_map(function ($item) use ($fulfillableQuantities) {
+                    $lineItemId = isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '';
                     return [
                         'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
                         'admin_graphql_api_id' => $item['node']['id'] ?? '',
                         'current_quantity' => $item['node']['currentQuantity'] ?? '',
+                        'fulfillable_quantity' => $fulfillableQuantities[$lineItemId] ?? 0,
                         'fulfillment_status' => $item['node']['fulfillmentStatus'] ?? '',
                         'name' => $item['node']['name'] ?? '',
                         'product_id' => isset($item['node']['product']['id']) ? str_replace('gid://shopify/Product/', '', $item['node']['product']['id']) : '',
@@ -319,8 +348,8 @@ class OrdersEndpoints
             $orderData = $responseData['data']['order'];
 
             $orderResponse = array();
-
-            $orderResponse['id'] = str_replace('gid://shopify/Order/', '', $orderData['id']) ?? '';
+            if(isset($orderData)) {
+            $orderResponse['id'] = isset($orderData['id']) ? str_replace('gid://shopify/Order/', '', $orderData['id']) : '';
             $orderResponse['admin_graphql_api_id'] = $orderData['id'] ?? '';
             $orderResponse['cancel_reason'] = $orderData['cancelReason'] ?? '';
             $orderResponse['cancelled_at'] = $orderData['cancelledAt'] ?? '';
@@ -364,12 +393,40 @@ class OrdersEndpoints
                     'value_type' => isset($discount['node']['value']['percentage']) ? 'percentage' : 'fixed_amount' ?? '',
                 ];
             }, $orderData['discountApplications']['edges']) : [];
-            $orderResponse['fulfillments'] = $orderData['fulfillments'] ?? '';
-            $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function ($item) {
+            //$orderResponse['fulfillments'] = $orderData['fulfillments'] ?? '';
+            $orderResponse['fulfillments'] = isset($orderData['fulfillments']) && is_array($orderData['fulfillments']) ? array_map(function ($fulfillment) {
+                return [
+                    'id' => str_replace('gid://shopify/Fulfillment/', '', $fulfillment['id'] ?? ''),
+                    'admin_graphql_api_id' => $fulfillment['id'] ?? '',
+                    'created_at' => $fulfillment['createdAt'] ?? '',
+                    'shipment_status' => $fulfillment['displayStatus'] ?? '',
+                    'name' => $fulfillment['name'] ?? '',
+                    'status' => $fulfillment['status'] ?? '',
+                    'updated_at' => $fulfillment['updatedAt'] ?? '',
+                    'tracking_number' => isset($fulfillment['trackingInfo'][0]['number']) ? $fulfillment['trackingInfo'][0]['number'] : '',
+                    'tracking_url' => isset($fulfillment['trackingInfo'][0]['url']) ? $fulfillment['trackingInfo'][0]['url'] : '',
+                    'tracking_company' => isset($fulfillment['trackingInfo'][0]['company']) ? $fulfillment['trackingInfo'][0]['company'] : '',
+                ];
+            }, $orderData['fulfillments']) : [];
+            $fulfillableQuantities = [];
+            if (isset($orderData['fulfillmentOrders']['edges']) && is_array($orderData['fulfillmentOrders']['edges'])) {
+                foreach ($orderData['fulfillmentOrders']['edges'] as $fulfillmentOrder) {
+                    if (!empty($fulfillmentOrder['node']['lineItems']['edges'])) {
+                        foreach ($fulfillmentOrder['node']['lineItems']['edges'] as $orderLineItem) {
+                            $lineItemId = str_replace('gid://shopify/LineItem/', '', $orderLineItem['node']['lineItem']['id']);
+                            $remainingQty = $orderLineItem['node']['remainingQuantity'] ?? 0;
+                            $fulfillableQuantities[$lineItemId] = $remainingQty;
+                        }
+                    }
+                }
+            }
+            $orderResponse['line_items'] = isset($orderData['lineItems']['edges']) && is_array($orderData['lineItems']['edges']) ? array_map(function ($item) use ($fulfillableQuantities) {
+                $lineItemId = isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '';
                 return [
                     'id' => isset($item['node']['id']) ? str_replace('gid://shopify/LineItem/', '', $item['node']['id']) : '',
                     'admin_graphql_api_id' => $item['node']['id'] ?? '',
                     'current_quantity' => $item['node']['currentQuantity'] ?? '',
+                    'fulfillable_quantity' => $fulfillableQuantities[$lineItemId] ?? 0,
                     'fulfillment_status' => $item['node']['fulfillmentStatus'] ?? '',
                     'name' => $item['node']['name'] ?? '',
                     'product_id' => isset($item['node']['product']['id']) ? str_replace('gid://shopify/Product/', '', $item['node']['product']['id']) : '',
@@ -470,7 +527,7 @@ class OrdersEndpoints
                     }, $item['node']['discountedPriceSet']) : [],
                     'is_removed' => $item['node']['isRemoved'] ?? '',
                 ];
-            }, $orderData['shippingLines']['edges']) : [];
+            }, $orderData['shippingLines']['edges']) : [];}
 
             return $orderResponse;
         }
@@ -1092,16 +1149,8 @@ class OrdersEndpoints
         mutation OrderUpdate($input: OrderInput!) {
             orderUpdate(input: $input) {
                 order {
-                    canMarkAsPaid
                     cancelReason
                     cancelledAt
-                    clientIp
-                    confirmed
-                    customer {
-                    displayName
-                    email
-                    }
-                    discountCodes
                 }
                 userErrors {
                     field
