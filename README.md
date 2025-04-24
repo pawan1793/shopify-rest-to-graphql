@@ -113,6 +113,8 @@ The `GraphqlService` class is the core of this package and provides direct inter
 - `graphqlDeleteProduct($shopifyid)`: Delete a product
 - `graphqlCheckProductOnShopify($shopifyid)`: Check if a product exists on Shopify
 - `reOrderProductImages($params)`: Reorder product images
+- `graphqlCreateProductImage($images, $productShopifyId)`: Add Product Image
+- `graphqlDeleteProductImage(imageIds, $productShopifyId)`: Delete Product Image
 
 #### Variants
 
@@ -186,6 +188,29 @@ $params = [
 ];
 
 $products = $shopifyGraphql->graphqlGetProducts($params);
+```
+### Example: Add Product Image
+
+```php
+        $images = [
+            [
+                'url' => 'https://fastly.picsum.photos/id/365/200/300.jpg?hmac=n_4DxqK0o938eabBZRnEywWtPwgF2MKoTfnRmJ7vlKQ',
+                'alt' => 'lorem ipsum',
+            ]
+        ];
+
+$response = $shopifyGraphql->graphqlCreateProductImage($images, $productShopifyId);
+```
+
+### Example: Delete Product Image
+
+```php
+        $imageIds = [
+            "4145546145154","5456564465234",
+        ];
+
+
+$response = $shopifyGraphql->graphqlDeleteProductImage($imageIds, $productShopifyId);
 ```
 
 ## Endpoints

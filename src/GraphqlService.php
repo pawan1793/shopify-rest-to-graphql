@@ -2059,7 +2059,130 @@ class GraphqlService
 
         }
     }
+    public function graphqlCreateProductImage(array $mediaItems, int $shopifyProductId)
+    {
+        $shopifyProductIdGid = "gid://shopify/Product/{$shopifyProductId}";
 
+        $mediaInput = array_map(function ($item) {
+            $alt = addslashes($item['alt']);
+            $mediaType = 'IMAGE';
+            $source = addslashes($item['url']);
+
+            return <<<ITEM
+            {
+                alt: "$alt",
+                mediaContentType: $mediaType,
+                originalSource: "$source"
+            }
+            ITEM;
+        }, $mediaItems);
+
+        $mediaList = implode(',', $mediaInput);
+
+        $query = <<<QUERY
+                mutation {
+                    productCreateMedia(
+                        media: [$mediaList],
+                        productId: "$shopifyProductIdGid"
+                    ) {
+                        media {
+                            id
+                            alt
+                            mediaContentType
+                            status
+                            preview {
+                                image {
+                                    url
+                                    id
+                                }
+                            }
+                        }
+                        mediaUserErrors {
+                            field
+                            message
+                        }
+                        product {
+                            id
+                            title
+                        }
+                    }
+                }
+                QUERY;
+
+        $responseData = $this->graphqlQueryThalia($query);
+
+        try {
+            if (isset($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+            } elseif (isset($responseData['data']['productDeleteMedia']['mediaUserErrors']) && !empty($responseData['data']['productDeleteMedia']['mediaUserErrors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
+            } else {
+                $responseData['data']['productCreateMedia']['media'] = array_map(function ($item) {
+                    $item['id'] = str_replace("gid://shopify/MediaImage/", "", $item['id']);
+                    return $item;
+                }, $responseData['data']['productCreateMedia']['media']);
+
+                return ['images' => $responseData['data']['productCreateMedia']['media']];
+            }
+        } catch (\Exception $e) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+        }
+    }
+    public function graphqlDeleteProductImage(array $imageIds, int $shopifyProductId)
+    {
+        $shopifyProductIdGid = "gid://shopify/Product/{$shopifyProductId}";
+
+        $mediaIdStrings = array_map(function ($id) {
+            return "\"gid://shopify/MediaImage/{$id}\"";
+        }, $imageIds);
+        $mediaIdList = implode(',', $mediaIdStrings);
+
+        $query = <<<QUERY
+        mutation {
+        productDeleteMedia(
+            productId: "$shopifyProductIdGid",
+            mediaIds: [$mediaIdList]
+        ) {
+            deletedMediaIds
+            deletedProductImageIds
+            mediaUserErrors {
+                field
+                message
+            }
+            product {
+                id
+                title
+                media(first: 5) {
+                    nodes {
+                        alt
+                        mediaContentType
+                        status
+                    }
+                }
+            }
+        }
+    }
+    QUERY;
+
+        $responseData = $this->graphqlQueryThalia($query);
+
+        try {
+            if (isset($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+            } elseif (isset($responseData['data']['productDeleteMedia']['mediaUserErrors']) && !empty($responseData['data']['productDeleteMedia']['mediaUserErrors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
+            } else {
+                $responseData['data']['productDeleteMedia']['deletedMediaIds'] = array_map(function ($item) {
+                    $item = str_replace("gid://shopify/MediaImage/", "", $item);
+                    return $item;
+                }, $responseData['data']['productDeleteMedia']['deletedMediaIds']);
+
+                return ['deletedImages' => $responseData['data']['productDeleteMedia']['deletedMediaIds']];
+            }
+        } catch (\Exception $e) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+        }
+    }
     public function graphqlDeleteProduct($shopifyid)
     {
 
