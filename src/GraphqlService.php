@@ -1,7 +1,7 @@
 <?php
 
 namespace Thalia\ShopifyRestToGraphql;
-use Thalia\ShopifyRestToGraphql\GraphqlException;
+
 use GuzzleHttp\Client;
 
 class GraphqlService
@@ -34,9 +34,6 @@ class GraphqlService
     }
 
 
-
-
-
     public function graphqlQueryThalia(string $query, array $variables = []): array
     {
 
@@ -62,13 +59,13 @@ class GraphqlService
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             // Covers ClientException, ServerException
             $responseBody = $e->hasResponse()
-                ? (string) $e->getResponse()->getBody()
+                ? (string)$e->getResponse()->getBody()
                 : 'No response from server.';
 
             $responseArray = json_decode($responseBody, true);
             $errors = $responseArray['errors'] ?? [['message' => $responseBody]];
 
-            throw new GraphqlException("Shopify API request failed", $e->getCode(), (array) $errors, $e);
+            throw new GraphqlException("Shopify API request failed", $e->getCode(), (array)$errors, $e);
 
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
             // Handle network issues (DNS, timeout, etc.)
@@ -86,20 +83,17 @@ class GraphqlService
 
 
     /**
-     * Send a GraphQL query to Shopify to fetch the list of publications,create product and update variant 
+     * Send a GraphQL query to Shopify to fetch the list of publications,create product and update variant
      * identify the "Online Store" publication, and process the response.
      *
-     * @param array  $params       An array of parameters for the GraphQL query.
-     * @param string $shop         The Shopify shop domain.
-     * @param string $accessToken  The access token for authenticating the Shopify API request.
+     * @param array $params An array of parameters for the GraphQL query.
+     * @param string $shop The Shopify shop domain.
+     * @param string $accessToken The access token for authenticating the Shopify API request.
      *
      * @return array The processed data containing "id" and "variants".
      *
      * @throws \Exception If there is an error with the HTTP request or GraphQL response.
      */
-
-
-
 
 
     public function graphqlPostProduct($params)
@@ -122,14 +116,6 @@ class GraphqlService
                 QUERY;
 
 
-
-
-
-
-
-
-
-
         try {
             // Send GraphQL request
 
@@ -138,7 +124,7 @@ class GraphqlService
 
             if (isset($responseData["errors"])) {
                 throw new GraphqlException("Shopify API request failed", 400, $responseData["errors"]);
-                
+
             } else {
                 foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
                     if ($publication["node"]["name"] == "Online Store") {
@@ -150,12 +136,9 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException("Shopify API request failed", 400,[],$e);
+            throw new GraphqlException("Shopify API request failed", 400, [], $e);
 
         }
-
-
-
 
         $productdata = $params['product'];
 
@@ -165,6 +148,10 @@ class GraphqlService
         $product['vendor'] = $productdata['vendor'];
         $product['tags'] = $productdata['tags'];
         $product['templateSuffix'] = $productdata['template_suffix'];
+
+        if (isset($productdata['category'])) {
+            $product['category'] = $productdata['category'];
+        }
 
         if (isset($productdata['seo'])) {
 
@@ -186,15 +173,12 @@ class GraphqlService
 
             foreach ($productdata['metafields'] as $metafieldkey => $metafield) {
                 if (is_integer($metafield['value'])) {
-                    $productdata['metafields'][$metafieldkey]['value'] = (string) $metafield['value'];
+                    $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
                 }
                 $product['metafields'] = $productdata['metafields'];
 
             }
         }
-
-
-
 
         if (!empty($productdata['collection'])) {
             foreach ($productdata['collection'] as $collectionid => $collection) {
@@ -204,7 +188,6 @@ class GraphqlService
         $productmedia = array();
         if (!empty($productdata['images'])) {
             foreach ($productdata['images'] as $imagekey => $image) {
-
 
 
                 if (count($productmedia) > 249) {
@@ -247,46 +230,39 @@ class GraphqlService
                     GRAPHQL;
 
 
-
         $variables = [
             'input' => $product,
             'mediainput' => $productmedia,
         ];
 
 
-
-
-
-
-
-
         $productreturndata = array();
         if (1) {
 
-                $responseData = $this->graphqlQueryThalia($productquery, $variables);
+            $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
 
-                // Check for GraphQL or user errors
-                if (isset($responseData['errors'])) {
+            // Check for GraphQL or user errors
+            if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
-                } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+            } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
 
-                } else {
-                    // Print the created product details
-                    $variantid = $responseData['data']['productCreate']['product']['variants']['edges'][0]['node']['id'];
+            } else {
+                // Print the created product details
+                $variantid = $responseData['data']['productCreate']['product']['variants']['edges'][0]['node']['id'];
 
 
-                    $productId = $responseData['data']['productCreate']['product']['id'];
+                $productId = $responseData['data']['productCreate']['product']['id'];
 
-                    $productreturndata['id'] = str_replace("gid://shopify/Product/", "", $productId);
-                    $productreturndata['variants'][0]['id'] = str_replace("gid://shopify/ProductVariant/", "", $variantid);
+                $productreturndata['id'] = str_replace("gid://shopify/Product/", "", $productId);
+                $productreturndata['variants'][0]['id'] = str_replace("gid://shopify/ProductVariant/", "", $variantid);
 
-                }
+            }
 
         }
 
@@ -317,20 +293,19 @@ class GraphqlService
         if (!empty($variant['sku'])) {
             $variantdata['inventoryItem']['sku'] = $variant['sku'];
         }
-        
+
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
             $variantdata['inventoryItem']['tracked'] = true;
-            if(isset($variant['inventory_management']) && $variant['inventory_management'] == ''){
-                 $variantdata['inventoryItem']['tracked'] = false;
+            if (isset($variant['inventory_management']) && $variant['inventory_management'] == '') {
+                $variantdata['inventoryItem']['tracked'] = false;
             }
         }
 
 
-
         if (isset($variant['weight'])) {
 
-            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
+            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float)$variant['weight'];
             if (isset($variant['weight_unit'])) {
                 switch ($variant['weight_unit']) {
                     case 'lb':
@@ -350,7 +325,6 @@ class GraphqlService
             }
 
         }
-
 
 
         $finalvariantvariables['productId'] = $productId;
@@ -382,12 +356,7 @@ class GraphqlService
                         GRAPHQL;
 
 
-
         }
-
-
-
-
 
 
         try {
@@ -414,13 +383,54 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
         }
 
         return $productreturndata;
     }
 
+    public function graphqlAdjustInventoryQuantities($input)
+    {
+        $mutation = <<<'GRAPHQL'
+    mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
+        inventoryAdjustQuantities(input: $input) {
+            userErrors {
+                field
+                message
+            }
+            inventoryAdjustmentGroup {
+                createdAt
+                reason
+                referenceDocumentUri
+                changes {
+                    name
+                    delta
+                }
+            }
+        }
+    }
+    GRAPHQL;
 
+        $variables = [
+            'input' => $input
+        ];
+
+        try {
+            $responseData = $this->graphqlQueryThalia($mutation, $variables);
+
+            if (isset($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+            }
+
+            if (!empty($responseData['data']['inventoryAdjustQuantities']['userErrors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['inventoryAdjustQuantities']['userErrors']);
+            }
+
+            return $responseData['data']['inventoryAdjustQuantities']['inventoryAdjustmentGroup'];
+        } catch (\Exception $e) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+        }
+    }
 
     public function graphqlPostProductWithVariants($params)
     {
@@ -442,7 +452,6 @@ class GraphqlService
                 QUERY;
 
 
-
         try {
 
             $responseData = $this->graphqlQueryThalia($query);
@@ -461,11 +470,9 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
 
         }
-
-
 
 
         $productdata = $params['product'];
@@ -489,14 +496,12 @@ class GraphqlService
 
             foreach ($productdata['metafields'] as $metafieldkey => $metafield) {
                 if (is_integer($metafield['value'])) {
-                    $productdata['metafields'][$metafieldkey]['value'] = (string) $metafield['value'];
+                    $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
                 }
                 $product['metafields'] = $productdata['metafields'];
 
             }
         }
-
-
 
 
         if (!empty($productdata['collection'])) {
@@ -594,7 +599,6 @@ class GraphqlService
             GRAPHQL;
 
 
-
         $variables = [
             'input' => $product,
             'mediainput' => $productmedia,
@@ -608,7 +612,6 @@ class GraphqlService
             try {
                 // Send GraphQL request
                 $responseData = $this->graphqlQueryThalia($productquery, $variables);
-
 
 
                 // Check for GraphQL or user errors
@@ -641,7 +644,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
@@ -674,7 +677,7 @@ class GraphqlService
 
             if (isset($rawvariant['weight'])) {
 
-                $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $rawvariant['weight'];
+                $variantdata['inventoryItem']['measurement']['weight']['value'] = (float)$rawvariant['weight'];
                 if (isset($rawvariant['weight_unit'])) {
                     switch ($rawvariant['weight_unit']) {
                         case 'lb':
@@ -694,7 +697,6 @@ class GraphqlService
                 }
 
             }
-
 
 
             $optionValues = array();
@@ -721,16 +723,6 @@ class GraphqlService
             $variantsdata[] = $variantdata;
 
         }
-
-
-
-
-
-
-
-
-
-
 
 
         if (1) {
@@ -781,9 +773,6 @@ class GraphqlService
         }
 
 
-
-
-
         try {
             // Send GraphQL request
 
@@ -805,7 +794,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
         }
 
 
@@ -858,13 +847,10 @@ class GraphqlService
         }
 
 
-
-
-
         if (!empty($productdata['metafields'])) {
             foreach ($productdata['metafields'] as $metafieldkey => $metafield) {
                 if (is_integer($metafield['value'])) {
-                    $productdata['metafields'][$metafieldkey]['value'] = (string) $metafield['value'];
+                    $productdata['metafields'][$metafieldkey]['value'] = (string)$metafield['value'];
                 }
 
                 if (strpos($metafield['id'], 'gid://shopify/Metafield') !== true) {
@@ -925,7 +911,6 @@ class GraphqlService
             }
 
 
-
             //get options for product and cross check with payload options
             $query = <<<'GRAPHQL'
                         query getProductDetails($id: ID!) {
@@ -949,8 +934,6 @@ class GraphqlService
             $responseData = $this->graphqlQueryThalia($query, $productvariables);
             $shopifyoptions = $responseData['data']['product']['options'];
             $missingoptions = [];
-
-
 
 
             // Find missing options
@@ -1023,8 +1006,6 @@ class GraphqlService
                     ];
 
 
-
-
                     $response = $this->graphqlQueryThalia($mutation, $variables);
 
                 }
@@ -1033,17 +1014,7 @@ class GraphqlService
             }
 
 
-
-
-
-
         }
-
-
-
-
-
-
 
 
         $productquery = <<<'GRAPHQL'
@@ -1078,10 +1049,6 @@ class GraphqlService
         ];
 
 
-
-
-
-
         // Get the response body
 
         if (1) {
@@ -1089,20 +1056,19 @@ class GraphqlService
             $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
 
+            // Check for GraphQL or user errors
+            if (isset($responseData['errors'])) {
 
-                // Check for GraphQL or user errors
-                if (isset($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+            } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
-                } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productUpdate']['userErrors']);
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productUpdate']['userErrors']);
-
-                } else {
+            } else {
 
 
-                }
+            }
 
         }
 
@@ -1189,7 +1155,7 @@ class GraphqlService
 
                 if (isset($variant['weight'])) {
 
-                    $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
+                    $variantdata['inventoryItem']['measurement']['weight']['value'] = (float)$variant['weight'];
                     if (isset($variant['weight_unit'])) {
                         switch ($variant['weight_unit']) {
                             case 'lb':
@@ -1209,9 +1175,6 @@ class GraphqlService
                     }
 
                 }
-
-
-
 
 
                 if (!isset($variant['id'])) {
@@ -1244,7 +1207,6 @@ class GraphqlService
                 } else {
 
 
-
                     $variantsdata[] = $variantdata;
                 }
 
@@ -1253,12 +1215,6 @@ class GraphqlService
 
             $finalvariantvariables['productId'] = $product['id'];
             $finalvariantvariables['variants'] = $variantsdata;
-
-
-
-
-
-
 
 
             if (1) {
@@ -1303,7 +1259,7 @@ class GraphqlService
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
             if (!empty($newvariantsdata)) {
@@ -1355,12 +1311,7 @@ class GraphqlService
                 }
 
 
-
-
-
-
                 $responseData = $this->graphqlQueryThalia($bulkvariantquery, $variables);
-
 
 
             }
@@ -1434,8 +1385,6 @@ class GraphqlService
         }
 
 
-
-
         if (!isset($params['limit'])) {
             $params['limit'] = 25;
         }
@@ -1451,7 +1400,6 @@ class GraphqlService
 
             $gqparams .= ' ' . $productIdQuery;
         }
-
 
 
         $query = array();
@@ -1473,9 +1421,6 @@ class GraphqlService
         if (isset($params['direction']) && $params['direction'] == 'previous') {
             $gqquery = str_replace('first', "last", $gqquery);
         }
-
-
-
 
 
         $fields['id'] = 'id';
@@ -1534,8 +1479,6 @@ class GraphqlService
             }
 
 
-
-
         }
         $fields['createdAt'] = 'createdAt';
         $fields['publishedAt'] = 'publishedAt';
@@ -1586,14 +1529,11 @@ class GraphqlService
         }
 
 
-
-
         $shopifyproducts = array();
         $pageinfo = array();
         try {
             // Send GraphQL request
             $responseData = $this->graphqlQueryThalia($query);
-
 
 
             if (isset($responseData['data'])) {
@@ -1689,9 +1629,6 @@ class GraphqlService
                 }
 
 
-
-
-
                 $responsedata['products'] = $shopifyproducts;
                 if (isset($responseData['data']['products']['pageInfo'])) {
                     $pageinfo = $responseData['data']['products']['pageInfo'];
@@ -1701,23 +1638,18 @@ class GraphqlService
             }
 
 
-
-
-
             if (isset($responseData["errors"])) {
                 throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
 
         }
     }
 
     public function graphqlGetProductsCount()
     {
-
-
 
 
         $query = <<<QUERY
@@ -1729,16 +1661,10 @@ class GraphqlService
                 QUERY;
 
 
-
-
-
-
         try {
             // Send GraphQL request
 
             $responseData = $this->graphqlQueryThalia($query);
-
-
 
 
             if (isset($responseData['data'])) {
@@ -1747,15 +1673,12 @@ class GraphqlService
             }
 
 
-
-
-
             if (isset($responseData["errors"])) {
                 throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
 
         }
     }
@@ -1819,12 +1742,6 @@ class GraphqlService
             }
         }
         QUERY;
-
-
-
-
-
-
 
 
         $productreturndata = array();
@@ -1898,16 +1815,16 @@ class GraphqlService
                     }
 
 
-
                     return $shopifyproduct;
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
     }
+
     public function graphqlGetProductWithoutInventory($shopifyid)
     {
 
@@ -1962,11 +1879,6 @@ class GraphqlService
         QUERY;
 
 
-
-
-
-
-
         if (1) {
 
             try {
@@ -2017,7 +1929,6 @@ class GraphqlService
                     }
 
 
-
                     $shopifyproduct['variants'] = $variants;
 
 
@@ -2054,11 +1965,12 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
     }
+
     public function graphqlCreateProductImage(array $mediaItems, int $shopifyProductId)
     {
         $shopifyProductIdGid = "gid://shopify/Product/{$shopifyProductId}";
@@ -2128,6 +2040,7 @@ class GraphqlService
             throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
         }
     }
+
     public function graphqlDeleteProductImage(array $imageIds, int $shopifyProductId)
     {
         $shopifyProductIdGid = "gid://shopify/Product/{$shopifyProductId}";
@@ -2183,6 +2096,7 @@ class GraphqlService
             throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
         }
     }
+
     public function graphqlDeleteProduct($shopifyid)
     {
 
@@ -2200,12 +2114,6 @@ class GraphqlService
             }
         }
         QUERY;
-
-
-
-
-
-
 
 
         $productreturndata = array();
@@ -2232,15 +2140,14 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
     }
+
     public function graphqlDeleteVariant($shopifyid, $variantid)
     {
-
-
 
 
         $query = <<<QUERY
@@ -2259,19 +2166,12 @@ class GraphqlService
         QUERY;
 
 
-
-
-
-
-
-
         $productreturndata = array();
         if (1) {
 
             try {
                 // Send GraphQL request
                 $responseData = $this->graphqlQueryThalia($query);
-
 
 
                 // Check for GraphQL or user errors
@@ -2290,12 +2190,11 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
     }
-
 
 
     public function graphqlGetProductVariants($shopifyid)
@@ -2325,12 +2224,6 @@ class GraphqlService
             }
         }
         QUERY;
-
-
-
-
-
-
 
 
         $productreturndata = array();
@@ -2374,15 +2267,14 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
     }
+
     public function graphqlGetVariant($variantid)
     {
-
-
 
 
         $query = <<<QUERY
@@ -2414,10 +2306,6 @@ class GraphqlService
         QUERY;
 
 
-
-
-
-
         if (1) {
 
             try {
@@ -2438,7 +2326,6 @@ class GraphqlService
                     $shopifyvariant = $responseData['data']['productVariant'];
 
 
-
                     $variant = $shopifyvariant;
 
                     $variant['id'] = str_replace("gid://shopify/ProductVariant/", "", $variant['id']);
@@ -2446,12 +2333,11 @@ class GraphqlService
                     unset($variant['inventoryItem']);
 
 
-
                     return $variant;
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
@@ -2472,11 +2358,6 @@ class GraphqlService
             }
         }
         QUERY;
-
-
-
-
-
 
 
         $productreturndata = array();
@@ -2501,14 +2382,11 @@ class GraphqlService
                     $shopifyproduct = $responseData['data']['product'];
 
 
-
-
-
                     return $shopifyproduct;
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
             }
 
         }
@@ -2546,7 +2424,6 @@ class GraphqlService
                 QUERY;
 
 
-
         $client = new Client([
             'base_uri' => "https://$shop/admin/api/2025-01/",
             'headers' => [
@@ -2568,7 +2445,6 @@ class GraphqlService
 
     public function reOrderProductImages($params)
     {
-
 
 
         $productid = $params['product']['id'];
@@ -2606,7 +2482,6 @@ class GraphqlService
                 QUERY;
 
 
-
         $responseData = $this->graphqlQueryThalia($mediaquery);
 
         $shopifyimages = array();
@@ -2616,7 +2491,6 @@ class GraphqlService
 
             $shopifyimages[$imagesrc] = $imageid;
         }
-
 
 
         $productmedia = array();
@@ -2634,12 +2508,6 @@ class GraphqlService
             }
 
         }
-
-
-
-
-
-
 
 
         $productorder = array();
@@ -2668,7 +2536,6 @@ class GraphqlService
                 QUERY;
 
 
-
         $responseData = $this->graphqlQueryThalia($query);
 
         return $responseData;
@@ -2678,8 +2545,6 @@ class GraphqlService
 
     public function getProductIdFromVairant($variantid): array
     {
-
-
 
 
         $query = <<<QUERY
@@ -2694,7 +2559,6 @@ class GraphqlService
             }
             }
         QUERY;
-
 
 
         $responseData = $this->graphqlQueryThalia($query);
@@ -2717,7 +2581,6 @@ class GraphqlService
         if (strpos($shopifyId, 'gid://shopify/Product') !== true) {
             $productId = "gid://shopify/Product/{$shopifyId}";
         }
-
 
 
         if (strpos($variantId, 'gid://shopify/ProductVariant') !== true) {
@@ -2744,11 +2607,6 @@ class GraphqlService
         }
 
 
-
-
-
-
-
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
             $variantdata['inventoryItem']['tracked'] = true;
@@ -2760,7 +2618,7 @@ class GraphqlService
 
         if (isset($variant['weight'])) {
 
-            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float) $variant['weight'];
+            $variantdata['inventoryItem']['measurement']['weight']['value'] = (float)$variant['weight'];
             if (isset($variant['weight_unit'])) {
                 switch ($variant['weight_unit']) {
                     case 'lb':
@@ -2784,7 +2642,6 @@ class GraphqlService
 
         $finalvariantvariables['productId'] = $productId;
         $finalvariantvariables['variants'][] = $variantdata;
-
 
 
         $variantquery = <<<'GRAPHQL'
@@ -2830,6 +2687,46 @@ class GraphqlService
         exit;
     }
 
-    
+    public function graphProductSetMetafields(array $metafields)
+    {
+        $mutation = <<<'GRAPHQL'
+    mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+        metafieldsSet(metafields: $metafields) {
+            metafields {
+                key
+                namespace
+                value
+                createdAt
+                updatedAt
+            }
+            userErrors {
+                field
+                message
+                code
+            }
+        }
+    }
+    GRAPHQL;
 
+        $variables = [
+            'metafields' => $metafields
+        ];
+
+        try {
+            $responseData = $this->graphqlQueryThalia($mutation, $variables);
+
+            if (isset($responseData['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['errors']);
+            }
+
+            if (!empty($responseData['data']['metafieldsSet']['userErrors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['metafieldsSet']['userErrors']);
+            }
+
+            return $responseData['data']['metafieldsSet']['metafields'];
+
+        } catch (\Exception $e) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+        }
+    }
 }
