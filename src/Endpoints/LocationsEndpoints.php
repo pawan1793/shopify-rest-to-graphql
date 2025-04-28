@@ -43,6 +43,7 @@ class LocationsEndpoints
                             id
                             name
                             isActive
+                            isFulfillmentService
                         }
                     }
                 }
@@ -68,6 +69,7 @@ class LocationsEndpoints
             $response[$key]['id'] = str_replace('gid://shopify/Location/', '', $locations['node']['id']);
             $response[$key]['name'] = $locations['node']['name'];
             $response[$key]['active'] = $locations['node']['isActive'];
+            $response[$key]['fulfillmentservice'] = $locations['node']['isFulfillmentService'];
 
         }
 
