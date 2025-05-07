@@ -95,14 +95,14 @@ class MetafieldsEndpoints
         if($endpoint =='product') {
             $ownerId = "gid://shopify/Product/{$ownerId}";
 
-        } else if($endpoint =="shop") {   
+        } else if($endpoint =="shop") {
             $ownerId = "gid://shopify/Shop/{$ownerId}";
 
         }else if($endpoint == "variant") {
             $ownerId = "gid://shopify/ProductVariant/{$ownerId}";
 
-        }    
-       
+        }
+
         $graphqlmetafields = array();
         foreach($params['metafields'] as $metafield){
             $graphqlmetafield['key'] = $metafield['key'];
@@ -113,10 +113,7 @@ class MetafieldsEndpoints
             $graphqlmetafields[] = $graphqlmetafield;
         }
 
-      
-
         $finalmetafieldsvariables['metafields'] = $graphqlmetafields;
-
 
         $metafieldquery = <<<'GRAPHQL'
             mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -138,10 +135,8 @@ class MetafieldsEndpoints
             }
             GRAPHQL;
 
-
-
         $responseData = $this->graphqlService->graphqlQueryThalia($metafieldquery, $finalmetafieldsvariables);
-       
+
 
         if (isset($responseData['data']['metafieldsSet']['userErrors']) && !empty($responseData['data']['metafieldsSet']['userErrors'])) {
 
@@ -153,7 +148,6 @@ class MetafieldsEndpoints
 
         }
 
-
         return $responseData;
     }
 
@@ -164,8 +158,6 @@ class MetafieldsEndpoints
             GraphQL Reference: https://shopify.dev/docs/api/admin-graphql/2025-01/queries/product?example=Get+metafields+attached+to+a+product
             Rest Reference: https://shopify.dev/docs/api/admin-rest/2025-01/resources/metafield#get-blogs-blog-id-metafields
         */
-
-
 
         if (isset($params['productid'])) {
 
@@ -249,7 +241,7 @@ class MetafieldsEndpoints
                     $metafieldquery = <<<'GRAPHQL'
                         query ProductMetafield($ownerId: ID!, $namespace: String!, $key: String!) {
                             product(id: $ownerId) {
-                                metafield(namespace: $namespace, key: $key) { 
+                                metafield(namespace: $namespace, key: $key) {
                                     id
                                     namespace
                                     key
@@ -344,7 +336,7 @@ class MetafieldsEndpoints
                     $metafieldquery = <<<'GRAPHQL'
                         query ProductVariantMetafield($ownerId: ID!, $namespace: String!, $key: String!) {
                             productVariant(id: $ownerId) {
-                                metafield(namespace: $namespace, key: $key) { 
+                                metafield(namespace: $namespace, key: $key) {
                                     id
                                     namespace
                                     key
@@ -368,7 +360,7 @@ class MetafieldsEndpoints
                         if (!empty($responseData['data']['productVariant']['metafield'])) {
 
                             $variantMetafieldData = $responseData['data']['productVariant']['metafield'];
-                            $variantMetafieldData['id'] = str_replace("gid://shopify/Metafield/", "", $responseData['id']);
+                            $variantMetafieldData['id'] = str_replace("gid://shopify/Metafield/", "", $variantMetafieldData['id']);
 
                         }
 
