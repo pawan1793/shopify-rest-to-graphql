@@ -660,28 +660,30 @@ class OrdersEndpoints
 
             $orderTransactionResponse = [];
 
-            foreach ($responseData['data']['order']['transactions'] as $response) {
-                $orderTransactionResponse[] = [
-                    'id' => str_replace('gid://shopify/OrderTransaction/', '', $response['id']) ?? 0,
-                    'order_id' => $response['order']['id'] ?? '',
-                    'kind' => $response['kind'] ?? '',
-                    'gateway' => $response['gateway'] ?? '',
-                    'status' => $response['status'] ?? '',
-                    'created_at' => $response['createdAt'] ?? '',
-                    'test' => $response['test'] ?? '',
-                    'authorization_code' => $response['authorizationCode'] ?? '',
-                    'authorization_expires_at' => $response['authorizationExpiresAt'] ?? '',
-                    'parent_id' => isset($response['parentTransaction']) ? $response['parentTransaction']['id'] : null,
-                    'processed_at' => $response['processedAt'] ?? '',
-                    'error_code' => $response['errorCode'] ?? '',
-                    'receipt' => $response['receiptJson'] ?? '',
-                    'fees' => $response['fees'] ?? '',
-                    'amount' => $response['amountSet']['presentmentMoney']['amount'] ?? '',
-                    'currency' => $response['amountSet']['presentmentMoney']['currencyCode'] ?? '',
-                    'payment_id' => $response['paymentId'] ?? '',
-                    'total_unsettled_set' => $response['totalUnsettledSet'] ?? '',
-                    'admin_graphql_api_id' => $response['id'] ?? '',
-                ];
+            if (isset($responseData['data']['order']) && $responseData['data']['order'] != null) {
+                foreach ($responseData['data']['order']['transactions'] as $response) {
+                    $orderTransactionResponse[] = [
+                        'id' => str_replace('gid://shopify/OrderTransaction/', '', $response['id']) ?? 0,
+                        'order_id' => $response['order']['id'] ?? '',
+                        'kind' => $response['kind'] ?? '',
+                        'gateway' => $response['gateway'] ?? '',
+                        'status' => $response['status'] ?? '',
+                        'created_at' => $response['createdAt'] ?? '',
+                        'test' => $response['test'] ?? '',
+                        'authorization_code' => $response['authorizationCode'] ?? '',
+                        'authorization_expires_at' => $response['authorizationExpiresAt'] ?? '',
+                        'parent_id' => isset($response['parentTransaction']) ? $response['parentTransaction']['id'] : null,
+                        'processed_at' => $response['processedAt'] ?? '',
+                        'error_code' => $response['errorCode'] ?? '',
+                        'receipt' => $response['receiptJson'] ?? '',
+                        'fees' => $response['fees'] ?? '',
+                        'amount' => $response['amountSet']['presentmentMoney']['amount'] ?? '',
+                        'currency' => $response['amountSet']['presentmentMoney']['currencyCode'] ?? '',
+                        'payment_id' => $response['paymentId'] ?? '',
+                        'total_unsettled_set' => $response['totalUnsettledSet'] ?? '',
+                        'admin_graphql_api_id' => $response['id'] ?? '',
+                    ];
+                }
             }
 
             return $orderTransactionResponse;
