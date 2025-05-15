@@ -205,7 +205,9 @@ class GraphqlService
         if (!empty($productdata['images'])) {
             foreach ($productdata['images'] as $imagekey => $image) {
 
-
+                if(empty($image['src'])){
+                    continue;
+                }
 
                 if (count($productmedia) > 249) {
                     break;
@@ -507,7 +509,9 @@ class GraphqlService
         $productmedia = array();
         if (!empty($productdata['images'])) {
             foreach ($productdata['images'] as $imagekey => $image) {
-
+                if(empty($image['src'])){
+                    continue;
+                }
                 if (count($productmedia) > 249) {
                     break;
                 }
@@ -533,7 +537,7 @@ class GraphqlService
                 $productoptions[$optionkey]['name'] = $option['name'];
                 $values = array();
                 foreach ($option['values'] as $valuekey => $value) {
-                    $values[$valuekey]['name'] = $value;
+                    $values[$valuekey]['name'] = (string)$value;
                 }
                 $productoptions[$optionkey]['values'] = $values;
 
@@ -888,7 +892,9 @@ class GraphqlService
         if (!empty($productdata['images'])) {
 
             foreach ($productdata['images'] as $imagekey => $image) {
-
+                if(empty($image['src'])){
+                    continue;
+                }
                 if (count($productmedia) > 240) {
                     break;
                 }
@@ -917,7 +923,7 @@ class GraphqlService
                     $productoptions[$optionkey]['name'] = $option['name'];
                     $values = array();
                     foreach ($option['values'] as $valuekey => $value) {
-                        $values[$valuekey]['name'] = $value;
+                        $values[$valuekey]['name'] = (string)$value;
                     }
                     $productoptions[$optionkey]['values'] = $values;
 
