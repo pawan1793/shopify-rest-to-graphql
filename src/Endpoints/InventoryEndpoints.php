@@ -298,4 +298,98 @@ class InventoryEndpoints
         return $responseData;
     }
 
+    /** 
+     * To get Inventory Items with all levels use this function.
+     */
+    public function getInventoryItemsWithAllLevels($params)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItems
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#get-inventory-levels
+        */
+
+
+
+        $query = '';
+        if (!empty($params['inventory_item_id'])) {
+           
+            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== true) {
+                $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $params['inventory_item_id']);
+            }
+            $query = 'query: "id:' . $inventoryItemId . '"';
+        }
+        $levels = ["available", "incoming", "committed", "damaged", "on_hand", "quality_control", "reserved", "safety_stock"];
+        $querylevesl = json_encode($levels);
+        $inventoryitemsquery = <<<"GRAPHQL"
+        query {
+            inventoryItems(first: 250, $query) {
+                edges {
+                    node {
+                        id
+                        tracked
+                        sku
+                        requiresShipping
+                        inventoryLevels(first: 250) {
+                            edges {
+                                node {
+                                    id
+                                    quantities (names: $querylevesl ) {
+                                        quantity
+                                    },
+                                    location {
+                                        id,
+                                        name
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemsquery);
+      
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+
+        } else {
+
+            $responseData = $responseData['data']['inventoryItems']['edges'];
+
+        }
+
+        $finalarray = array();
+
+        foreach ($responseData as $key => $inventoryItem) {
+
+            $response = array();
+            $locations = $inventoryItem['node']['inventoryLevels']['edges'];
+
+            foreach ($locations as $lkey => $location) {
+
+                $response['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
+                $response['tracked'] = $inventoryItem['node']['tracked'];
+                $response['sku'] = $inventoryItem['node']['sku'];
+                $response['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
+                $response['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
+                $response['location_name'] = $location['node']['location']['name'];
+                
+                foreach ($levels as $levelindex => $level) {
+                    $response[$level] = $location['node']['quantities'][$levelindex]['quantity'];
+                
+                }
+               
+
+                $finalarray[$lkey] = $response;
+
+            }
+
+        }
+
+        return $finalarray;
+    }
+
 }
