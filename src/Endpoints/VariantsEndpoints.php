@@ -294,4 +294,43 @@ class VariantsEndpoints
         return $responseData;
     }
 
+    public function getVariantById($id)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/productVariant
+        */
+
+        $gid = "gid://shopify/ProductVariant/{$id}";
+        $query = <<<GRAPHQL
+        query GetProductVariant(\$id: ID!) {
+            productVariant(id: \$id) {
+                id
+                title
+                availableForSale
+                barcode
+                compareAtPrice
+                createdAt
+                inventoryQuantity
+                inventoryItem {
+                    id
+                }
+            }
+        }
+        GRAPHQL;
+
+        $variables = [
+            'id' => $gid,
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query,$variables);
+
+        if (isset($responseData['data']['productVariant']['userErrors']) && !empty($responseData['data']['productVariant']['userErrors'])) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['products']['userErrors']);
+
+        } else {
+
+            return $responseData['data']['productVariant'];
+
+        }
+    }
 }
