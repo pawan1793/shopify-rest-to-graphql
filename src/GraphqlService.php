@@ -2445,103 +2445,91 @@ class GraphqlService
 
     public function reOrderProductImages($params)
     {
-
-
         $productid = $params['product']['id'];
 
-
         $mediaquery = <<<QUERY
-                    query productq {
-                    product(id: "gid://shopify/Product/$productid") {
-                        images (first:250) {
-                            edges {
-                                node {
+            query productq {
+                product(id: "gid://shopify/Product/$productid") {
+                    images (first:250) {
+                        edges {
+                            node {
                                 id
                                 src
-                                }
                             }
                         }
-                        media(first: 250) {
-                            edges {
+                    }
+                    media(first: 250) {
+                        edges {
                             node {
                                 id
                                 ... on MediaImage {
-                                id
-                                image {
                                     id
-                                    src
+                                    image {
+                                        id
+                                        src
+                                    }
                                 }
-                               
-                                }
-                            }
                             }
                         }
-                        
                     }
                 }
-                QUERY;
-
+            }
+        QUERY;
 
         $responseData = $this->graphqlQueryThalia($mediaquery);
 
-        $shopifyimages = array();
-        foreach ($responseData['data']['product']['images']['edges'] as $key => $image) {
-            $imageid = str_replace('gid://shopify/ProductImage/', '', $image['node']['id']);
-            $imagesrc = $image['node']['src'];
-
-            $shopifyimages[$imagesrc] = $imageid;
+        $shopifyimages = [];
+        foreach ($responseData['data']['product']['images']['edges'] as $image) {
+            $imageId = str_replace('gid://shopify/ProductImage/', '', $image['node']['id']);
+            $imageSrc = strtok($image['node']['src'], '?'); 
+            $shopifyimages[$imageSrc] = $imageId;
         }
 
+        $productmedia = [];
+        foreach ($responseData['data']['product']['media']['edges'] as $media) {
+            $mediaId = str_replace('gid://shopify/MediaImage/', '', $media['node']['id']);
 
-        $productmedia = array();
-        foreach ($responseData['data']['product']['media']['edges'] as $key => $media) {
-
-            $mediaid = str_replace('gid://shopify/MediaImage/', '', $media['node']['id']);
-
-            if (isset($media['node']['image']['id'])) {
-                // $imageid = str_replace('gid://shopify/ImageSource/','',$media['node']['image']['id']); //$media['node']['image']['id'];
-                // $productmedia[$imageid] = $mediaid;
-                $mediaurl = $media['node']['image']['src'];
-
-                $tmpimageid = $shopifyimages[$mediaurl];
-                $productmedia[$tmpimageid] = $mediaid;
+            if (isset($media['node']['image']['src'])) {
+                $mediaSrc = strtok($media['node']['image']['src'], '?'); 
+                if (isset($shopifyimages[$mediaSrc])) {
+                    $productImageId = $shopifyimages[$mediaSrc];
+                    $productmedia[$productImageId] = $mediaId;
+                }
             }
-
         }
 
-
-        $productorder = array();
-        foreach ($params['product']['images'] as $key => $image) {
-            $productorder[$image['position']] = '{ id: "gid://shopify/MediaImage/' . $productmedia[$image['id']] . '", newPosition: "' . $image['position'] . '" }';
-
+        $productorder = [];
+        foreach ($params['product']['images'] as $image) {
+            $productImageId = $image['id'];
+            $position = $image['position'];
+            $productorder[$position] = '{ id: "gid://shopify/MediaImage/' . $productImageId . '", newPosition: "' . $position . '" }';
         }
+
+        if (empty($productorder)) {
+            return ['error' => 'No valid moves'];
+        }
+
         ksort($productorder);
-        $productorder = implode(",", $productorder);
-
+        $moves = implode(",", $productorder);
 
         $query = <<<QUERY
-                    mutation ReorderProductMedia {
-                        productReorderMedia(id: "gid://shopify/Product/$productid", moves: [
-                       $productorder
-                        ]) {
-                        job {
-                            id
-                        }
-                        mediaUserErrors {
-                            field
-                            message
-                        }
-                        }
+            mutation ReorderProductMedia {
+                productReorderMedia(id: "gid://shopify/Product/$productid", moves: [
+                    $moves
+                ]) {
+                    job {
+                        id
                     }
-                QUERY;
+                    mediaUserErrors {
+                        field
+                        message
+                    }
+                }
+            }
+        QUERY;
 
-
-        $responseData = $this->graphqlQueryThalia($query);
-
-        return $responseData;
-
+        return $this->graphqlQueryThalia($query);
     }
-
 
     public function getProductIdFromVairant($variantid): array
     {
