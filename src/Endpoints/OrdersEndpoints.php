@@ -602,6 +602,7 @@ class OrdersEndpoints
                     'sku' => $node['sku'] ?? '',
                     'taxable' => $node['taxable'] ?? '',
                     'title' => $node['title'] ?? '',
+                    'properties' => $properties ?? [],
                     'price' => $node['originalUnitPriceSet']['presentmentMoney']['amount'] ?? '',
                     'total_discount_set' => $node['totalDiscountSet']['presentmentMoney']['amount'] ?? '',
                     'variant_id' => isset($node['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $node['variant']['id']) : '',
