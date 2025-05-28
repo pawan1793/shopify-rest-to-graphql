@@ -333,4 +333,70 @@ class VariantsEndpoints
 
         }
     }
+
+    public function productVariantAppendMedia($id, array $variantMedias)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/productVariantAppendMedia
+        */
+
+        $productId = "gid://shopify/Product/{$id}";
+        $variantMedia = [];
+        foreach ($variantMedias as $media) {
+            $variantMedia[] = [
+                'mediaIds' => ['gid://shopify/MediaImage/' . $media['id']],
+                'variantId' => "gid://shopify/ProductVariant/" . $media['variantId']
+            ];
+        }
+
+        $query = <<<GRAPHQL
+        mutation productVariantAppendMedia(
+          \$productId: ID!
+          \$variantMedia: [ProductVariantAppendMediaInput!]!
+        ) {
+          productVariantAppendMedia(
+            productId: \$productId
+            variantMedia: \$variantMedia
+          ) {
+            product {
+              id
+            }
+            productVariants {
+              id
+              media(first: 5) {
+                edges {
+                  node {
+                    __typename
+                    ... on MediaImage {
+                      id
+                      preview {
+                        image { url }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            userErrors {
+              field
+              message
+              code
+            }
+          }
+        }
+        GRAPHQL;
+
+        $variables = [
+            'productId' => $productId,
+            'variantMedia' => $variantMedia
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query, $variables);
+
+        if (isset($responseData['data']['productVariantAppendMedia']['userErrors']) && count($responseData['data']['productVariantAppendMedia']['userErrors']) > 0) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantAppendMedia']['userErrors']);
+        } else {
+            return $responseData['data']['productVariantAppendMedia'];
+        }
+    }
 }
