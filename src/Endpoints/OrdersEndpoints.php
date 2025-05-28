@@ -287,12 +287,12 @@ class OrdersEndpoints
                         'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                         'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                             return [
-                                'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                                'amount' => $discount['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
                             ];
                         }, $item['node']['discountAllocations']) : [],
                         'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
                             return [
-                                'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                                'amount' => $discount['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
                             ];
                         }, $item['node']['discountedPriceSet']) : [],
                         'is_removed' => $item['node']['isRemoved'] ?? '',
@@ -518,12 +518,12 @@ class OrdersEndpoints
                     'price' => $item['node']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                     'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                         return [
-                            'amount' => $discount['node']['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                            'amount' => $discount['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
                         ];
                     }, $item['node']['discountAllocations']) : [],
                     'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
                         return [
-                            'amount' => $discount['node']['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
+                            'amount' => $discount['discountedPriceSet']['presentmentMoney']['amount'] ?? 0,
                         ];
                     }, $item['node']['discountedPriceSet']) : [],
                     'is_removed' => $item['node']['isRemoved'] ?? '',
