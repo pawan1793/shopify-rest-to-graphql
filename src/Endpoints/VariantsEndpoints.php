@@ -399,4 +399,60 @@ class VariantsEndpoints
             return $responseData['data']['productVariantAppendMedia'];
         }
     }
+
+    public function productVariantDetachMedia($id, array $variantMedias)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantDetachMedia
+        */
+
+        $productId = "gid://shopify/Product/{$id}";
+        $variantMedia = [];
+        foreach ($variantMedias as $media) {
+            $variantMedia[] = [
+                'mediaIds' => ['gid://shopify/MediaImage/' . $media['id']],
+                'variantId' => "gid://shopify/ProductVariant/" . $media['variantId']
+            ];
+        }
+
+        $query = <<<GRAPHQL
+        mutation productVariantDetachMedia(
+          \$productId: ID!,
+          \$variantMedia: [ProductVariantDetachMediaInput!]!
+        ) {
+          productVariantDetachMedia(
+            productId: \$productId,
+            variantMedia: \$variantMedia
+          ) {
+            product {
+              id
+              title
+            }
+            productVariants {
+              id
+              image {      # Variant artık bu resmi taşımayacak
+                id
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+        GRAPHQL;
+
+        $variables = [
+            'productId' => $productId,
+            'variantMedia' => $variantMedia
+        ];
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query, $variables);
+
+        if (isset($responseData['data']['productVariantDetachMedia']['userErrors']) && count($responseData['data']['productVariantDetachMedia']['userErrors']) > 0) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantDetachMedia']['userErrors']);
+        } else {
+            return $responseData['data']['productVariantDetachMedia'];
+        }
+    }
 }
