@@ -232,15 +232,31 @@ class OrdersEndpoints
                         'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                         'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                             return [
-                                'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
+                                'amount' => $adjustmentItem['node']['amountSet']['presentmentMoney']['amount'] ?? '',
                                 'kind' => $adjustmentItem['node']['reason'] ?? '',
                             ];
                         }, $refund['orderAdjustments']['edges']) : [],
                         'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
+                            $node = $refundLineItem['node'] ?? [];
+                            $lineItem = $node['lineItem'] ?? [];
+
                             return [
-                                'id' => isset($refundLineItem['node']['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']) : '',
-                                'line_item_id' => isset($refundLineItem['node']['lineItem']['id']) ? str_replace('gid://shopify/LineItem/', '', $refundLineItem['node']['lineItem']['id']) : '',
-                                'quantity' => $refundLineItem['node']['quantity'] ?? ''
+                                'id' => isset($node['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $node['id']) : '',
+                                'quantity' => $node['quantity'] ?? '',
+                                'line_item_id' => isset($lineItem['id']) ? str_replace('gid://shopify/LineItem/', '', $lineItem['id']) : '',
+                                'line_item' => [
+                                    'id' => isset($lineItem['id']) ? str_replace('gid://shopify/LineItem/', '', $lineItem['id']) : '',
+                                    'title' => $lineItem['title'] ?? '',
+                                    'name' => $lineItem['name'] ?? '',
+                                    'current_quantity' => $lineItem['currentQuantity'] ?? '',
+                                    'quantity' => $lineItem['quantity'] ?? '',
+                                    'refundable_quantity' => $lineItem['refundableQuantity'] ?? '',
+                                    'variant_title' => $lineItem['variantTitle'] ?? '',
+                                    'variant_id' => isset($lineItem['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $lineItem['variant']['id']) : '',
+                                    'product_id' => isset($lineItem['product']['id']) ? str_replace('gid://shopify/Product/', '', $lineItem['product']['id']) : '',
+                                    'price' => $lineItem['originalUnitPriceSet']['presentmentMoney']['amount'] ?? '',
+                                    'total_discount' => $lineItem['totalDiscountSet']['presentmentMoney']['amount'] ?? '',
+                                ],
                             ];
                         }, $refund['refundLineItems']['edges']) : []
                     ];
@@ -462,15 +478,30 @@ class OrdersEndpoints
                     'order_id' => isset($refund['order']['id']) ? str_replace('gid://shopify/Order/', '', $refund['order']['id']) : '',
                     'order_adjustments' => isset($refund['orderAdjustments']['edges']) && is_array($refund['orderAdjustments']['edges']) ? array_map(function ($adjustmentItem) {
                         return [
-                            'amount' => isset($adjustmentItem['node']['amountSet']['presentmentMoney']['amount']) ?? '',
+                            'amount' => $adjustmentItem['node']['amountSet']['presentmentMoney']['amount'] ?? '',
                             'kind' => $adjustmentItem['node']['reason'] ?? '',
                         ];
                     }, $refund['orderAdjustments']['edges']) : [],
                     'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
+                        $node = $refundLineItem['node'] ?? [];
+                        $lineItem = $node['lineItem'] ?? [];
+
                         return [
-                            'id' => isset($refundLineItem['node']['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $refundLineItem['node']['id']) : '',
-                            'line_item_id' => isset($refundLineItem['node']['lineItem']['id']) ? str_replace('gid://shopify/LineItem/', '', $refundLineItem['node']['lineItem']['id']) : '',
-                            'quantity' => $refundLineItem['node']['quantity'] ?? ''
+                            'id' => isset($node['id']) ? str_replace('gid://shopify/RefundLineItem/', '', $node['id']) : '',
+                            'quantity' => $node['quantity'] ?? '',
+                            'line_item' => [
+                                'id' => isset($lineItem['id']) ? str_replace('gid://shopify/LineItem/', '', $lineItem['id']) : '',
+                                'title' => $lineItem['title'] ?? '',
+                                'name' => $lineItem['name'] ?? '',
+                                'current_quantity' => $lineItem['currentQuantity'] ?? '',
+                                'quantity' => $lineItem['quantity'] ?? '',
+                                'refundable_quantity' => $lineItem['refundableQuantity'] ?? '',
+                                'variant_title' => $lineItem['variantTitle'] ?? '',
+                                'variant_id' => isset($lineItem['variant']['id']) ? str_replace('gid://shopify/ProductVariant/', '', $lineItem['variant']['id']) : '',
+                                'product_id' => isset($lineItem['product']['id']) ? str_replace('gid://shopify/Product/', '', $lineItem['product']['id']) : '',
+                                'price' => $lineItem['originalUnitPriceSet']['presentmentMoney']['amount'] ?? '',
+                                'total_discount' => $lineItem['totalDiscountSet']['presentmentMoney']['amount'] ?? '',
+                            ],
                         ];
                     }, $refund['refundLineItems']['edges']) : []
                 ];
