@@ -328,6 +328,10 @@ class GraphqlService
             }
         }
 
+        if(!empty($variant['inventory_management_tracked'])){
+             $variantdata['inventoryItem']['tracked'] = true;
+        }
+
 
 
         if (isset($variant['weight'])) {
