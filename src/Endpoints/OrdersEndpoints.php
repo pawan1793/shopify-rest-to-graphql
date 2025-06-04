@@ -1131,4 +1131,38 @@ class OrdersEndpoints
 
         return $orderUpdateData;
     }
+
+    public function getOrderTransactions($params)
+    {
+        $orderId = $params['orderId'];
+        $query = <<<QUERY
+        query getOrderTransactions {
+          order(id: "gid://shopify/Order/{$orderId}") {
+            id
+            transactions {
+              id
+              amountSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+              kind
+              status
+              processedAt
+            }
+          }
+        }
+        QUERY;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($query);
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+            throw new \Exception('GraphQL Error: ' . print_r($responseData['errors'], true));
+
+        } else {
+            $orderUpdateData = $responseData['data'];
+        }
+
+        return $orderUpdateData;
+    }
 }
