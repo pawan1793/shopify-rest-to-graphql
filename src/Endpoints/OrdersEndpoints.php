@@ -236,6 +236,11 @@ class OrdersEndpoints
                                 'kind' => $adjustmentItem['node']['reason'] ?? '',
                             ];
                         }, $refund['orderAdjustments']['edges']) : [],
+                        'refund_shipping_lines' => isset($refund['refundShippingLines']['edges']) && is_array($refund['refundShippingLines']['edges']) ? array_map(function ($shippingLine) {
+                            return [
+                                'amount' => $shippingLine['node']['shippingLine']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                            ];
+                        }, $refund['refundShippingLines']['edges']) : [],
                         'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
                             $node = $refundLineItem['node'] ?? [];
                             $lineItem = $node['lineItem'] ?? [];
@@ -482,6 +487,11 @@ class OrdersEndpoints
                             'kind' => $adjustmentItem['node']['reason'] ?? '',
                         ];
                     }, $refund['orderAdjustments']['edges']) : [],
+                    'refund_shipping_lines' => isset($refund['refundShippingLines']['edges']) && is_array($refund['refundShippingLines']['edges']) ? array_map(function ($shippingLine) {
+                        return [
+                            'amount' => $shippingLine['node']['shippingLine']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                        ];
+                    }, $refund['refundShippingLines']['edges']) : [],
                     'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
                         $node = $refundLineItem['node'] ?? [];
                         $lineItem = $node['lineItem'] ?? [];
