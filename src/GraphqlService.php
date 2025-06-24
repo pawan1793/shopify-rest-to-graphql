@@ -677,6 +677,10 @@ class GraphqlService
             if (!empty($rawvariant['cost'])) {
                 $variantdata['inventoryItem']['cost'] = $rawvariant['cost'];
                 $variantdata['inventoryItem']['tracked'] = true;
+
+                if(isset($variant['inventory_management']) && $rawvariant['inventory_management'] == ''){
+                    $variantdata['inventoryItem']['tracked'] = false;
+                }
             }
 
 
@@ -1194,6 +1198,9 @@ class GraphqlService
                 if (!empty($variant['cost'])) {
                     $variantdata['inventoryItem']['cost'] = $variant['cost'];
                     $variantdata['inventoryItem']['tracked'] = true;
+                    if(isset($variant['inventory_management']) && $variant['inventory_management'] == ''){
+                        $variantdata['inventoryItem']['tracked'] = false;
+                    }
                 }
 
 
@@ -2762,6 +2769,9 @@ class GraphqlService
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
             $variantdata['inventoryItem']['tracked'] = true;
+            if(isset($variant['inventory_management']) && $variant['inventory_management'] == ''){
+                 $variantdata['inventoryItem']['tracked'] = false;
+            }
         }
 
         if (!empty($variant['sku'])) {
