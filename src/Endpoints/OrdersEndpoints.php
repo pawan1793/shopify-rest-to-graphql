@@ -667,6 +667,103 @@ class OrdersEndpoints
     }
 
     /**
+     * To get Orders Returns use this function.
+     */
+    public function getOrderReturns($param)
+    {
+        $orderId = $param['orderId'];
+        $limit = isset($param['limit']) ? (int)$param['limit'] : 50;
+
+        $returnsFields = implode("\n", $param['fields']);
+
+        $allReturns = [];
+        $hasNextPage = true;
+        $afterCursor = null;
+
+        while ($hasNextPage) {
+            $cursorParam = $afterCursor ? "after: \"{$afterCursor}\"" : '';
+            $query = <<<QUERY
+                query GetOrderReturns {
+                    order(id: "gid://shopify/Order/{$orderId}") {
+                        returns(first: $limit $cursorParam) {
+                            edges {
+                                node {
+                                    $returnsFields
+                                }
+                            }
+                            pageInfo {
+                                hasNextPage
+                            }
+                        }
+                    }
+                }
+            QUERY;
+
+            $response = $this->graphqlService->graphqlQueryThalia($query);
+
+            if (isset($response['errors']) && !empty($response['errors'])) {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $response["errors"]);
+            }
+
+            $edges = $response['data']['order']['returns']['edges'] ?? [];
+
+            foreach ($edges as $edge) {
+                $node = $edge['node'];
+
+                $reverseFulfillmentOrders = [];
+
+                $rfoEdges = $node['reverseFulfillmentOrders']['edges'] ?? [];
+                foreach ($rfoEdges as $rfoEdge) {
+                    $rfoNode = $rfoEdge['node'];
+
+                    $lineItems = [];
+
+                    $liEdges = $rfoNode['lineItems']['edges'] ?? [];
+                    foreach ($liEdges as $liEdge) {
+                        $liNode = $liEdge['node'];
+                        $lineItemData = $liNode['fulfillmentLineItem']['lineItem'] ?? [];
+
+                        $lineItems[] = [
+                            'id' => isset($lineItemData['id'])
+                                ? str_replace('gid://shopify/LineItem/', '', $lineItemData['id'])
+                                : '',
+                            'name' => $lineItemData['name'] ?? '',
+                            'product_id' => isset($lineItemData['product']['id'])
+                                ? str_replace('gid://shopify/Product/', '', $lineItemData['product']['id'])
+                                : '',
+                            'quantity' => $lineItemData['quantity'] ?? 0,
+                        ];
+                    }
+
+                    $reverseFulfillmentOrders[] = [
+                        'lineItems' => $lineItems,
+                    ];
+                }
+                
+                $allReturns[] = [
+                    'id' => isset($node['id'])
+                        ? str_replace('gid://shopify/Return/', '', $node['id'])
+                        : '',
+                    'name' => $node['name'] ?? '',
+                    'status' => $node['status'] ?? '',
+                    'reverseFulfillmentOrders' => $reverseFulfillmentOrders,
+                ];
+            }
+
+            $hasNextPage = $response['data']['order']['returns']['pageInfo']['hasNextPage'] ?? false;
+
+            if ($hasNextPage && !empty($edges)) {
+                $lastEdge = end($edges);
+                $afterCursor = $lastEdge['cursor'] ?? null;
+            } else {
+                $afterCursor = null;
+            }
+        }
+
+        return $allReturns;
+    }
+
+    /**
      * To get Order transection by its Order Id use this function.
      */
     public function transactionsForOrder($param)
