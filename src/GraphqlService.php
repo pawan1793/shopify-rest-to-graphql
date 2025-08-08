@@ -313,9 +313,10 @@ class GraphqlService
             $variantdata['barcode'] = isset($variant['barcode']) ? $variant['barcode'] : null;
         }
 
-        if (!empty($variant['taxable'])) {
+        if (isset($variant['taxable'])) {
             $variantdata['taxable'] = isset($variant['taxable']) ? $variant['taxable'] : true;
         }
+
         if (!empty($variant['sku'])) {
             $variantdata['inventoryItem']['sku'] = $variant['sku'];
         }
