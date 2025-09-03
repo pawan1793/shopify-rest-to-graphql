@@ -57,8 +57,22 @@ class GraphqlService
                 ]);
             }
 
+            $responseData = json_decode($response->getBody(), true);
 
-            return json_decode($response->getBody(), true);
+            // Check for throttling error
+            if (isset($responseData['errors']) && isset($responseData['errors'][0]['extensions']['code']) && $responseData['errors'][0]['extensions']['code'] === 'THROTTLED') {
+                throw new GraphqlException('Shopify API request throttled', 503, $responseData['errors'], null);
+            }
+
+            return $responseData;
+
+        } catch (GraphqlException $e) {
+            if ($e->getCode() === 503) {
+                throw $e; // Just rethrow throttling errors as-is
+            }
+            // Handle other GraphQL errors
+            throw new GraphqlException($e->getMessage(), $e->getCode(), $e->getErrors(), $e);
+
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             // Covers ClientException, ServerException
             $responseBody = $e->hasResponse()
