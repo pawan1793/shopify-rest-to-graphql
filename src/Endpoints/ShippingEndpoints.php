@@ -31,8 +31,8 @@ class ShippingEndpoints
     public function getDeliveryProfiles()
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/deliveryProfiles
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/shippingzone
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/deliveryProfiles
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/shippingzone
         */
 
 

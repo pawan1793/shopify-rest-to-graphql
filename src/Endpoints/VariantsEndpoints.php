@@ -33,7 +33,7 @@ class VariantsEndpoints
     public function productVariantsBulkUpdate($shopifyId, $variantId, $params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkUpdate
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/productVariantsBulkUpdate
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-07/resources/product-variant#put-variants-variant-id
         */
 
@@ -235,8 +235,8 @@ class VariantsEndpoints
     public function productVariantsBulkDelete($shopifyId, $variantId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/productVariantsBulkDelete
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/product-variant#delete-products-product-id-variants-variant-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/productVariantsBulkDelete
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/product-variant#delete-products-product-id-variants-variant-id
         */
 
 

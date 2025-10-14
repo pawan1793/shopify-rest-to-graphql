@@ -29,8 +29,8 @@ class LocationsEndpoints
     public function getLocations()
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/locations
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/location#get-locations
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/locations
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/location#get-locations
         */
 
 

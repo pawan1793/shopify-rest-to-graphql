@@ -29,7 +29,7 @@ class ScriptTagsEndPoints
     public function getScriptTags()
     {
         /*
-          Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/scriptTags?example=Retrieves+a+list+of+all+script+tags
+          Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/scriptTags?example=Retrieves+a+list+of+all+script+tags
           Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/scripttag#get-script-tags
       */
         $query = <<<'GRAPHQL'
@@ -90,7 +90,7 @@ class ScriptTagsEndPoints
     public function scriptTagCreate($params)
     {
         /*
-          Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/scriptTagCreate?example=Creates+a+new+script+tag&language=PHP
+          Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/scriptTagCreate?example=Creates+a+new+script+tag&language=PHP
           Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/scripttag#post-script-tags
       */
         $query = <<<'GRAPHQL'
@@ -212,7 +212,7 @@ class ScriptTagsEndPoints
     public function deleteScriptTags($scriptid)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/scriptTagDelete?example=Deletes+a+script+tag&language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/scriptTagDelete?example=Deletes+a+script+tag&language=PHP
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/scripttag#delete-script-tags-script-tag-id
         */
 

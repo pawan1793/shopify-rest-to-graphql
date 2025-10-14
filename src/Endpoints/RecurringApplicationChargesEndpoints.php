@@ -32,8 +32,8 @@ class RecurringApplicationChargesEndpoints
     public function appSubscriptionCreate($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/appSubscriptionCreate
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#post-recurring-application-charges
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/appSubscriptionCreate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#post-recurring-application-charges
         */
 
 
@@ -103,8 +103,8 @@ class RecurringApplicationChargesEndpoints
     public function currentAppInstallationForRecurring($recurringChargeId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#get-recurring-application-charges
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#get-recurring-application-charges
         */
 
 
@@ -159,7 +159,7 @@ class RecurringApplicationChargesEndpoints
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/appSubscriptionCancel?example=Cancels+a+recurring+application+charge
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/recurringapplicationcharge#delete-recurring-application-charges-recurring-application-charge-id
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#delete-recurring-application-charges-recurring-application-charge-id
         */
 
         global $graphqlService;
