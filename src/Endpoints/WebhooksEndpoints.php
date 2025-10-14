@@ -190,8 +190,8 @@ class WebhooksEndpoints
     public function webhookSubscriptions()
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/webhookSubscriptions
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#get-webhooks
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/webhookSubscriptions
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/webhook#get-webhooks
         */
 
 
@@ -249,8 +249,8 @@ class WebhooksEndpoints
     public function webhookSubscriptionCreate($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/webhookSubscriptionCreate
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#post-webhooks
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/webhookSubscriptionCreate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/webhook#post-webhooks
         */
 
 
@@ -335,8 +335,8 @@ class WebhooksEndpoints
     public function webhookSubscriptionUpdate($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/webhookSubscriptionUpdate
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#put-webhooks-webhook-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/webhookSubscriptionUpdate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/webhook#put-webhooks-webhook-id
         */
 
 
@@ -412,8 +412,8 @@ class WebhooksEndpoints
     public function webhookSubscriptionDelete($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/webhookSubscriptionDelete
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/webhook#delete-webhooks-webhook-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/webhookSubscriptionDelete
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/webhook#delete-webhooks-webhook-id
         */
 
 

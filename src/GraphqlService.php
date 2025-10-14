@@ -23,7 +23,7 @@ class GraphqlService
         $this->shopDomain = $shopDomain;
         $this->accessToken = $accessToken;
         $this->client = new Client([
-            'base_uri' => "https://{$this->shopDomain}/admin/api/2025-01/graphql.json",
+            'base_uri' => "https://{$this->shopDomain}/admin/api/2025-07/graphql.json",
             'headers' => [
                 'X-Shopify-Access-Token' => $this->accessToken,
                 'Content-Type' => 'application/json',
@@ -1746,49 +1746,37 @@ class GraphqlService
         }
     }
 
-    public function graphqlGetProductsCount()
+    public function graphqlGetProductsCount($params)
     {
 
-
-
+        $limit = isset($params['limit']) ? $params['limit'] : 'null';
 
         $query = <<<QUERY
-                query {
-                    productsCount {
-                        count
-                    }
-                }
-                QUERY;
-
-
-
-
-
+        query {
+            productsCount(limit: $limit) {
+                count
+                precision
+            }
+        }
+        QUERY;
 
         try {
             // Send GraphQL request
 
             $responseData = $this->graphqlQueryThalia($query);
 
-
-
-
             if (isset($responseData['data'])) {
                 $responsedata = $responseData['data']['productsCount'];
                 return $responsedata;
             }
 
-
-
-
-
             if (isset($responseData["errors"])) {
                 throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
             }
+
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
-
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
         }
     }
 
@@ -2580,7 +2568,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2025-01/",
+            'base_uri' => "https://$shop/admin/api/2025-07/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
