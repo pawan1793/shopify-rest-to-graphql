@@ -61,20 +61,22 @@ class GraphqlService
 
             // Check for throttling error
             if (isset($responseData['errors']) && isset($responseData['errors'][0]['extensions']['code']) && $responseData['errors'][0]['extensions']['code'] === 'THROTTLED') {
-                throw new GraphqlException('Shopify API request throttled', 503, $responseData['errors'], null);
+                throw new GraphqlException(
+                    'Shopify API request throttled. Please retry after the rate limit window.',
+                    GraphqlException::CODE_THROTTLED,
+                    $responseData['errors']
+                );
             }
 
             return $responseData;
 
         } catch (GraphqlException $e) {
-            if ($e->getCode() === 503) {
-                throw $e; // Just rethrow throttling errors as-is
-            }
-            // Handle other GraphQL errors
-            throw new GraphqlException($e->getMessage(), $e->getCode(), $e->getErrors(), $e);
+            // Re-throw GraphQL exceptions as-is (they're already properly formatted)
+            throw $e;
 
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             // Covers ClientException, ServerException
+            $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : GraphqlException::CODE_SERVER_ERROR;
             $responseBody = $e->hasResponse()
                 ? (string) $e->getResponse()->getBody()
                 : 'No response from server.';
@@ -82,19 +84,33 @@ class GraphqlService
             $responseArray = json_decode($responseBody, true);
             $errors = $responseArray['errors'] ?? [['message' => $responseBody]];
 
-            throw new GraphqlException("Shopify API request failed", $e->getCode(), (array) $errors, $e);
+            $message = $statusCode >= 500
+                ? 'Shopify API server error occurred'
+                : 'Shopify API request failed';
+
+            throw new GraphqlException($message, $statusCode, (array) $errors, $e);
 
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
             // Handle network issues (DNS, timeout, etc.)
             $errors = [['message' => 'Connection failed: ' . $e->getMessage()]];
 
-            throw new GraphqlException("Shopify API connection error", $e->getCode(), $errors, $e);
+            throw new GraphqlException(
+                'Failed to connect to Shopify API. Please check your network connection.',
+                GraphqlException::CODE_SERVICE_UNAVAILABLE,
+                $errors,
+                $e
+            );
 
         } catch (\Exception $e) {
             // Generic fallback
             $errors = [['message' => 'Unexpected error: ' . $e->getMessage()]];
 
-            throw new GraphqlException("Unexpected Shopify API error", $e->getCode(), $errors, $e);
+            throw new GraphqlException(
+                'An unexpected error occurred while communicating with Shopify API',
+                GraphqlException::CODE_SERVER_ERROR,
+                $errors,
+                $e
+            );
         }
     }
 
@@ -151,7 +167,7 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new GraphqlException("Shopify API request failed", 400, $responseData["errors"]);
+                throw new GraphqlException("Failed to fetch publications from Shopify API", GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
                 
             } else {
                 foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
@@ -164,7 +180,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException("Shopify API request failed", 400,[],$e);
+            throw new GraphqlException("Failed to fetch publications from Shopify API", GraphqlException::CODE_BAD_REQUEST, [], $e);
 
         }
 
@@ -284,13 +300,17 @@ class GraphqlService
 
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-
-
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                
+                    if(isset($responseData["errors"][0]["extensions"]["code"])){
+                        if($responseData["errors"][0]["extensions"]["code"] == "VARIANT_THROTTLE_EXCEEDED"){
+                            throw new GraphqlException('Variant throttle exceeded, please try again later', GraphqlException::CODE_THROTTLED, $responseData["errors"]);
+                        }
+                    }
+                    throw new GraphqlException('Failed to create product via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
+                    throw new GraphqlException('Product creation failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productCreate']['userErrors']);
 
                 } else {
                     // Print the created product details
@@ -417,11 +437,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to update product variants via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
             } elseif (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
+                throw new GraphqlException('Product variant update failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
 
             } else {
                 // Print the created product details
@@ -435,7 +455,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
 
         return $productreturndata;
@@ -470,7 +490,7 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to fetch publications from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             } else {
                 foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
                     if ($publication["node"]["name"] == "Online Store") {
@@ -482,7 +502,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
 
         }
 
@@ -638,11 +658,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to create product via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
+                    throw new GraphqlException('Product creation failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productCreate']['userErrors']);
 
                 } else {
                     $productId = $responseData['data']['productCreate']['product']['id'];
@@ -664,7 +684,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -819,11 +839,11 @@ class GraphqlService
             // Check for GraphQL or user errors
             if (isset($responseData['errors'])) {
 
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to create product with variants via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
             } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
 
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
+                throw new GraphqlException('Product creation with variants failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productCreate']['userErrors']);
 
             } else {
                 $shopifyid = str_replace("gid://shopify/Product/", "", $productId);
@@ -832,7 +852,7 @@ class GraphqlService
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
 
 
@@ -1122,11 +1142,11 @@ class GraphqlService
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to update product via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productUpdate']['userErrors']) && !empty($responseData['data']['productUpdate']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productUpdate']['userErrors']);
+                    throw new GraphqlException('Product update failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productUpdate']['userErrors']);
 
                 } else {
 
@@ -1326,16 +1346,16 @@ class GraphqlService
 
                 // Check for GraphQL or user errors
                 if (isset($responseData['errors'])) {
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to create product via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
                 } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productCreate']['userErrors']);
+                    throw new GraphqlException('Product creation failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productCreate']['userErrors']);
                 } else {
 
 
                 }
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
             if (!empty($newvariantsdata)) {
@@ -1737,11 +1757,11 @@ class GraphqlService
 
 
             if (isset($responseData["errors"])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to fetch products from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             }
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+            throw new GraphqlException('Failed to fetch products from Shopify API', GraphqlException::CODE_BAD_REQUEST, [], $e);
 
         }
     }
@@ -1771,12 +1791,12 @@ class GraphqlService
             }
 
             if (isset($responseData["errors"])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to get products count from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             }
 
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+            throw new GraphqlException('Failed to get products count from Shopify API', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
     }
 
@@ -1859,15 +1879,15 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
+                    throw new GraphqlException('Product fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['product']['userErrors']);
 
                 } elseif (empty($responseData['data']['product'])) {
 
-                    throw new \Exception('GraphQL Error: Product Not Found');
+                    throw new GraphqlException('Product not found', GraphqlException::CODE_NOT_FOUND, [['message' => 'Product not found']]);
 
                 } else {
 
@@ -1923,7 +1943,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -1999,15 +2019,15 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
+                    throw new GraphqlException('Product fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['product']['userErrors']);
 
                 } elseif (empty($responseData['data']['product'])) {
 
-                    throw new \Exception('GraphQL Error: Product Not Found');
+                    throw new GraphqlException('Product not found', GraphqlException::CODE_NOT_FOUND, [['message' => 'Product not found']]);
 
                 } else {
 
@@ -2074,7 +2094,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2133,9 +2153,9 @@ class GraphqlService
 
         try {
             if (isset($responseData['errors'])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to create product media via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             } elseif (isset($responseData['data']['productDeleteMedia']['mediaUserErrors']) && !empty($responseData['data']['productDeleteMedia']['mediaUserErrors'])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
+                throw new GraphqlException('Product media creation failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
             } else {
                 $responseData['data']['productCreateMedia']['media'] = array_map(function ($item) {
                     $item['id'] = str_replace("gid://shopify/MediaImage/", "", $item['id']);
@@ -2145,7 +2165,7 @@ class GraphqlService
                 return ['images' => $responseData['data']['productCreateMedia']['media']];
             }
         } catch (\Exception $e) {
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+            throw new GraphqlException('Failed to create product media', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
     }
     public function graphqlDeleteProductImage(array $imageIds, int $shopifyProductId)
@@ -2188,9 +2208,9 @@ class GraphqlService
 
         try {
             if (isset($responseData['errors'])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                throw new GraphqlException('Failed to delete product media via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             } elseif (isset($responseData['data']['productDeleteMedia']['mediaUserErrors']) && !empty($responseData['data']['productDeleteMedia']['mediaUserErrors'])) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
+                throw new GraphqlException('Product media deletion failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productDeleteMedia']['mediaUserErrors']);
             } else {
                 $responseData['data']['productDeleteMedia']['deletedMediaIds'] = array_map(function ($item) {
                     $item = str_replace("gid://shopify/MediaImage/", "", $item);
@@ -2200,7 +2220,7 @@ class GraphqlService
                 return ['deletedImages' => $responseData['data']['productDeleteMedia']['deletedMediaIds']];
             }
         } catch (\Exception $e) {
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, [], $e);
+            throw new GraphqlException('Failed to delete product media', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
     }
     public function graphqlDeleteProduct($shopifyid)
@@ -2240,11 +2260,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
+                    throw new GraphqlException('Product fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['product']['userErrors']);
 
                 } else {
 
@@ -2252,7 +2272,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2298,11 +2318,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to delete product variants via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productVariantsBulkDelete']['userErrors']) && !empty($responseData['data']['productVariantsBulkDelete']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkDelete']['userErrors']);
+                    throw new GraphqlException('Product variant deletion failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productVariantsBulkDelete']['userErrors']);
 
                 } else {
 
@@ -2310,7 +2330,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2364,11 +2384,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
+                    throw new GraphqlException('Product fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['product']['userErrors']);
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2394,7 +2414,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2448,11 +2468,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product variant from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['productVariant']['userErrors']) && !empty($responseData['data']['productVariant']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariant']['userErrors']);
+                    throw new GraphqlException('Product variant fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productVariant']['userErrors']);
 
                 } else {
                     $shopifyvariant = $responseData['data']['productVariant'];
@@ -2471,7 +2491,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2511,11 +2531,11 @@ class GraphqlService
                 if (isset($responseData['errors'])) {
 
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+                    throw new GraphqlException('Failed to fetch product from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
                 } elseif (isset($responseData['data']['product']['userErrors']) && !empty($responseData['data']['product']['userErrors'])) {
 
-                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['product']['userErrors']);
+                    throw new GraphqlException('Product fetch failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['product']['userErrors']);
 
                 } else {
                     $shopifyproduct = $responseData['data']['product'];
@@ -2528,7 +2548,7 @@ class GraphqlService
 
                 }
             } catch (\Exception $e) {
-                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400,[],$e);
+                throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
 
         }
@@ -2555,7 +2575,7 @@ class GraphqlService
         if (isset($responseData['data']['collection']['id'])) {
             return $responseData['data']['collection']['handle'];
         } else {
-            throw new \Exception('GraphQL Errors: Collection Not Found');
+            throw new GraphqlException('Collection not found', GraphqlException::CODE_NOT_FOUND, [['message' => 'Collection not found']]);
         }
     }
 
@@ -2724,7 +2744,7 @@ class GraphqlService
             return $product;
 
         } else {
-            throw new \Exception('GraphQL Errors: productVariant Not Found');
+            throw new GraphqlException('Product variant not found', GraphqlException::CODE_NOT_FOUND, [['message' => 'Product variant not found']]);
         }
     }
 
@@ -2835,7 +2855,7 @@ class GraphqlService
 
         if (isset($responseData['data']['productVariantsBulkUpdate']['userErrors']) && !empty($responseData['data']['productVariantsBulkUpdate']['userErrors'])) {
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
+            throw new GraphqlException('Product variant bulk update failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productVariantsBulkUpdate']['userErrors']);
 
         } else {
             $responseData = $responseData['data']['productVariantsBulkUpdate'];
