@@ -471,8 +471,8 @@ class ProductsEndpoints
         $limit = isset($params['limit']) ? $params['limit'] : 'null';
 
         $countQuery = <<<GRAPHQL
-            query ProductVariantsCount(limit: $limit) {
-                productVariantsCount {
+            query ProductVariantsCount(\$limit: $limit) {
+                productVariantsCount(limit: \$limit) {
                     count
                     precision
                 }
