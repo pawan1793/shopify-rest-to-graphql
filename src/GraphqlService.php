@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 
 class GraphqlService
 {
-    private const API_VERSION = '2025-07';
+    private const API_VERSION = '2026-01';
     private const MAX_IMAGES = 250;
     private const MAX_IMAGES_UPDATE = 240;
     private const ONLINE_STORE_PUBLICATION = 'Online Store';
