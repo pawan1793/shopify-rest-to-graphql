@@ -67,7 +67,7 @@ class ShopEndpoints
                     }
                     description
                 }
-                billingAddress {
+                shopAddress {
                     address1
                     address2
                     city
