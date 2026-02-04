@@ -4,46 +4,100 @@ namespace Thalia\ShopifyRestToGraphql\Endpoints;
 
 use Thalia\ShopifyRestToGraphql\GraphqlService;
 use Thalia\ShopifyRestToGraphql\GraphqlException;
+
 class InventoryEndpoints
 {
     private $graphqlService;
-
     private $shopDomain;
     private $accessToken;
 
-    public function __construct(string $shopDomain = null, string $accessToken = null)
+    public function __construct(?string $shopDomain = null, ?string $accessToken = null)
     {
-
         if ($shopDomain === null || $accessToken === null) {
             throw new \InvalidArgumentException('Shop domain and access token must be provided.');
         }
 
-
         $this->shopDomain = $shopDomain;
         $this->accessToken = $accessToken;
-
         $this->graphqlService = new GraphqlService($this->shopDomain, $this->accessToken);
-
     }
 
-    /** 
+    /**
+     * Convert ID to GID format for InventoryItem
+     *
+     * @param string $id
+     * @return string
+     */
+    private function formatInventoryItemGid(string $id): string
+    {
+        if (strpos($id, 'gid://shopify/InventoryItem/') === false) {
+            return "gid://shopify/InventoryItem/{$id}";
+        }
+        return $id;
+    }
+
+    /**
+     * Convert ID to GID format for Location
+     *
+     * @param string $id
+     * @return string
+     */
+    private function formatLocationGid(string $id): string
+    {
+        if (strpos($id, 'gid://shopify/Location/') === false) {
+            return "gid://shopify/Location/{$id}";
+        }
+        return $id;
+    }
+
+    /**
+     * Extract numeric ID from GID format
+     *
+     * @param string $gid
+     * @param string $type
+     * @return string
+     */
+    private function extractIdFromGid(string $gid, string $type): string
+    {
+        return str_replace("gid://shopify/{$type}/", '', $gid);
+    }
+
+    /**
+     * Handle GraphQL response errors
+     *
+     * @param array $responseData
+     * @param string $operationName
+     * @return void
+     * @throws GraphqlException
+     */
+    private function handleGraphqlErrors(array $responseData, string $operationName = ''): void
+    {
+        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['errors']);
+        }
+
+        if (!empty($operationName) && isset($responseData['data'][$operationName]['userErrors']) && !empty($responseData['data'][$operationName]['userErrors'])) {
+            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data'][$operationName]['userErrors']);
+        }
+    }
+
+    /**
      * To get Inventory Items use this function.
+     *
+     * @param array $params
+     * @return array
+     * @throws GraphqlException
      */
     public function getInventoryItems($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItems
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#get-inventory-levels
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItems
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#get-inventory-levels
         */
-
-
 
         $query = '';
         if (!empty($params['inventory_item_id'])) {
-           
-            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== true) {
-                $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $params['inventory_item_id']);
-            }
+            $inventoryItemId = $this->extractIdFromGid($params['inventory_item_id'], 'InventoryItem');
             $query = 'query: "id:' . $inventoryItemId . '"';
         }
 
@@ -77,58 +131,46 @@ class InventoryEndpoints
         GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemsquery);
+        $this->handleGraphqlErrors($responseData);
 
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+        $responseData = $responseData['data']['inventoryItems']['edges'];
+        $finalarray = [];
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
-
-        } else {
-
-            $responseData = $responseData['data']['inventoryItems']['edges'];
-
-        }
-
-        $finalarray = array();
-
-        foreach ($responseData as $key => $inventoryItem) {
-
-            $response = array();
+        foreach ($responseData as $inventoryItem) {
+            $response = [];
             $locations = $inventoryItem['node']['inventoryLevels']['edges'];
 
             foreach ($locations as $lkey => $location) {
-
-                $response['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
+                $response['inventory_item_id'] = $this->extractIdFromGid($inventoryItem['node']['id'], 'InventoryItem');
                 $response['tracked'] = $inventoryItem['node']['tracked'];
                 $response['sku'] = $inventoryItem['node']['sku'];
                 $response['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
-                $response['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
+                $response['location_id'] = $this->extractIdFromGid($location['node']['location']['id'], 'Location');
                 $response['location_name'] = $location['node']['location']['name'];
-                $response['available'] = $location['node']['quantities'][0]['quantity'];
+                $response['available'] = $location['node']['quantities'][0]['quantity'] ?? 0;
 
                 $finalarray[$lkey] = $response;
-
             }
-
         }
 
         return $finalarray;
     }
 
-    /** 
+    /**
      * To get Inventory Item use this function.
+     *
+     * @param string $inventoryItemId
+     * @return array
+     * @throws GraphqlException
      */
     public function getInventoryItem($inventoryItemId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItem
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventoryitem#get-inventory-items-inventory-item-id
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItem
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventoryitem#get-inventory-items-inventory-item-id
         */
 
-
-
-        if (strpos($inventoryItemId, 'gid://shopify/InventoryItem') !== true) {
-            $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $inventoryItemId);
-        }
+        $inventoryItemId = $this->extractIdFromGid($inventoryItemId, 'InventoryItem');
 
         $inventoryitemquery = <<<"GRAPHQL"
         query inventoryItem {
@@ -156,19 +198,11 @@ class InventoryEndpoints
         GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemquery);
+        $this->handleGraphqlErrors($responseData);
 
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
-
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
-
-        } else {
-
-            $responseData = $responseData['data']['inventoryItem'];
-
-        }
-
-        $response = array();
-        $response['id'] = str_replace('gid://shopify/InventoryItem/', '', $responseData['id']);
+        $responseData = $responseData['data']['inventoryItem'];
+        $response = [];
+        $response['id'] = $this->extractIdFromGid($responseData['id'], 'InventoryItem');
         $response['sku'] = $responseData['sku'];
         $response['requires_shipping'] = $responseData['requiresShipping'];
         $response['cost'] = $responseData['unitCost']['amount'] ?? 0;
@@ -182,88 +216,170 @@ class InventoryEndpoints
     }
 
 
-    /** 
+    /**
      * To Set Inventory Quantities use this function.
+     *
+     * @param array $params
+     * @return array
+     * @throws GraphqlException
      */
     public function inventorySetQuantities($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/inventorySetQuantities?language=PHP
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#post-inventory-levels-adjust
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/inventorySetQuantities?language=PHP
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels-adjust
         */
 
-
-
-        $inventoryadjustvariables = array();
-
-     
-
-        if (!empty($params['location_id'])) {
-            $inventoryadjustvariables['input']['reason'] = 'correction';
-            $inventoryadjustvariables['input']['name'] = 'available';
-            $inventoryadjustvariables['input']['ignoreCompareQuantity'] = true;
-            $inventoryadjustvariables['input']['quantities'] = array();
-            $inventoryadjustvariables['input']['quantities'][0]['quantity'] = $params['available'];
-            $inventoryadjustvariables['input']['quantities'][0]['inventoryItemId'] = "gid://shopify/InventoryItem/{$params['inventory_item_id']}";
-            $inventoryadjustvariables['input']['quantities'][0]['locationId'] = "gid://shopify/Location/{$params['location_id']}";
+        if (empty($params['location_id']) || empty($params['inventory_item_id'])) {
+            throw new \InvalidArgumentException('location_id and inventory_item_id are required.');
         }
-       
+
+        $inventoryadjustvariables = [
+            'input' => [
+                'reason' => 'correction',
+                'name' => 'available',
+                'ignoreCompareQuantity' => true,
+                'quantities' => [
+                    [
+                        'quantity' => $params['available'] ?? 0,
+                        'inventoryItemId' => $this->formatInventoryItemGid($params['inventory_item_id']),
+                        'locationId' => $this->formatLocationGid($params['location_id'])
+                    ]
+                ]
+            ]
+        ];
 
         $inventoryadjustquery = <<<'GRAPHQL'
-                mutation InventorySet($input: InventorySetQuantitiesInput!) {
+            mutation InventorySet($input: InventorySetQuantitiesInput!) {
                 inventorySetQuantities(input: $input) {
-                inventoryAdjustmentGroup {
-                    createdAt
-                    reason
-                    referenceDocumentUri
-                    changes {
-                    name
-                    delta
+                    inventoryAdjustmentGroup {
+                        createdAt
+                        reason
+                        referenceDocumentUri
+                        changes {
+                            name
+                            delta
+                        }
+                    }
+                    userErrors {
+                        field
+                        message
                     }
                 }
-                userErrors {
-                    field
-                    message
-                }
-                }
             }
-            GRAPHQL;
+        GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
-        
-        if (isset($responseData['data']['inventorySetQuantities']['userErrors']) && !empty($responseData['data']['inventorySetQuantities']['userErrors'])) {
+        $this->handleGraphqlErrors($responseData);
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['inventorySetQuantities']['userErrors']);
-        } else {
-            $responseData = $responseData['data']['inventorySetQuantities'];
+        $userErrors = $responseData['data']['inventorySetQuantities']['userErrors'] ?? [];
+        if (!empty($userErrors)) {
+            $errorMessage = $userErrors[0]['message'] ?? '';
+            if ($errorMessage === 'The specified inventory item is not stocked at the location.') {
+                // Try to activate the inventory item at the location first, then retry
+                $this->inventoryActivate($params);
+                // Retry setting quantities after activation
+                $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
+                $this->handleGraphqlErrors($responseData);
+                $userErrors = $responseData['data']['inventorySetQuantities']['userErrors'] ?? [];
+                if (!empty($userErrors)) {
+                    throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $userErrors);
+                }
+            } else {
+                throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $userErrors);
+            }
         }
 
-        return $responseData;
+        return $responseData['data']['inventorySetQuantities'];
+    }
+
+    /**
+     * To activate Inventory Item at a location use this function.
+     *
+     * @param array $params
+     * @return array
+     * @throws GraphqlException
+     */
+    public function inventoryActivate($params)
+    {
+        /*
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-10/mutations/inventoryActivate
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels
+        */
+
+        if (empty($params['inventory_item_id']) || empty($params['location_id'])) {
+            throw new \InvalidArgumentException('inventory_item_id and location_id are required.');
+        }
+
+        $variables = [
+            'inventoryItemId' => $this->formatInventoryItemGid($params['inventory_item_id']),
+            'locationId' => $this->formatLocationGid($params['location_id']),
+        ];
+
+        if (isset($params['available']) && $params['available'] !== null) {
+            $variables['available'] = (int)$params['available'];
+        }
+
+        $inventoryactivatequery = <<<'GRAPHQL'
+            mutation ActivateInventoryItem($inventoryItemId: ID!, $locationId: ID!, $available: Int) {
+                inventoryActivate(inventoryItemId: $inventoryItemId, locationId: $locationId, available: $available) {
+                    inventoryLevel {
+                        id
+                        quantities(names: ["available"]) {
+                            name
+                            quantity
+                        }
+                        item {
+                            id
+                        }
+                        location {
+                            id
+                        }
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }
+        GRAPHQL;
+
+        $responseData = $this->graphqlService->graphqlQueryThalia($inventoryactivatequery, $variables);
+        $this->handleGraphqlErrors($responseData, 'inventoryActivate');
+
+        return $responseData['data']['inventoryActivate']['inventoryLevel'];
     }
 
 
-    /** 
+    /**
      * To adjust Inventory Quantities use this function. (Don't Use this)
+     *
+     * @param array $params
+     * @return array
+     * @throws GraphqlException
      */
     public function inventoryAdjustQuantities($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/mutations/inventoryAdjustQuantities
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#post-inventory-levels-adjust
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/inventoryAdjustQuantities
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels-adjust
         */
 
-
-
-        $inventoryadjustvariables = array();
-
-        if (!empty($params['location_id'])) {
-            $inventoryadjustvariables['input']['reason'] = 'correction';
-            $inventoryadjustvariables['input']['name'] = 'available';
-            $inventoryadjustvariables['input']['changes'] = array();
-            $inventoryadjustvariables['input']['changes']['delta'] = $params['available_adjustment'];
-            $inventoryadjustvariables['input']['changes']['inventoryItemId'] = "gid://shopify/InventoryItem/{$params['inventory_item_id']}";
-            $inventoryadjustvariables['input']['changes']['locationId'] = "gid://shopify/Location/{$params['location_id']}";
+        if (empty($params['location_id']) || empty($params['inventory_item_id'])) {
+            throw new \InvalidArgumentException('location_id and inventory_item_id are required.');
         }
+
+        $inventoryadjustvariables = [
+            'input' => [
+                'reason' => 'correction',
+                'name' => 'available',
+                'changes' => [
+                    'delta' => $params['available_adjustment'] ?? 0,
+                    'inventoryItemId' => $this->formatInventoryItemGid($params['inventory_item_id']),
+                    'locationId' => $this->formatLocationGid($params['location_id'])
+                ]
+            ]
+        ];
 
         $inventoryadjustquery = <<<'GRAPHQL'
             mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
@@ -285,41 +401,33 @@ class InventoryEndpoints
             GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
+        $this->handleGraphqlErrors($responseData, 'inventoryAdjustQuantities');
 
-        if (isset($responseData['data']['inventoryAdjustQuantities']['userErrors']) && !empty($responseData['data']['inventoryAdjustQuantities']['userErrors'])) {
-
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData['data']['inventoryAdjustQuantities']['userErrors']);
-        } else {
-
-            $responseData = $responseData['data']['inventoryAdjustQuantities'];
-
-        }
-
-        return $responseData;
+        return $responseData['data']['inventoryAdjustQuantities'];
     }
 
-    /** 
+    /**
      * To get Inventory Items with all levels use this function.
+     *
+     * @param array $params
+     * @return array
+     * @throws GraphqlException
      */
     public function getInventoryItemsWithAllLevels($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/inventoryItems
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/inventorylevel#get-inventory-levels
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItems
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#get-inventory-levels
         */
-
-
 
         $query = '';
         if (!empty($params['inventory_item_id'])) {
-           
-            if (strpos($params['inventory_item_id'], 'gid://shopify/InventoryItem') !== true) {
-                $inventoryItemId = str_replace('gid://shopify/InventoryItem/', '', $params['inventory_item_id']);
-            }
+            $inventoryItemId = $this->extractIdFromGid($params['inventory_item_id'], 'InventoryItem');
             $query = 'query: "id:' . $inventoryItemId . '"';
         }
+
         $levels = ["available", "incoming", "committed", "damaged", "on_hand", "quality_control", "reserved", "safety_stock"];
-        $querylevesl = json_encode($levels);
+        $querylevels = json_encode($levels);
         $inventoryitemsquery = <<<"GRAPHQL"
         query {
             inventoryItems(first: 250, $query) {
@@ -333,11 +441,11 @@ class InventoryEndpoints
                             edges {
                                 node {
                                     id
-                                    quantities (names: $querylevesl ) {
+                                    quantities(names: $querylevels) {
                                         quantity
-                                    },
+                                    }
                                     location {
-                                        id,
+                                        id
                                         name
                                     }
                                 }
@@ -350,43 +458,29 @@ class InventoryEndpoints
         GRAPHQL;
 
         $responseData = $this->graphqlService->graphqlQueryThalia($inventoryitemsquery);
-      
-        if (isset($responseData['errors']) && !empty($responseData['errors'])) {
+        $this->handleGraphqlErrors($responseData);
 
-            throw new GraphqlException('GraphQL Error: ' . $this->shopDomain, 400, $responseData["errors"]);
+        $responseData = $responseData['data']['inventoryItems']['edges'];
+        $finalarray = [];
 
-        } else {
-
-            $responseData = $responseData['data']['inventoryItems']['edges'];
-
-        }
-
-        $finalarray = array();
-
-        foreach ($responseData as $key => $inventoryItem) {
-
-            $response = array();
+        foreach ($responseData as $inventoryItem) {
+            $response = [];
             $locations = $inventoryItem['node']['inventoryLevels']['edges'];
 
             foreach ($locations as $lkey => $location) {
-
-                $response['inventory_item_id'] = str_replace('gid://shopify/InventoryItem/', '', $inventoryItem['node']['id']);
+                $response['inventory_item_id'] = $this->extractIdFromGid($inventoryItem['node']['id'], 'InventoryItem');
                 $response['tracked'] = $inventoryItem['node']['tracked'];
                 $response['sku'] = $inventoryItem['node']['sku'];
                 $response['requires_shipping'] = $inventoryItem['node']['requiresShipping'];
-                $response['location_id'] = str_replace('gid://shopify/Location/', '', $location['node']['location']['id']);
+                $response['location_id'] = $this->extractIdFromGid($location['node']['location']['id'], 'Location');
                 $response['location_name'] = $location['node']['location']['name'];
-                
+
                 foreach ($levels as $levelindex => $level) {
-                    $response[$level] = $location['node']['quantities'][$levelindex]['quantity'];
-                
+                    $response[$level] = $location['node']['quantities'][$levelindex]['quantity'] ?? 0;
                 }
-               
 
                 $finalarray[$lkey] = $response;
-
             }
-
         }
 
         return $finalarray;

@@ -29,8 +29,8 @@ class CollectionsEndpoints
     public function getCustomCollections($params = array())
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collections
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/customcollection#get-custom-collections
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/collections
+        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/customcollection#get-custom-collections
         */
 
 
@@ -104,8 +104,8 @@ class CollectionsEndpoints
     public function getSmartCollections($params = array())
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collections
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/smartcollection#get-smart-collections
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/collections
+        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/smartcollection#get-smart-collections
         */
 
 
@@ -179,8 +179,8 @@ class CollectionsEndpoints
     public function getCollection($collectionId)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/collection
-        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/customcollection#get-custom-collections-custom-collection-id, https://shopify.dev/docs/api/admin-rest/2025-01/resources/smartcollection#get-smart-collections-smart-collection-id
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/collection
+        Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/customcollection#get-custom-collections-custom-collection-id, https://shopify.dev/docs/api/admin-rest/2025-07/resources/smartcollection#get-smart-collections-smart-collection-id
         */
 
 

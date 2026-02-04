@@ -7,7 +7,7 @@ use Thalia\ShopifyRestToGraphql\GraphqlException;
 class ShopEndpoints
 {
 
-    const PlanNames = ["affiliate" => "Development", "staff" => "Staff", "cancelled" => "Cancelled", "staff_business" => "Staff Business", "trial" => "Trial", "dormant" => "Dormant", "frozen" => "Frozen", "singtel_trial" => "Singtel Trial", "partner_test" => "Developer Preview", "basic" => "Basic", "npo_lite" => "Npo Lite", "npo_full" => "Npo Full", "singtel_basic" => "Singtel Basic", "singtel_starter" => "Singtel Starter", "uafrica_basic" => "Uafrica Basic", "fraudulent" => "Fraudulent", "starter" => "Starter", "comped" => "Comped", "shopify_alumni" => "Shopify Alumni", "professional" => "Shopify", "custom" => "Custom", "unlimited" => "Advanced", "singtel_unlimited" => "Singtel Unlimited", "singtel_professional" => "Singtel Professional", "business" => "Business", "uafrica_professional" => "Uafrica Professional", "shopify_plus" => "Shopify Plus", "enterprise" => "Enterprise", "shopify_plus_trial" => "Plus Trial"];
+    const PlanNames = ["affiliate" => "Development", "staff" => "Staff", "cancelled" => "Cancelled", "staff_business" => "Staff Business", "trial" => "Trial", "dormant" => "Dormant", "frozen" => "Frozen", "singtel_trial" => "Singtel Trial", "partner_test" => "Developer Preview", "basic" => "Basic", "npo_lite" => "Npo Lite", "npo_full" => "Npo Full", "singtel_basic" => "Singtel Basic", "singtel_starter" => "Singtel Starter", "uafrica_basic" => "Uafrica Basic", "fraudulent" => "Fraudulent", "starter" => "Starter", "comped" => "Comped", "shopify_alumni" => "Shopify Alumni", "professional" => "Shopify", "custom" => "Custom", "unlimited" => "Advanced", "singtel_unlimited" => "Singtel Unlimited", "singtel_professional" => "Singtel Professional", "business" => "Business", "uafrica_professional" => "Uafrica Professional", "shopify_plus" => "Shopify Plus", "enterprise" => "Enterprise", "shopify_plus_trial" => "Plus Trial", "shopify_starter" => "Shopify Starter"];
 
     private $graphqlService;
 
@@ -34,8 +34,8 @@ class ShopEndpoints
     public function shopInfo($param = [])
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-01/queries/shop
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/shop
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/shop
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/shop
         */
 
         global $graphqlService;

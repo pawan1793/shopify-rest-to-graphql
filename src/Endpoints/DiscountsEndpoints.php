@@ -31,7 +31,7 @@ class DiscountsEndpoints
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/queries/discountNodes?example=Retrieve+a+list+of+discounts
-            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-01/resources/pricerule#get-price-rules
+            Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/pricerule#get-price-rules
         */
 
         $position = 'first';
