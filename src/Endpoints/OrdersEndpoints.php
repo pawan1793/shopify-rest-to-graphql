@@ -237,8 +237,20 @@ class OrdersEndpoints
                             ];
                         }, $refund['orderAdjustments']['edges']) : [],
                         'refund_shipping_lines' => isset($refund['refundShippingLines']['edges']) && is_array($refund['refundShippingLines']['edges']) ? array_map(function ($shippingLine) {
+                            $shippingRefundNode = $shippingLine['node'] ?? [];
+                            $shippingRefundLine = $shippingRefundNode['shippingLine'] ?? [];
+
                             return [
-                                'amount' => $shippingLine['node']['shippingLine']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                                'id' => isset($shippingRefundNode['id']) ? str_replace('gid://shopify/RefundShippingLine/', '', $shippingRefundNode['id']) : '',
+                                'shipping_line_id' => isset($shippingRefundLine['id']) ? str_replace('gid://shopify/ShippingLine/', '', $shippingRefundLine['id']) : '',
+                                'title' => $shippingRefundLine['title'] ?? '',
+                                'is_removed' => $shippingRefundLine['isRemoved'] ?? '',
+                                'discount_allocations' => isset($shippingRefundLine['discountAllocations']) && is_array($shippingRefundLine['discountAllocations']) ? array_map(function ($allocation) {
+                                    return [
+                                        'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                                    ];
+                                }, $shippingRefundLine['discountAllocations']) : [],
+                                'amount' => $shippingRefundLine['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                             ];
                         }, $refund['refundShippingLines']['edges']) : [],
                         'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
@@ -488,8 +500,20 @@ class OrdersEndpoints
                         ];
                     }, $refund['orderAdjustments']['edges']) : [],
                     'refund_shipping_lines' => isset($refund['refundShippingLines']['edges']) && is_array($refund['refundShippingLines']['edges']) ? array_map(function ($shippingLine) {
+                        $shippingRefundNode = $shippingLine['node'] ?? [];
+                        $shippingRefundLine = $shippingRefundNode['shippingLine'] ?? [];
+
                         return [
-                            'amount' => $shippingLine['node']['shippingLine']['originalPriceSet']['presentmentMoney']['amount'] ?? '',
+                            'id' => isset($shippingRefundNode['id']) ? str_replace('gid://shopify/RefundShippingLine/', '', $shippingRefundNode['id']) : '',
+                            'shipping_line_id' => isset($shippingRefundLine['id']) ? str_replace('gid://shopify/ShippingLine/', '', $shippingRefundLine['id']) : '',
+                            'title' => $shippingRefundLine['title'] ?? '',
+                            'is_removed' => $shippingRefundLine['isRemoved'] ?? '',
+                            'discount_allocations' => isset($shippingRefundLine['discountAllocations']) && is_array($shippingRefundLine['discountAllocations']) ? array_map(function ($allocation) {
+                                return [
+                                    'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                                ];
+                            }, $shippingRefundLine['discountAllocations']) : [],
+                            'amount' => $shippingRefundLine['originalPriceSet']['presentmentMoney']['amount'] ?? '',
                         ];
                     }, $refund['refundShippingLines']['edges']) : [],
                     'refund_line_items' => isset($refund['refundLineItems']['edges']) && is_array($refund['refundLineItems']['edges']) ? array_map(function ($refundLineItem) {
@@ -953,7 +977,7 @@ class OrdersEndpoints
         }
     }
 
-    public function testquerFormmate()
+    public function testqueryFormmate()
     {
         $param = [
             'id' => 6341354586423,
