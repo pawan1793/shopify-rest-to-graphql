@@ -218,7 +218,8 @@ class OrdersEndpoints
                         'tax_lines' => $item['node']['taxLines'] ?? [],
                         'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function ($allocation) {
                             return [
-                                'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                                'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                                'index' => $allocation['discountApplication']['index'] ?? ''
                             ];
                         }, $item['node']['discountAllocations']) : [],
                     ];
@@ -321,6 +322,7 @@ class OrdersEndpoints
                         'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                             return [
                                 'amount' => $discount['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                                'index' => $allocation['discountApplication']['index'] ?? ''
                             ];
                         }, $item['node']['discountAllocations']) : [],
                         'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
@@ -481,7 +483,8 @@ class OrdersEndpoints
                     'tax_lines' => $item['node']['taxLines'] ?? [],
                     'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function ($allocation) {
                         return [
-                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                            'index' => $allocation['discountApplication']['index'] ?? ''
                         ];
                     }, $item['node']['discountAllocations']) : [],
                 ];
@@ -584,6 +587,7 @@ class OrdersEndpoints
                     'discount_allocations' => isset($item['node']['discountAllocations']) && is_array($item['node']['discountAllocations']) ? array_map(function($discount) {
                         return [
                             'amount' => $discount['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                            'index' => $allocation['discountApplication']['index'] ?? ''
                         ];
                     }, $item['node']['discountAllocations']) : [],
                     'discounted_price' => isset($item['node']['discountedPriceSet']) && is_array($item['node']['discountedPriceSet']) ? array_map(function($discount) {
@@ -676,7 +680,8 @@ class OrdersEndpoints
                     'tax_lines' => $node['taxLines'] ?? [],
                     'discount_allocations' => isset($node['discountAllocations']) && is_array($node['discountAllocations']) ? array_map(function ($allocation) {
                         return [
-                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? '',
+                            'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
+                            'index' => $allocation['discountApplication']['index'] ?? ''
                         ];
                     }, $node['discountAllocations']) : [],
                 ];
@@ -763,7 +768,7 @@ class OrdersEndpoints
                         'lineItems' => $lineItems,
                     ];
                 }
-                
+
                 $allReturns[] = [
                     'id' => isset($node['id'])
                         ? str_replace('gid://shopify/Return/', '', $node['id'])
