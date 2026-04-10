@@ -681,7 +681,16 @@ class OrdersEndpoints
                     'discount_allocations' => isset($node['discountAllocations']) && is_array($node['discountAllocations']) ? array_map(function ($allocation) {
                         return [
                             'amount' => $allocation['allocatedAmountSet']['presentmentMoney']['amount'] ?? 0,
-                            'index' => $allocation['discountApplication']['index'] ?? ''
+                            'index' => $allocation['discountApplication']['index'] ?? '',
+                            'allocation_method' => $allocation['discountApplication']['allocationMethod'] ?? '',
+                            'target_selection' => $allocation['discountApplication']['targetSelection'] ?? '',
+                            'target_type' => $allocation['discountApplication']['targetType'] ?? '',
+                            'value' => isset($allocation['discountApplication']['value']['amount'])
+                                ? $allocation['discountApplication']['value']['amount']
+                                : (isset($allocation['discountApplication']['value']['percentage']) ? $allocation['discountApplication']['value']['percentage'] : ''),
+                            'value_type' => isset($allocation['discountApplication']['value']['percentage'])
+                                ? 'percentage'
+                                : (isset($allocation['discountApplication']['value']['amount']) ? 'fixed_amount' : ''),
                         ];
                     }, $node['discountAllocations']) : [],
                 ];
