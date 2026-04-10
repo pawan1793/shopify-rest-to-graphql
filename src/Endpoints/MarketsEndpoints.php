@@ -38,8 +38,6 @@ class MarketsEndpoints
 
         $position = 'first';
         $cursorparam = '';
-        $catalogPosition = 'first';
-        $catalogCursorParam = '';
         $marketsFirst = 250;
         $catalogsFirst = 20;
 
@@ -60,19 +58,6 @@ class MarketsEndpoints
             if(isset($params['direction']) && $params['direction'] == 'prev'){
                 $position = 'last';
                 $cursorparam = "before: \"{$params['cursor']}\"";
-            }
-
-        }
-
-        if(isset($params['catalog_cursor'])){
-
-            if(isset($params['catalog_direction']) && $params['catalog_direction'] == 'next'){
-                $catalogCursorParam = "after: \"{$params['catalog_cursor']}\"";
-            }
-
-            if(isset($params['catalog_direction']) && $params['catalog_direction'] == 'prev'){
-                $catalogPosition = 'last';
-                $catalogCursorParam = "before: \"{$params['catalog_cursor']}\"";
             }
 
         }
@@ -98,7 +83,7 @@ class MarketsEndpoints
                                 }
                                 roundingEnabled
                             }
-                            catalogs($catalogPosition: $catalogsFirst, $catalogCursorParam) {
+                            catalogs(first: $catalogsFirst) {
                                 pageInfo {
                                     hasNextPage
                                     hasPreviousPage
@@ -220,12 +205,24 @@ class MarketsEndpoints
                         cursor
                         node {
                             id
+                            conditions {
+                                regionsCondition {
+                                    regions(first: 1) {
+                                        edges {
+                                            node {
+                                                ... on MarketRegionCountry {
+                                                    code
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             catalogs(first: 20) {
                                 edges {
                                     node {
                                         priceList {
                                             id
-                                            currency
                                         }
                                     }
                                 }
@@ -261,6 +258,7 @@ class MarketsEndpoints
             $marketId = str_replace('gid://shopify/Market/', '', $marketIdRaw);
 
             $catalogsEdges = isset($market['catalogs']['edges']) ? $market['catalogs']['edges'] : array();
+            $regionEdges = isset($market['conditions']['regionsCondition']['regions']['edges']) ? $market['conditions']['regionsCondition']['regions']['edges'] : array();
 
             $catalogNodes = array_map(function ($catalogEdge) {
                 $catalog = isset($catalogEdge['node']) ? $catalogEdge['node'] : array();
@@ -270,9 +268,19 @@ class MarketsEndpoints
                 return $catalog;
             }, $catalogsEdges);
 
+            $countryCode = null;
+            foreach ($regionEdges as $regionEdge) {
+                $region = isset($regionEdge['node']) ? $regionEdge['node'] : array();
+                if (isset($region['code']) && !empty($region['code'])) {
+                    $countryCode = $region['code'];
+                    break;
+                }
+            }
+
             $marketsList[] = [
                 'id' => $marketId,
                 'cursor' => isset($edge['cursor']) ? $edge['cursor'] : null,
+                'countryCode' => $countryCode,
                 'catalogs' => $catalogNodes,
             ];
 
@@ -302,13 +310,11 @@ class MarketsEndpoints
                 if (!is_array($marketPriceLists)) {
                     continue;
                 }
-                foreach ($marketPriceLists as $priceListId => $currency) {
+                foreach ($marketPriceLists as $priceListId => $countryCode) {
                     if ($priceListId === null || $priceListId === '') {
                         continue;
                     }
                     $priceListIdString = (string) $priceListId;
-                    // NOTE: Currency-to-country is a best-effort fallback and may be ambiguous (e.g., EUR, USD).
-                    $countryCode = substr($currency, 0, 2); // take first 2 characters of currency code
                     if (!isset($priceListCountryCodes[$priceListIdString])) {
                         $priceListIds[] = $priceListIdString;
                     }
@@ -337,7 +343,7 @@ class MarketsEndpoints
             $normalizedId = (strpos($priceListId, 'gid://shopify/PriceList/') === false) ? "gid://shopify/PriceList/{$priceListId}" : $priceListId;
 
             $alias = 'pl_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $priceListId);
-            $countryCode = isset($priceListCountryCodes[$priceListId]) ? $priceListCountryCodes[$priceListId] : 'US';
+            $countryCode = $priceListCountryCodes[$priceListId];
 
             $queryParts .= "
             {$alias}: priceList(id: \"{$normalizedId}\") {
@@ -464,6 +470,12 @@ class MarketsEndpoints
 
         $normalizedAdds = array();
         foreach ($pricesToAdd as $priceInput) {
+            if (!isset($priceInput['variantId'], $priceInput['currencyCode'], $priceInput['price'])) {
+                continue;
+            }
+            if ($priceInput['variantId'] === '' || $priceInput['currencyCode'] === '' || $priceInput['price'] === '') {
+                continue;
+            }
             $entry = array();
             if (strpos($priceInput['variantId'], 'gid://shopify/ProductVariant/') !== false) {
                 $entry['variantId'] = $priceInput['variantId'];
