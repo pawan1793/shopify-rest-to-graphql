@@ -13,6 +13,8 @@ class GraphqlService
     private const ONLINE_STORE_PUBLICATION = 'Online Store';
     private const WEIGHT_UNIT_POUNDS = 'POUNDS';
     private const WEIGHT_UNIT_KILOGRAMS = 'KILOGRAMS';
+    private const WEIGHT_UNIT_GRAMS = 'GRAMS';
+    private const WEIGHT_UNIT_OUNCES = 'OUNCES';
     private const PRODUCT_STATUS_DRAFT = 'DRAFT';
 
     private string $shopDomain;
@@ -174,6 +176,11 @@ class GraphqlService
             case 'lb':
                 return self::WEIGHT_UNIT_POUNDS;
             case 'kg':
+                return self::WEIGHT_UNIT_KILOGRAMS;
+            case 'g':
+                return self::WEIGHT_UNIT_GRAMS;
+            case 'oz':
+                return self::WEIGHT_UNIT_OUNCES;
             default:
                 return self::WEIGHT_UNIT_KILOGRAMS;
         }
