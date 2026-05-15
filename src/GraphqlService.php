@@ -302,8 +302,14 @@ class GraphqlService
             $product['seo']['description'] = $productdata['seo']['description'] ?? '';
         }
 
-        if (isset($productdata['published']) && $productdata['published'] === false) {
-            $product['status'] = self::PRODUCT_STATUS_DRAFT;
+        if (isset($productdata['published'])) {
+            if ($productdata['published'] === false) {
+                $product['status'] = self::PRODUCT_STATUS_DRAFT;
+            } elseif ($productdata['published'] === 'UNLISTED') {
+                $product['status'] = 'UNLISTED';
+            } else {
+                $product['status'] = 'ACTIVE';
+            }
         }
 
         $product['publications'][]['publicationId'] = $onlinepublication['id'];
@@ -552,8 +558,14 @@ class GraphqlService
         $product['tags'] = $productdata['tags'];
         $product['templateSuffix'] = $productdata['template_suffix'];
 
-        if (isset($productdata['published']) && $productdata['published'] === false) {
-            $product['status'] = self::PRODUCT_STATUS_DRAFT;
+        if (isset($productdata['published'])) {
+            if ($productdata['published'] === false) {
+                $product['status'] = self::PRODUCT_STATUS_DRAFT;
+            } elseif ($productdata['published'] === 'UNLISTED') {
+                $product['status'] = 'UNLISTED';
+            } else {
+                $product['status'] = 'ACTIVE';
+            }
         }
 
         $product['publications'][]['publicationId'] = $onlinepublication['id'];
