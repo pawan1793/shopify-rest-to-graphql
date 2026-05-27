@@ -32,7 +32,7 @@ class ProductsEndpoints
     public function getProducts($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/products?example=Retrieve+a+list+of+products
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/products?example=Retrieve+a+list+of+products
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/product#get-products
         */
 
@@ -260,7 +260,7 @@ class ProductsEndpoints
     public function getProduct($productId)
     {
         /*
-            aphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/product?example=Retrieve+a+single+product
+            aphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/product?example=Retrieve+a+single+product
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/product#get-products-product-id
         */
 
@@ -464,7 +464,7 @@ class ProductsEndpoints
     public function productVariantsCount($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/productVariantsCount?example=Receive+a+count+of+all+Product+Variants
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/productVariantsCount?example=Receive+a+count+of+all+Product+Variants
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/product-variant#get-products-product-id-variants-count
         */
 

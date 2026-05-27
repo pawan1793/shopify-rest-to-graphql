@@ -32,7 +32,7 @@ class OrdersEndpoints
     public function getOrders($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/orders
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/orders
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/order#get-orders
         */
 
@@ -357,7 +357,7 @@ class OrdersEndpoints
     public function getOrder($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/order?example=Retrieve+a+specific+order
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/order?example=Retrieve+a+specific+order
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/order#get-orders-order-id
         */
 
@@ -807,7 +807,7 @@ class OrdersEndpoints
     public function transactionsForOrder($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/order?example=Retrieves+a+list+of+transactions&language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/order?example=Retrieves+a+list+of+transactions&language=PHP
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/transaction#get-orders-order-id-transactions
         */
 
@@ -875,7 +875,7 @@ class OrdersEndpoints
     public function OrdersCount($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/ordersCount?example=Retrieve+an+order+count
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/ordersCount?example=Retrieve+an+order+count
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/order#get-orders-count
         */
 
@@ -937,7 +937,7 @@ class OrdersEndpoints
     public function OrderRiskAssessmentsList($orderId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/order?example=Retrieves+a+list+of+all+order+risks+for+an+order
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/order?example=Retrieves+a+list+of+all+order+risks+for+an+order
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/order-risk#get-orders-order-id-risks
         */
 
@@ -1319,7 +1319,7 @@ class OrdersEndpoints
     public function updateOrderTags($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/orderUpdate?example=Update+an+order
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/orderUpdate?example=Update+an+order
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/order#put-orders-order-id
         */
 

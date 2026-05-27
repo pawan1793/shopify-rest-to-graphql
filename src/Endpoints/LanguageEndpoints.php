@@ -31,7 +31,7 @@ class LanguageEndpoints
     public function publishedLanguages()
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/queries/shopLocales
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/shopLocales
         */
 
         $languagesQuery = <<<'GRAPHQL'

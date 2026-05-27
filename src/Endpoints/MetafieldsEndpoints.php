@@ -30,7 +30,7 @@ class MetafieldsEndpoints
     public function metafieldsDelete($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/metafieldsDelete
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/metafieldsDelete
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#delete-blogs-blog-id-metafields-metafield-id
         */
 
@@ -89,7 +89,7 @@ class MetafieldsEndpoints
     public function metafieldsSet($ownerId,$params,$endpoint='product')
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/metafieldsSet
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/metafieldsSet
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2024-10/resources/metafield#post-blogs-blog-id-metafields
         */
         if($endpoint =='product') {
@@ -155,7 +155,7 @@ class MetafieldsEndpoints
     public function getMetafields($params)
     {
         /*
-            GraphQL Reference: https://shopify.dev/docs/api/admin-graphql/2025-07/queries/product?example=Get+metafields+attached+to+a+product
+            GraphQL Reference: https://shopify.dev/docs/api/admin-graphql/2026-04/queries/product?example=Get+metafields+attached+to+a+product
             Rest Reference: https://shopify.dev/docs/api/admin-rest/2025-07/resources/metafield#get-blogs-blog-id-metafields
         */
 

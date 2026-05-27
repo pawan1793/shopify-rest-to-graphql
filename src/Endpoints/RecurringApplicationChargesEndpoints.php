@@ -32,7 +32,7 @@ class RecurringApplicationChargesEndpoints
     public function appSubscriptionCreate($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/appSubscriptionCreate
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/appSubscriptionCreate
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#post-recurring-application-charges
         */
 
@@ -103,7 +103,7 @@ class RecurringApplicationChargesEndpoints
     public function currentAppInstallationForRecurring($recurringChargeId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/currentAppInstallation?example=Retrieves+a+list+of+recurring+application+charges
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#get-recurring-application-charges
         */
 
@@ -158,7 +158,7 @@ class RecurringApplicationChargesEndpoints
     public function cancelAppSubscription($recurringChargeId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/appSubscriptionCancel?example=Cancels+a+recurring+application+charge
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/appSubscriptionCancel?example=Cancels+a+recurring+application+charge
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/recurringapplicationcharge#delete-recurring-application-charges-recurring-application-charge-id
         */
 

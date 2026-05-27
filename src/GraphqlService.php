@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 
 class GraphqlService
 {
-    private const API_VERSION = '2026-01';
+    private const API_VERSION = '2026-04';
     private const MAX_IMAGES = 250;
     private const MAX_IMAGES_UPDATE = 240;
     private const ONLINE_STORE_PUBLICATION = 'Online Store';
@@ -2567,7 +2567,7 @@ class GraphqlService
 
 
         $client = new Client([
-            'base_uri' => "https://$shop/admin/api/2025-07/",
+            'base_uri' => "https://$shop/admin/api/" . self::API_VERSION . "/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
