@@ -33,7 +33,7 @@ class FulfillmentsEndpoints
     {
         /*
             Graphql Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/fulfillmentorder#post-fulfillment-orders-fulfillment-order-id-move
-            Rest Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/fulfillmentOrderMove?example=Moves+a+fulfillment+order+to+a+new+location&language=PHP
+            Rest Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/fulfillmentOrderMove?example=Moves+a+fulfillment+order+to+a+new+location&language=PHP
         */
 
 
@@ -83,7 +83,7 @@ class FulfillmentsEndpoints
     public function createFulfillment($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentcreate
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/fulfillmentcreate
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/fulfillment#post-fulfillments
         */
 
@@ -166,7 +166,7 @@ class FulfillmentsEndpoints
     public function updateTracking($fulfillmentid, $params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/fulfillmentTrackingInfoUpdate?example=Updates+the+tracking+information+for+a+fulfillment
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/fulfillmentTrackingInfoUpdate?example=Updates+the+tracking+information+for+a+fulfillment
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/fulfillment#post-fulfillments-fulfillment-id-update-tracking
         */
 
@@ -227,8 +227,8 @@ class FulfillmentsEndpoints
     public function createFulfillmentEvent($fulfillmentid, $params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentEventCreate?example=Creates+a+fulfillment+event&language=PHP
-            Rest Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/fulfillmentOrderMove?example=Moves+a+fulfillment+order+to+a+new+location&language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/fulfillmentEventCreate?example=Creates+a+fulfillment+event&language=PHP
+            Rest Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/fulfillmentOrderMove?example=Moves+a+fulfillment+order+to+a+new+location&language=PHP
         */
 
 
@@ -286,7 +286,7 @@ class FulfillmentsEndpoints
     public function getFulfillmentOrder($orderid)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/queries/order?example=Retrieves+a+list+of+fulfillment+orders+for+a+specific+order
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/order?example=Retrieves+a+list+of+fulfillment+orders+for+a+specific+order
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/fulfillmentorder#get-orders-order-id-fulfillment-orders
         */
 

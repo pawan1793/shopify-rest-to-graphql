@@ -91,7 +91,7 @@ class InventoryEndpoints
     public function getInventoryItems($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItems
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/inventoryItems
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#get-inventory-levels
         */
 
@@ -166,7 +166,7 @@ class InventoryEndpoints
     public function getInventoryItem($inventoryItemId)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItem
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/inventoryItem
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventoryitem#get-inventory-items-inventory-item-id
         */
 
@@ -226,7 +226,7 @@ class InventoryEndpoints
     public function inventorySetQuantities($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/inventorySetQuantities?language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/inventorySetQuantities?language=PHP
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels-adjust
         */
 
@@ -303,7 +303,7 @@ class InventoryEndpoints
     public function inventoryActivate($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-10/mutations/inventoryActivate
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/inventoryActivate
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels
         */
 
@@ -361,7 +361,7 @@ class InventoryEndpoints
     public function inventoryAdjustQuantities($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/inventoryAdjustQuantities
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/inventoryAdjustQuantities
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#post-inventory-levels-adjust
         */
 
@@ -416,7 +416,7 @@ class InventoryEndpoints
     public function getInventoryItemsWithAllLevels($params)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/inventoryItems
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/inventoryItems
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/inventorylevel#get-inventory-levels
         */
 

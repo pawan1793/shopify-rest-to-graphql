@@ -30,7 +30,7 @@ class DiscountsEndpoints
     function discountNodes($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/latest/queries/discountNodes?example=Retrieve+a+list+of+discounts
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/discountNodes?example=Retrieve+a+list+of+discounts
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/pricerule#get-price-rules
         */
 

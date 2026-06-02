@@ -32,7 +32,7 @@ class ThemesEndpoints
     public function themes()
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/themes
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/themes
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/theme#get-themes
         */
 
@@ -96,7 +96,7 @@ class ThemesEndpoints
     public function themesByRole($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/themes
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/themes
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/theme#get-themes
         */
 
@@ -164,7 +164,7 @@ class ThemesEndpoints
     public function getThemeById($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/theme?example=Retrieves+a+single+theme+by+its+ID
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/theme?example=Retrieves+a+single+theme+by+its+ID
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/theme#get-themes-theme-id
         */
 
@@ -220,7 +220,7 @@ class ThemesEndpoints
     public function themesFiles($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/theme?example=Retrieves+a+list+of+assets+for+a+theme&language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/theme?example=Retrieves+a+list+of+assets+for+a+theme&language=PHP
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/asset#get-themes-theme-id-assets
         */
 
@@ -315,7 +315,7 @@ class ThemesEndpoints
     public function themeFilesUpsert($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/themeFilesUpsert
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/themeFilesUpsert
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/asset#put-themes-theme-id-assets
         */
 
@@ -368,7 +368,7 @@ class ThemesEndpoints
     public function themeFilesDelete($param)
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/themeFilesDelete?example=Deletes+an+asset+from+a+theme&language=PHP
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/themeFilesDelete?example=Deletes+an+asset+from+a+theme&language=PHP
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/asset#delete-themes-theme-id-assets?asset[key]=assets-bg-body.gif
         */
 
@@ -420,7 +420,7 @@ class ThemesEndpoints
     {
 
          /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2024-10/queries/theme
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/theme
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/asset#get-themes-theme-id-assets?asset[key]=templates-index.liquid
         */
 

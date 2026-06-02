@@ -30,7 +30,7 @@ class OauthScopeEndpoints
     {
 
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/currentAppInstallation
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/currentAppInstallation
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/accessscope#get-admin-oauth-access-scopes
         */
 

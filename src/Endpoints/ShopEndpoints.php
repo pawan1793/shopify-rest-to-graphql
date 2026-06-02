@@ -34,7 +34,7 @@ class ShopEndpoints
     public function shopInfo($param = [])
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/shop
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/shop
             Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/shop
         */
 

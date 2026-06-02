@@ -29,7 +29,7 @@ class ApplicationChargesEndpoints
     public function appPurchaseOneTimeCreate($params)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/mutations/appPurchaseOneTimeCreate
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/appPurchaseOneTimeCreate
         Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/applicationcharge#post-application-charges
         */
 
@@ -96,7 +96,7 @@ class ApplicationChargesEndpoints
     public function currentAppInstallationForOneTime($chargeId)
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2025-07/queries/currentAppInstallation?example=Retrieves+a+list+of+application+charges
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/currentAppInstallation?example=Retrieves+a+list+of+application+charges
         Rest Reference : https://shopify.dev/docs/api/admin-rest/2025-07/resources/applicationcharge#get-application-charges-application-charge-id
         */
 

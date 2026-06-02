@@ -33,7 +33,7 @@ class MarketsEndpoints
     public function getMarkets($params = array())
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-01/queries/markets
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/markets
         */
 
         $position = 'first';
@@ -148,7 +148,7 @@ class MarketsEndpoints
     public function getMarketCatalogPriceLists($params = array())
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-01/queries/markets
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/markets
         */
 
         $marketIds = isset($params['market_ids']) && is_array($params['market_ids']) ? $params['market_ids'] : array();
@@ -300,7 +300,7 @@ class MarketsEndpoints
     public function getMarketPriceListsPrices($priceListData = array(), $variantIds = array())
     {
         /*
-            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-01/queries/priceList
+            Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/queries/priceList
         */
 
         $priceListIds = [];
@@ -460,7 +460,7 @@ class MarketsEndpoints
     public function priceListFixedPricesUpdate($priceListId, $pricesToAdd = [], $variantIdsToDelete = [])
     {
         /*
-        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-01/mutations/priceListFixedPricesUpdate
+        Graphql Reference : https://shopify.dev/docs/api/admin-graphql/2026-04/mutations/priceListFixedPricesUpdate
         */
 
         $normalizedPriceListId = $priceListId;
