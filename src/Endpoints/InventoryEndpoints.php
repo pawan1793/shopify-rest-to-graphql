@@ -63,6 +63,24 @@ class InventoryEndpoints
     }
 
     /**
+     * Generate an RFC 4122 version 4 UUID to use as an idempotency key.
+     *
+     * As of Admin API 2026-04 the @idempotent directive is mandatory on inventory
+     * adjustment mutations; each logical operation must supply a unique key so that
+     * a retried request is recognised as a duplicate and applied only once.
+     *
+     * @return string
+     */
+    private function generateIdempotencyKey(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    /**
      * Handle GraphQL response errors
      *
      * @param array $responseData
@@ -234,24 +252,28 @@ class InventoryEndpoints
             throw new \InvalidArgumentException('location_id and inventory_item_id are required.');
         }
 
+        // As of 2026-04 the compare-and-swap redesign removed `ignoreCompareQuantity`;
+        // `changeFromQuantity` is now required per quantity (null = skip the concurrency check,
+        // matching the previous "always overwrite" behaviour).
         $inventoryadjustvariables = [
             'input' => [
                 'reason' => 'correction',
                 'name' => 'available',
-                'ignoreCompareQuantity' => true,
                 'quantities' => [
                     [
                         'quantity' => $params['available'] ?? 0,
                         'inventoryItemId' => $this->formatInventoryItemGid($params['inventory_item_id']),
-                        'locationId' => $this->formatLocationGid($params['location_id'])
+                        'locationId' => $this->formatLocationGid($params['location_id']),
+                        'changeFromQuantity' => null
                     ]
                 ]
-            ]
+            ],
+            'idempotencyKey' => $this->generateIdempotencyKey()
         ];
 
         $inventoryadjustquery = <<<'GRAPHQL'
-            mutation InventorySet($input: InventorySetQuantitiesInput!) {
-                inventorySetQuantities(input: $input) {
+            mutation InventorySet($input: InventorySetQuantitiesInput!, $idempotencyKey: String!) {
+                inventorySetQuantities(input: $input) @idempotent(key: $idempotencyKey) {
                     inventoryAdjustmentGroup {
                         createdAt
                         reason
@@ -278,7 +300,9 @@ class InventoryEndpoints
             if ($errorMessage === 'The specified inventory item is not stocked at the location.') {
                 // Try to activate the inventory item at the location first, then retry
                 $this->inventoryActivate($params);
-                // Retry setting quantities after activation
+                // Retry setting quantities after activation with a fresh idempotency key,
+                // so Shopify treats this as a new operation rather than a duplicate of the failed one.
+                $inventoryadjustvariables['idempotencyKey'] = $this->generateIdempotencyKey();
                 $responseData = $this->graphqlService->graphqlQueryThalia($inventoryadjustquery, $inventoryadjustvariables);
                 $this->handleGraphqlErrors($responseData);
                 $userErrors = $responseData['data']['inventorySetQuantities']['userErrors'] ?? [];
@@ -369,6 +393,8 @@ class InventoryEndpoints
             throw new \InvalidArgumentException('location_id and inventory_item_id are required.');
         }
 
+        // As of 2026-04 `changeFromQuantity` is required per change (null = skip the
+        // concurrency check) and the @idempotent directive is mandatory.
         $inventoryadjustvariables = [
             'input' => [
                 'reason' => 'correction',
@@ -376,14 +402,16 @@ class InventoryEndpoints
                 'changes' => [
                     'delta' => $params['available_adjustment'] ?? 0,
                     'inventoryItemId' => $this->formatInventoryItemGid($params['inventory_item_id']),
-                    'locationId' => $this->formatLocationGid($params['location_id'])
+                    'locationId' => $this->formatLocationGid($params['location_id']),
+                    'changeFromQuantity' => null
                 ]
-            ]
+            ],
+            'idempotencyKey' => $this->generateIdempotencyKey()
         ];
 
         $inventoryadjustquery = <<<'GRAPHQL'
-            mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
-                inventoryAdjustQuantities(input: $input) {
+            mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!, $idempotencyKey: String!) {
+                inventoryAdjustQuantities(input: $input) @idempotent(key: $idempotencyKey) {
                     userErrors {
                         field
                         message
