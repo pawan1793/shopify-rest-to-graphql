@@ -1306,7 +1306,7 @@ class GraphqlService
                         $optionValues[1] = $optiondata;
                     }
 
-                    if (isset($variant['option3']) && isset($graphqloptionids['option2']['values'][$variant['option2']])) {
+                    if (isset($variant['option3']) && isset($graphqloptionids['option3']['values'][$variant['option3']])) {
                         $optiondata['optionId'] = $graphqloptionids['option3']['id'];
                         $optiondata['id'] = $graphqloptionids['option3']['values'][$variant['option3']];
                         $optionValues[2] = $optiondata;
