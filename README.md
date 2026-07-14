@@ -90,6 +90,66 @@ Example Usage for calling graphql query
     }
     ```
 
+## Authentication & Expiring Offline Access Tokens
+
+Shopify is replacing **non-expiring** offline access tokens with **expiring** ones. Public apps
+created before **2026-04-01** must migrate by **2027-01-01**, after which requests for non-expiring
+tokens will error. Custom and merchant-created apps are exempt. See the
+[Shopify docs](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/offline-access-tokens#migrating-from-non-expiring-to-expiring-tokens).
+
+This package is **stateless** — it acquires/refreshes tokens but never stores them. Your app owns
+persistence. To support expiring tokens, add these columns to your per-shop token storage:
+**`expires_at`**, **`refresh_token`**, **`refresh_token_expires_at`** (alongside `access_token`).
+
+```php
+use Thalia\ShopifyRestToGraphql\Endpoints\OauthEndpoints;
+
+$oauth = new OauthEndpoints($shop, $appApiKey, $appSecret);
+
+// 1) Redirect the merchant to install (unchanged):
+$url = $oauth->getAuthorizeUrl($appScope, $redirectUrl);
+```
+
+**New installs — acquire an expiring token on the OAuth callback:**
+
+```php
+$tokens  = $oauth->getExpiringAccessToken($_GET['code']);
+// $tokens = [access_token, expires_in, refresh_token, refresh_token_expires_in, scope]
+
+$storage = OauthEndpoints::toStorage($tokens);
+// $storage = [access_token, refresh_token, scope, expires_at, refresh_token_expires_at]
+// → persist $storage keyed by the shop domain
+```
+
+> The legacy `getAccessToken($code)` (non-expiring, returns a bare token string) is unchanged and
+> still works, but new installs should use `getExpiringAccessToken()`.
+
+**Before each use — refresh proactively if near expiry:**
+
+```php
+if (time() >= $storage['expires_at'] - 300) {                 // 5-minute skew
+    $rotated = $oauth->refreshOfflineAccessToken($storage['refresh_token']);
+    $storage = OauthEndpoints::toStorage($rotated);           // persist BEFORE using
+}
+$service = new \Thalia\ShopifyRestToGraphql\GraphqlService($shop, $storage['access_token']);
+```
+
+`refreshOfflineAccessToken()` returns a **new** access token **and a new** refresh token — the old
+refresh token is invalidated immediately, so persist the new values before using them. On an HTTP
+`401` (caught as a `GraphqlException` with `getCode() === 401`), refresh once and retry. If the
+refresh itself returns `401`, or `refresh_token_expires_at` (90 days) has passed, the merchant must
+relaunch/reinstall the app. Transient `429`/`5xx` failures are safe to retry with backoff.
+
+**Existing merchants — migrate a non-expiring token once (irreversible):**
+
+```php
+$tokens  = $oauth->migrateToExpiringToken($existingNonExpiringToken);
+$storage = OauthEndpoints::toStorage($tokens);                // persist immediately
+// The original non-expiring token is REVOKED on success.
+```
+
+Run the migration once per shop — from a background/batch job or lazily on the next app launch.
+
 ## GraphqlService Class
 
 The `GraphqlService` class is the core of this package and provides direct interaction with Shopify's GraphQL API.
