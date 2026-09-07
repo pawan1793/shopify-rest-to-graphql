@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 
 class GraphqlService
 {
-    private const API_VERSION = '2026-04';
+    private const API_VERSION = '2026-07';
     private const MAX_IMAGES = 250;
     private const MAX_IMAGES_UPDATE = 240;
     private const ONLINE_STORE_PUBLICATION = 'Online Store';
@@ -488,10 +488,10 @@ class GraphqlService
         
         if (!empty($variant['cost'])) {
             $variantdata['inventoryItem']['cost'] = $variant['cost'];
-            $variantdata['inventoryItem']['tracked'] = true;
-            if(isset($variant['inventory_management']) && $variant['inventory_management'] == ''){
-                 $variantdata['inventoryItem']['tracked'] = false;
-            }
+        }
+
+        if (isset($variant['inventory_management'])) {
+            $variantdata['inventoryItem']['tracked'] = $variant['inventory_management'] !== '';
         }
 
         if(!empty($variant['inventory_management_tracked'])){
@@ -781,11 +781,10 @@ class GraphqlService
 
             if (!empty($rawvariant['cost'])) {
                 $variantdata['inventoryItem']['cost'] = $rawvariant['cost'];
-                $variantdata['inventoryItem']['tracked'] = true;
+            }
 
-                if(isset($variant['inventory_management']) && $rawvariant['inventory_management'] == ''){
-                    $variantdata['inventoryItem']['tracked'] = false;
-                }
+            if (isset($rawvariant['inventory_management'])) {
+                $variantdata['inventoryItem']['tracked'] = $rawvariant['inventory_management'] !== '';
             }
 
 
