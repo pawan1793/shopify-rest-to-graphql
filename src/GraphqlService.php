@@ -17,11 +17,26 @@ class GraphqlService
     private const WEIGHT_UNIT_OUNCES = 'OUNCES';
     private const PRODUCT_STATUS_DRAFT = 'DRAFT';
 
+    /**
+     * Guzzle options applied to every GraphqlService instance (including the ones the
+     * *Endpoints classes create internally). A request with no timeout can hold a PHP
+     * worker forever when Shopify stalls, so both timeouts are set by default.
+     * Override globally with setDefaultOptions() or per instance via the constructor.
+     */
+    private static array $defaultOptions = [
+        'timeout' => 90,
+        'connect_timeout' => 10,
+    ];
+
     private string $shopDomain;
     private string $accessToken;
     private Client $client;
 
-    public function __construct(?string $shopDomain = null, ?string $accessToken = null)
+    /**
+     * @param array $options Extra Guzzle request options merged over the defaults
+     *                       (e.g. ['timeout' => 300] for bulk-operation downloads).
+     */
+    public function __construct(?string $shopDomain = null, ?string $accessToken = null, array $options = [])
     {
         if ($shopDomain === null || $accessToken === null) {
             throw new \InvalidArgumentException('Shop domain and access token must be provided.');
@@ -29,13 +44,30 @@ class GraphqlService
 
         $this->shopDomain = $shopDomain;
         $this->accessToken = $accessToken;
-        $this->client = new Client([
+        $this->client = new Client(array_replace(self::$defaultOptions, $options, [
             'base_uri' => "https://{$this->shopDomain}/admin/api/" . self::API_VERSION . "/graphql.json",
-            'headers' => [
-                'X-Shopify-Access-Token' => $this->accessToken,
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+            'headers' => array_replace(
+                $options['headers'] ?? [],
+                [
+                    'X-Shopify-Access-Token' => $this->accessToken,
+                    'Content-Type' => 'application/json',
+                ]
+            ),
+        ]));
+    }
+
+    /**
+     * Change the Guzzle defaults for all instances created afterwards
+     * (call once at application boot). Keys follow Guzzle request options.
+     */
+    public static function setDefaultOptions(array $options): void
+    {
+        self::$defaultOptions = array_replace(self::$defaultOptions, $options);
+    }
+
+    public static function getDefaultOptions(): array
+    {
+        return self::$defaultOptions;
     }
 
 
@@ -2566,13 +2598,13 @@ class GraphqlService
 
 
 
-        $client = new Client([
+        $client = new Client(array_replace(self::$defaultOptions, [
             'base_uri' => "https://$shop/admin/api/" . self::API_VERSION . "/",
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-Shopify-Access-Token' => $accessToken
             ]
-        ]);
+        ]));
 
         $response = $client->post('graphql.json', [
             'body' => json_encode(['query' => $query])

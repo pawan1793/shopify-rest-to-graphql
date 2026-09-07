@@ -4,6 +4,13 @@ Tracks Shopify Admin GraphQL API version upgrades and any code-affecting changes
 
 ## Unreleased
 
+- **HTTP timeouts on every request.** `GraphqlService` now builds its Guzzle client with
+  `timeout => 90` and `connect_timeout => 10` by default (previously none, so a stalled
+  Shopify response could hold a PHP worker indefinitely). The constructor gained an optional
+  third argument `array $options = []` merged over the defaults (e.g. `['timeout' => 300]`),
+  and `GraphqlService::setDefaultOptions([...])` / `getDefaultOptions()` change the defaults
+  for every instance, including the ones the `*Endpoints` classes create internally.
+  Existing two-argument calls are unaffected.
 - **OAuth — support for Shopify expiring offline access tokens.**
   Shopify is replacing non-expiring offline tokens with expiring ones (public apps created before
   2026-04-01 must migrate by 2027-01-01, after which non-expiring token requests error out;
