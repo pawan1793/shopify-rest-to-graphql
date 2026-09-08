@@ -4,6 +4,26 @@ Tracks Shopify Admin GraphQL API version upgrades and any code-affecting changes
 
 ## Unreleased
 
+- **Typed Shopify errors are no longer flattened to 400.** Fifteen `catch (\Exception $e)` blocks
+  in `GraphqlService` rewrapped every failure as `GraphqlException::CODE_BAD_REQUEST`, discarding
+  the original code and keeping it only on `getPrevious()`. A throttled request (429) was therefore
+  indistinguishable from a malformed one, and a missing product (404) from a rejected mutation.
+  Each of those blocks now rethrows a `GraphqlException` as-is first — the idiom already used in
+  `graphqlQueryThalia()`, `getOnlineStorePublication()` and `graphqlPostProduct()`.
+
+  **Consumer impact:** callers that catch `\Exception` are unaffected, but the `getCode()` they
+  observe is now the real one. Code branching on `429`/`404` that never fired before will start
+  firing — check any `getCode()` comparisons before upgrading.
+
+- **`graphqlUpdateProduct()` takes an optional `$returnProduct` flag.** The method ends with a full
+  `graphqlGetProduct()` read-back — variants, selectedOptions, inventoryItem, images, options and
+  publications — issued after the mutations have already committed. Import paths need it; sync
+  paths discard it and pay for it on every product. `$returnProduct = false` skips the read-back
+  and returns `['id' => $shopifyid]`.
+
+  **Consumer impact:** none by default — the parameter defaults to `true` and existing behaviour is
+  byte-identical.
+
 - **HTTP timeouts on every request.** `GraphqlService` now builds its Guzzle client with
   `timeout => 90` and `connect_timeout => 10` by default (previously none, so a stalled
   Shopify response could hold a PHP worker indefinitely). The constructor gained an optional
