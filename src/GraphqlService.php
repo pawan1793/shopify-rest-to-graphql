@@ -70,6 +70,33 @@ class GraphqlService
         return self::$defaultOptions;
     }
 
+    /**
+     * Optional observer called after every successful request with
+     * (string $query, ?array $cost, float $milliseconds, string $shopDomain), where
+     * $cost is the response's `extensions.cost` block (or null). Use it to feed a
+     * rate-limit budget or a metrics sink; exceptions thrown by the logger are ignored.
+     *
+     * @var callable|null
+     */
+    private static $costLogger = null;
+
+    public static function setCostLogger(?callable $logger): void
+    {
+        self::$costLogger = $logger;
+    }
+
+    /**
+     * Same request as graphqlQueryThalia() but returns a GraphqlResponse, which
+     * exposes `extensions.cost` (requested/actual cost, throttleStatus) besides
+     * `data` and `errors`.
+     *
+     * @throws GraphqlException
+     */
+    public function query(string $query, array $variables = []): GraphqlResponse
+    {
+        return new GraphqlResponse($this->graphqlQueryThalia($query, $variables));
+    }
+
 
 
 
@@ -82,17 +109,29 @@ class GraphqlService
                 $payload['variables'] = $variables;
             }
 
+            $started = microtime(true);
             $response = $this->client->post('', ['json' => $payload]);
 
             $responseData = json_decode($response->getBody(), true);
 
             // Check for throttling error
             if (isset($responseData['errors']) && isset($responseData['errors'][0]['extensions']['code']) && $responseData['errors'][0]['extensions']['code'] === 'THROTTLED') {
-                throw new GraphqlException(
+                $throttled = new GraphqlException(
                     'Shopify API request throttled. Please retry after the rate limit window.',
                     GraphqlException::CODE_THROTTLED,
                     $responseData['errors']
                 );
+                $throttled->setThrottleStatus($responseData['extensions']['cost']['throttleStatus'] ?? null);
+
+                throw $throttled;
+            }
+
+            if (self::$costLogger !== null) {
+                try {
+                    (self::$costLogger)($query, $responseData['extensions']['cost'] ?? null, (microtime(true) - $started) * 1000, $this->shopDomain);
+                } catch (\Throwable $ignored) {
+                    // a metrics sink must never break the request
+                }
             }
 
             return $responseData;

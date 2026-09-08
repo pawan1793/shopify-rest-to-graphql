@@ -17,6 +17,9 @@ class GraphqlException extends Exception
 
     protected array $errors = [];
 
+    /** `extensions.cost.throttleStatus` of a THROTTLED answer, when Shopify sent one. */
+    protected ?array $throttleStatus = null;
+
     public function __construct(
         string $message = "",
         int $code = 0,
@@ -40,6 +43,53 @@ class GraphqlException extends Exception
             'errors' => $this->getErrors(),
             'trace' => $this->getTraceAsString(),
         ];
+    }
+
+    /**
+     * The throttleStatus block (maximumAvailable, currentlyAvailable, restoreRate)
+     * that came with a THROTTLED answer, or null when unknown.
+     */
+    public function getThrottleStatus(): ?array
+    {
+        return $this->throttleStatus;
+    }
+
+    public function setThrottleStatus(?array $throttleStatus): static
+    {
+        $this->throttleStatus = $throttleStatus;
+
+        return $this;
+    }
+
+    /**
+     * Shopify's rate limit was hit (HTTP 429 or a GraphQL THROTTLED error).
+     */
+    public function isThrottled(): bool
+    {
+        if ($this->getCode() === self::CODE_THROTTLED) {
+            return true;
+        }
+        foreach ($this->errors as $error) {
+            if (is_array($error) && ($error['extensions']['code'] ?? null) === 'THROTTLED') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrying the same request later can succeed: throttled, 5xx, connection
+     * failures. False for 4xx (bad request, auth, not found) and userErrors.
+     */
+    public function isRetryable(): bool
+    {
+        if ($this->isThrottled()) {
+            return true;
+        }
+        $code = (int) $this->getCode();
+
+        return $code === 0 || $code >= 500;
     }
 
     /**

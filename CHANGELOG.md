@@ -4,6 +4,25 @@ Tracks Shopify Admin GraphQL API version upgrades and any code-affecting changes
 
 ## Unreleased
 
+- **Bulk Operations endpoint.** New `Endpoints\BulkOperationsEndpoints`:
+  `runQuery($query, $clientIdentifier)`, `stagedUploadJsonl($path)` (performs the multipart
+  POST with the returned parameters, returns the `stagedUploadPath`), `runMutation($mutation,
+  $stagedUploadPath, $clientIdentifier)`, `get($id)` (`bulkOperation(id:)` with status,
+  errorCode, type, objectCount, rootObjectCount, fileSize, url, partialDataUrl, createdAt,
+  completedAt), `current($type)`, `cancel($id)`, `downloadToFile($url, $path, $timeout = 600)`
+  (Guzzle `sink`), `subscribeFinishWebhook($address)` (`bulk_operations/finish` through
+  `WebhooksEndpoints`). userErrors are thrown as `GraphqlException` code 400 with the
+  userErrors array in `getErrors()`.
+- **Typed responses.** `GraphqlService::query($query, $variables)` returns a `GraphqlResponse`
+  (`data()`, `errors()`, `extensions()`, `cost()`, `requestedQueryCost()`, `actualQueryCost()`,
+  `throttleStatus()`, `toArray()`, ArrayAccess). `graphqlQueryThalia()` is unchanged.
+- **Throttle details on exceptions.** `GraphqlException::getThrottleStatus()` carries
+  `extensions.cost.throttleStatus` of a THROTTLED answer (null when Shopify did not send one);
+  `isThrottled()` and `isRetryable()` (throttled, 5xx, connection failures) help callers decide
+  on a retry.
+- **Cost observer.** `GraphqlService::setCostLogger(callable)` is called after every request with
+  `($query, $cost, $milliseconds, $shopDomain)`; exceptions from the logger are swallowed.
+
 - **HTTP timeouts on every request.** `GraphqlService` now builds its Guzzle client with
   `timeout => 90` and `connect_timeout => 10` by default (previously none, so a stalled
   Shopify response could hold a PHP worker indefinitely). The constructor gained an optional
