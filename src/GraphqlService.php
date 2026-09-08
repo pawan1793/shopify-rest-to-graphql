@@ -310,6 +310,8 @@ class GraphqlService
                 }
 
             }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
             throw new GraphqlException("Failed to fetch publications from Shopify API", GraphqlException::CODE_BAD_REQUEST, [], $e);
@@ -756,6 +758,8 @@ class GraphqlService
                     }
 
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -914,6 +918,8 @@ class GraphqlService
                 sleep(5);
                 return $this->graphqlGetProduct($shopifyid);
             }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
@@ -922,7 +928,23 @@ class GraphqlService
 
     }
 
-    public function graphqlUpdateProduct($params)
+    /**
+     * Update a product, its variants and its metafields.
+     *
+     * $returnProduct controls the trailing read-back. It defaults to true so existing callers
+     * are unaffected — the import paths in consuming apps read variants[0].id and
+     * variants[0].inventory_item_id straight off the return value.
+     *
+     * Pass false when the caller discards the result. The read-back is a full product fetch
+     * (variants, selectedOptions, inventoryItem, images, options, publications) issued after
+     * the mutations have already succeeded, so on a high-volume sync it is both the most
+     * expensive call of the update AND the one most likely to be throttled — and when it
+     * throws, the caller sees a failure for a write that actually landed.
+     *
+     * @param  bool  $returnProduct  false returns only ['id' => ...] and skips the read-back
+     * @return array
+     */
+    public function graphqlUpdateProduct($params, bool $returnProduct = true)
     {
 
 
@@ -1404,6 +1426,8 @@ class GraphqlService
 
 
                 }
+            } catch (GraphqlException $e) {
+                throw $e;
             } catch (\Exception $e) {
                 // Handle Guzzle exceptions
                 throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
@@ -1461,6 +1485,11 @@ class GraphqlService
         }
 
         $shopifyid = $this->extractIdFromGid($product['id'], 'Product');
+
+        if (!$returnProduct) {
+            return ['id' => $shopifyid];
+        }
+
         return $this->graphqlGetProduct($shopifyid);
     }
 
@@ -1800,6 +1829,8 @@ class GraphqlService
             if (isset($responseData["errors"])) {
                 throw new GraphqlException('Failed to fetch products from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
             throw new GraphqlException('Failed to fetch products from Shopify API', GraphqlException::CODE_BAD_REQUEST, [], $e);
@@ -1835,6 +1866,8 @@ class GraphqlService
                 throw new GraphqlException('Failed to get products count from Shopify API', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
             }
 
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             // Handle Guzzle exceptions
             throw new GraphqlException('Failed to get products count from Shopify API', GraphqlException::CODE_BAD_REQUEST, [], $e);
@@ -1979,6 +2012,8 @@ class GraphqlService
                     return $shopifyproduct;
 
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2125,6 +2160,8 @@ class GraphqlService
                     return $shopifyproduct;
 
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2195,6 +2232,8 @@ class GraphqlService
 
                 return ['images' => $responseData['data']['productCreateMedia']['media']];
             }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to create product media', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2250,6 +2289,8 @@ class GraphqlService
 
                 return ['deletedImages' => $responseData['data']['productDeleteMedia']['deletedMediaIds']];
             }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to delete product media', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2301,6 +2342,8 @@ class GraphqlService
             }
 
             return $responseData;
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2352,6 +2395,8 @@ class GraphqlService
                 } else {
                     return $responseData;
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2430,6 +2475,8 @@ class GraphqlService
 
                     return $variants;
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
@@ -2506,6 +2553,8 @@ class GraphqlService
                     return $variant;
 
                 }
+            } catch (GraphqlException $e) {
+                throw $e;
             } catch (\Exception $e) {
                 throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
             }
@@ -2559,6 +2608,8 @@ class GraphqlService
                     return $shopifyproduct;
 
                 }
+        } catch (GraphqlException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new GraphqlException('Failed to execute GraphQL operation', GraphqlException::CODE_BAD_REQUEST, [], $e);
         }
