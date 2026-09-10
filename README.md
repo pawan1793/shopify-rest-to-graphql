@@ -323,6 +323,25 @@ $ordersEndpoint = new OrdersEndpoints($shop, $accessToken);
 
 - `getOrders($params)`: Get a list of orders with filtering options
 - `getOrder($orderId)`: Get a single order by ID
+
+`getOrders()` and `getOrder()` accept an optional `fields` array holding the GraphQL selection to
+request. Omit it (or pass an empty array) to use the package default, which covers every key the
+REST-shaped response exposes:
+
+```php
+$orders = $ordersEndpoint->getOrders(['limit' => 50, 'query' => ['status' => 'any']]);
+```
+
+Pass your own `fields` to fetch less and keep the query cheap - only the keys you request are
+populated in the response:
+
+```php
+$orders = $ordersEndpoint->getOrders([
+    'limit' => 50,
+    'fields' => ['id', 'name', 'displayFulfillmentStatus'],
+]);
+```
+
 - `createOrder($params)`: Create a new order
 - `updateOrder($orderId, $params)`: Update an existing order
 - `cancelOrder($orderId, $params)`: Cancel an order

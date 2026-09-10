@@ -4,6 +4,40 @@ Tracks Shopify Admin GraphQL API version upgrades and any code-affecting changes
 
 ## Unreleased
 
+- **`fulfillments[]` now exposes the line items in each fulfillment.** Both order mappers built
+  the fulfillment array from `id` / `created_at` / `shipment_status` / `name` / `status` /
+  `updated_at` / `tracking_*` and dropped `fulfillmentLineItems` on the floor, even when the caller
+  requested it — so consumers could see that a parcel was `in_transit` but not which products were
+  in it. Each fulfillment now carries `fulfillment_line_items[]` with `id`, `quantity`,
+  `line_item_id`, `name`, `title`, `variant_title`, `sku` and `price`.
+
+  `line_item_id` is the key that ties a fulfillment back to an order line item, which is what lets a
+  consumer report a part-shipped order per product rather than under one status for the whole order.
+
+  `defaultOrderFields()` now requests `name`, `title`, `variantTitle` and `sku` on
+  `fulfillmentLineItems.lineItem` so those keys are populated for callers that take the default.
+
+  **Consumer impact:** additive — a new key on an existing array, nothing renamed or removed.
+  Callers passing their own `fields` need `fulfillmentLineItems { edges { node { id quantity
+  lineItem { id name title variantTitle sku } } } }` inside `fulfillments` to populate it; without
+  it the key is present and empty.
+
+- **`getOrders()` / `getOrder()` no longer require a `fields` array.** Both built their query from
+  `implode("\n", $param['fields'])` with no fallback, so every caller had to hand-maintain the full
+  GraphQL selection. When `fields` is missing, empty or null they now fall back to a new private
+  `defaultOrderFields()` — the reference selection previously buried in `testqueryFormmate()`, which
+  nothing ever called. Callers that pass their own `fields` are unaffected; their list is used verbatim.
+
+  Three fields the response mappers already read were missing from that reference selection, so the
+  default now includes them:
+  - `fulfillments.displayStatus` — maps to `fulfillments[].shipment_status` (was always `''`)
+  - `fulfillments.trackingInfo` — maps to `tracking_number` / `tracking_url` / `tracking_company`
+  - `fulfillmentOrders` — maps to `line_items[].fulfillable_quantity` (was always `0`)
+
+  **Consumer impact:** additive. Existing calls that pass `fields` behave exactly as before — if you
+  want the three fields above, add them to your own list (or drop `fields` to take the default).
+  Note the default selection requests `read_customers` and `read_products` on top of `read_orders`.
+
 - **Typed Shopify errors are no longer flattened to 400.** Fifteen `catch (\Exception $e)` blocks
   in `GraphqlService` rewrapped every failure as `GraphqlException::CODE_BAD_REQUEST`, discarding
   the original code and keeping it only on `getPrevious()`. A throttled request (429) was therefore
