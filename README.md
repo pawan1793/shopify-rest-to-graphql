@@ -134,11 +134,35 @@ if (time() >= $storage['expires_at'] - 300) {                 // 5-minute skew
 $service = new \Thalia\ShopifyRestToGraphql\GraphqlService($shop, $storage['access_token']);
 ```
 
-`refreshOfflineAccessToken()` returns a **new** access token **and a new** refresh token — the old
-refresh token is invalidated immediately, so persist the new values before using them. On an HTTP
-`401` (caught as a `GraphqlException` with `getCode() === 401`), refresh once and retry. If the
-refresh itself returns `401`, or `refresh_token_expires_at` (90 days) has passed, the merchant must
-relaunch/reinstall the app. Transient `429`/`5xx` failures are safe to retry with backoff.
+`refreshOfflineAccessToken()` returns a **new** access token **and a new** refresh token — persist
+both before using them. The old refresh token stays usable only until the earliest of: the new one
+is used, a new token is acquired, 30 days after its first use, or its original 90-day expiry. On an
+HTTP `401` (a `GraphqlException` where `$e->isUnauthorized()` is true), refresh once and retry. If
+the refresh itself returns `401`, or `refresh_token_expires_at` (90 days) has passed, the merchant
+must relaunch/reinstall the app. Transient `429`/`5xx` failures are safe to retry with backoff.
+Don't refresh and acquire a token (code grant / token exchange) concurrently for the same shop —
+each retires the other's result.
+
+```php
+try {
+    $result = $service->graphqlQueryThalia($query);
+} catch (\Thalia\ShopifyRestToGraphql\GraphqlException $e) {
+    if (! $e->isUnauthorized()) {
+        throw $e;
+    }
+    $storage = OauthEndpoints::toStorage($oauth->refreshOfflineAccessToken($storage['refresh_token']));
+    // persist $storage, rebuild $service with the new access token, retry once
+}
+```
+
+**Embedded apps — exchange the App Bridge ID token (token exchange):**
+
+```php
+$tokens  = $oauth->exchangeIdTokenForOfflineToken($idToken);  // expiring=1 by default
+$storage = OauthEndpoints::toStorage($tokens);                // persist
+```
+
+A `400` means the ID token is stale (they live ~1 minute) — get a fresh one from App Bridge and retry.
 
 **Existing merchants — migrate a non-expiring token once (irreversible):**
 

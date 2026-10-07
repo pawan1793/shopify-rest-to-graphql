@@ -116,9 +116,14 @@ class OauthEndpoints
     /**
      * Rotate an EXPIRING offline access token using its refresh token.
      *
-     * Conformant refresh grant (grant_type=refresh_token). Shopify returns a NEW access token AND
-     * a NEW refresh token; the previous refresh token is invalidated immediately, while the
-     * previous access token stays valid until its own expiry. Persist the new tokens before use.
+     * Conformant refresh grant (grant_type=refresh_token). Every refresh returns a NEW access token
+     * AND a NEW refresh token. Persist both before use. The presented refresh token stays usable
+     * until the earliest of: the newer refresh token is used, a new token is acquired via code
+     * grant / token exchange, 30 days after its first use, or its original 90-day expiry. Retired
+     * access tokens stay valid until their own expires_in so in-flight requests can finish.
+     *
+     * Don't refresh and acquire (code grant / token exchange) concurrently for the same shop:
+     * each retires the other's result.
      *
      * POST https://{shop}.myshopify.com/admin/oauth/access_token
      *
@@ -126,8 +131,10 @@ class OauthEndpoints
      * @param string|null $clientId Defaults to the app API key passed to the constructor.
      * @param string|null $clientSecret Defaults to the app secret passed to the constructor.
      * @return array{access_token:string, expires_in:int, refresh_token:string, refresh_token_expires_in:int, scope:string}
-     * @throws GraphqlException code 401 = refresh token invalid/expired (relaunch app);
-     *                          429/5xx = transient (safe to retry with backoff for up to ~1h).
+     * @throws GraphqlException code 401 ({"error":"invalid_request","error_description":"This request
+     *                          requires an active refresh_token"}) = refresh token expired, revoked or
+     *                          replaced: stop retrying and re-authenticate (token exchange / OAuth);
+     *                          429/5xx/connection errors = transient (safe to retry with backoff).
      */
     public function refreshOfflineAccessToken(string $refreshToken, ?string $clientId = null, ?string $clientSecret = null): array
     {
@@ -163,6 +170,39 @@ class OauthEndpoints
             'subject_token_type'   => 'urn:shopify:params:oauth:token-type:offline-access-token',
             'requested_token_type' => 'urn:shopify:params:oauth:token-type:offline-access-token',
             'expiring'             => 1,
+        ]);
+    }
+
+    /**
+     * Exchange an App Bridge ID token (session token) for an offline access token.
+     *
+     * Token-exchange grant for embedded apps. Requests an EXPIRING offline token by default,
+     * which public apps must use for GraphQL Admin API requests from January 1, 2027.
+     * Acquiring a new expiring token retires older expiring offline tokens for the same shop.
+     *
+     * Don't run this concurrently with refreshOfflineAccessToken() for the same shop: each
+     * retires the other's result.
+     *
+     * POST https://{shop}.myshopify.com/admin/oauth/access_token
+     *
+     * @param string $idToken The ID token from App Bridge (Authorization: Bearer header / id_token param).
+     * @param bool $expiring Request an expiring token (expiring=1). Pass false only for legacy non-expiring tokens.
+     * @param string|null $clientId Defaults to the app API key passed to the constructor.
+     * @param string|null $clientSecret Defaults to the app secret passed to the constructor.
+     * @return array{access_token:string, expires_in?:int, refresh_token?:string, refresh_token_expires_in?:int, scope:string}
+     * @throws GraphqlException code 400 = ID token invalid or expired (they live ~1 minute):
+     *                          get a fresh one from App Bridge and retry.
+     */
+    public function exchangeIdTokenForOfflineToken(string $idToken, bool $expiring = true, ?string $clientId = null, ?string $clientSecret = null): array
+    {
+        return $this->postOauthToken([
+            'client_id'            => $clientId ?? $this->appApiKey,
+            'client_secret'        => $clientSecret ?? $this->appSecret,
+            'grant_type'           => 'urn:ietf:params:oauth:grant-type:token-exchange',
+            'subject_token'        => $idToken,
+            'subject_token_type'   => 'urn:ietf:params:oauth:token-type:id_token',
+            'requested_token_type' => 'urn:shopify:params:oauth:token-type:offline-access-token',
+            'expiring'             => $expiring ? 1 : 0,
         ]);
     }
 
@@ -240,11 +280,15 @@ class OauthEndpoints
      * Build the Guzzle client used for OAuth token requests.
      *
      * Test seam: override in a subclass to inject a MockHandler and assert the built request
-     * without hitting a live Shopify store.
+     * without hitting a live Shopify store. Timeouts match GraphqlService's defaults so a stalled
+     * token endpoint can't hold a PHP worker forever.
      */
     protected function createClient(): Client
     {
-        return new Client();
+        return new Client([
+            'timeout'         => 90,
+            'connect_timeout' => 10,
+        ]);
     }
 
 }

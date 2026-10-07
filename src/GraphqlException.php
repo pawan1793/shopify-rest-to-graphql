@@ -79,6 +79,16 @@ class GraphqlException extends Exception
     }
 
     /**
+     * Shopify rejected the credentials (HTTP 401). For an expiring offline token, refresh it
+     * with OauthEndpoints::refreshOfflineAccessToken() and retry; if the refresh itself fails
+     * with 401, the refresh token is dead and the merchant must re-authenticate.
+     */
+    public function isUnauthorized(): bool
+    {
+        return $this->getCode() === self::CODE_UNAUTHORIZED;
+    }
+
+    /**
      * Retrying the same request later can succeed: throttled, 5xx, connection
      * failures. False for 4xx (bad request, auth, not found) and userErrors.
      */
