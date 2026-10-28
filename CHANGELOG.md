@@ -4,6 +4,40 @@ Tracks Shopify Admin GraphQL API version upgrades and any code-affecting changes
 
 ## Unreleased
 
+- **One Guzzle client per shop, shared across instances.** `GraphqlService` (and therefore every
+  endpoint class, which builds its own `GraphqlService`) used to create a new Guzzle `Client` per
+  instance, so each instance paid a fresh TCP + TLS handshake: a product push through
+  `GraphqlService`, `MetafieldsEndpoints` and `InventoryEndpoints` opened four or five connections
+  per product. Clients are now pooled per shop domain, access token and option set (32 entries,
+  oldest dropped) and the connection stays alive between calls. `GraphqlService::resetSharedState()`
+  clears the pool and the publication cache (tests, token rotation: a new token gets a new client
+  anyway, since the token is part of the key).
+
+- **The Online Store publication is looked up once per shop** instead of before every
+  `graphqlPostProductWithVariants()` / `graphqlPostProduct()` call. `graphqlPostProduct()` now
+  uses the same helper as the variants method; a shop without an Online Store publication still
+  gets an empty publication there (it used to send a null id).
+
+- **`graphqlPostProductWithVariants($params, array $options = [])` no longer sleeps 5 seconds
+  after every create.** It reads the product back right away and, while media was sent and not all
+  of it is listed yet, reads again every second for up to `media_wait` seconds (default 5, so the
+  worst case is unchanged and the usual case returns in 1–2 s). Options:
+  - `media_wait` (int, default 5): seconds to wait for media; `0` reads back once immediately.
+  - `read_back` (bool, default true): `false` skips the read-back and returns `id`, `title`,
+    `variants` (`id`, `sku`, `title`, `inventory_item_id`) and an empty `images` list built from
+    the mutation payloads (one request fewer, and no media wait). For callers that only need the
+    variant ids.
+
+  The `productVariantsBulkCreate` selection now includes `sku` and `inventoryItem { id }`, and its
+  `userErrors` are checked under the right key (`productVariantsBulkCreate`, not `productCreate`),
+  so a failed variant create throws instead of returning a product with the default variant.
+
+- **`graphqlUpdateProduct()` sends only the mutations it needs.** The `productUpdate` mutation is
+  skipped when the input holds nothing but the id and no media (a variants-only update), and the
+  `getProductDetails` options query runs only when a variant without an `id` has to be created.
+  A variants-only update with `$returnProduct = false` is now a single `productVariantsBulkUpdate`
+  request instead of four.
+
 - **`fulfillments[]` now exposes the line items in each fulfillment.** Both order mappers built
   the fulfillment array from `id` / `created_at` / `shipment_status` / `name` / `status` /
   `updated_at` / `tracking_*` and dropped `fulfillmentLineItems` on the floor, even when the caller

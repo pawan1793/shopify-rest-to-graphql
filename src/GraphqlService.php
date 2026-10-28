@@ -44,16 +44,66 @@ class GraphqlService
 
         $this->shopDomain = $shopDomain;
         $this->accessToken = $accessToken;
-        $this->client = new Client(array_replace(self::$defaultOptions, $options, [
-            'base_uri' => "https://{$this->shopDomain}/admin/api/" . self::API_VERSION . "/graphql.json",
+        $this->client = self::sharedClient($shopDomain, $accessToken, $options);
+    }
+
+    /**
+     * Guzzle clients shared by every GraphqlService (and endpoint class) built in
+     * this process, keyed by shop, token and option set.
+     *
+     * A Guzzle client owns its curl handle pool, so a client per instance meant a
+     * fresh TCP + TLS handshake for every request: a product push that goes
+     * through GraphqlService, MetafieldsEndpoints and InventoryEndpoints opened
+     * four or five connections per product. Sharing the client keeps the
+     * connection alive across instances.
+     */
+    private static array $clients = [];
+
+    private const CLIENT_POOL_SIZE = 32;
+
+    private static function sharedClient(string $shopDomain, string $accessToken, array $options): Client
+    {
+        $key = $shopDomain . '|' . hash('sha256', $accessToken) . '|' . self::optionsKey($options);
+
+        if (isset(self::$clients[$key])) {
+            return self::$clients[$key];
+        }
+
+        if (count(self::$clients) >= self::CLIENT_POOL_SIZE) {
+            // Oldest entry first; string keys survive array_shift.
+            array_shift(self::$clients);
+        }
+
+        return self::$clients[$key] = new Client(array_replace(self::$defaultOptions, $options, [
+            'base_uri' => "https://{$shopDomain}/admin/api/" . self::API_VERSION . "/graphql.json",
             'headers' => array_replace(
                 $options['headers'] ?? [],
                 [
-                    'X-Shopify-Access-Token' => $this->accessToken,
+                    'X-Shopify-Access-Token' => $accessToken,
                     'Content-Type' => 'application/json',
                 ]
             ),
         ]));
+    }
+
+    /** Stable key for an option set; objects (handlers, loggers) count by identity. */
+    private static function optionsKey(array $options): string
+    {
+        $all = [self::$defaultOptions, $options];
+        array_walk_recursive($all, function (&$value) {
+            if (is_object($value)) {
+                $value = get_class($value) . '#' . spl_object_id($value);
+            }
+        });
+
+        return md5(serialize($all));
+    }
+
+    /** Drop the shared clients and cached publications (tests, token rotation). */
+    public static function resetSharedState(): void
+    {
+        self::$clients = [];
+        self::$publications = [];
     }
 
     /**
@@ -186,8 +236,15 @@ class GraphqlService
      * @return array The publication node data
      * @throws GraphqlException
      */
+    /** Online Store publication per shop; it never changes within a process. */
+    private static array $publications = [];
+
     private function getOnlineStorePublication(): array
     {
+        if (isset(self::$publications[$this->shopDomain])) {
+            return self::$publications[$this->shopDomain];
+        }
+
         $query = <<<QUERY
             query publications {
                 publications(first: 5) {
@@ -214,7 +271,7 @@ class GraphqlService
 
             foreach ($responseData["data"]["publications"]["edges"] as $publication) {
                 if ($publication["node"]["name"] === self::ONLINE_STORE_PUBLICATION) {
-                    return $publication["node"];
+                    return self::$publications[$this->shopDomain] = $publication["node"];
                 }
             }
 
@@ -305,56 +362,15 @@ class GraphqlService
 
     public function graphqlPostProduct($params)
     {
-
-
-        $onlinepublication = [];
-        $query = <<<QUERY
-                query publications {
-                    publications(first: 5) {
-                    edges {
-                        node {
-                        id
-                        name
-                        
-                        }
-                    }
-                    }
-                }
-                QUERY;
-
-
-
-
-
-
-
-
-
-
+        // Same lookup as graphqlPostProductWithVariants, cached per shop. A shop
+        // without an Online Store publication used to get an empty id here.
         try {
-            // Send GraphQL request
-
-            $responseData = $this->graphqlQueryThalia($query);
-
-
-            if (isset($responseData["errors"])) {
-                throw new GraphqlException("Failed to fetch publications from Shopify API", GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
-                
-            } else {
-                foreach ($responseData["data"]["publications"]["edges"] as $key => $publication) {
-                    if ($publication["node"]["name"] == "Online Store") {
-                        $onlinepublication = $publication["node"];
-                    }
-
-                }
-
-            }
+            $onlinepublication = $this->getOnlineStorePublication();
         } catch (GraphqlException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            // Handle Guzzle exceptions
-            throw new GraphqlException("Failed to fetch publications from Shopify API", GraphqlException::CODE_BAD_REQUEST, [], $e);
-
+            if ($e->getCode() !== GraphqlException::CODE_NOT_FOUND) {
+                throw $e;
+            }
+            $onlinepublication = [];
         }
 
 
@@ -615,8 +631,27 @@ class GraphqlService
 
 
 
-    public function graphqlPostProductWithVariants($params)
+    /**
+     * Create a product, then its variants, and return it REST-shaped.
+     *
+     * $options:
+     *   media_wait (int, default 5)   Seconds to wait for the media sent with the
+     *                                 product to be processed before returning. The
+     *                                 product is read back right away and again every
+     *                                 second until every image is listed or the wait is
+     *                                 over (the old code always slept 5 s). 0 reads back
+     *                                 once without waiting.
+     *   read_back  (bool, default true) false skips the read-back and returns only
+     *                                 id, title, variants (id, sku, title,
+     *                                 inventory_item_id) and an empty images list,
+     *                                 straight from the mutation payloads. Use it when
+     *                                 the caller does not need images or options.
+     */
+    public function graphqlPostProductWithVariants($params, array $options = [])
     {
+        $mediaWait = max(0, (int) ($options['media_wait'] ?? 5));
+        $readBack = (bool) ($options['read_back'] ?? true);
+
         $onlinepublication = $this->getOnlineStorePublication();
 
 
@@ -920,6 +955,10 @@ class GraphqlService
                                 productVariants {
                                     id
                                     title
+                                    sku
+                                    inventoryItem {
+                                        id
+                                    }
                                     selectedOptions {
                                         name
                                         value
@@ -948,14 +987,18 @@ class GraphqlService
 
                 throw new GraphqlException('Failed to create product with variants via GraphQL', GraphqlException::CODE_BAD_REQUEST, $responseData["errors"]);
 
-            } elseif (isset($responseData['data']['productCreate']['userErrors']) && !empty($responseData['data']['productCreate']['userErrors'])) {
+            } elseif (!empty($responseData['data']['productVariantsBulkCreate']['userErrors'])) {
 
-                throw new GraphqlException('Product creation with variants failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productCreate']['userErrors']);
+                throw new GraphqlException('Product creation with variants failed with validation errors', GraphqlException::CODE_BAD_REQUEST, $responseData['data']['productVariantsBulkCreate']['userErrors']);
 
             } else {
                 $shopifyid = $this->extractIdFromGid($productId, 'Product');
-                sleep(5);
-                return $this->graphqlGetProduct($shopifyid);
+
+                if (!$readBack) {
+                    return $this->productFromVariantsCreate($shopifyid, $productdata, $responseData['data']['productVariantsBulkCreate'] ?? []);
+                }
+
+                return $this->readBackProduct($shopifyid, count($productmedia), $mediaWait);
             }
         } catch (GraphqlException $e) {
             throw $e;
@@ -965,6 +1008,58 @@ class GraphqlService
         }
 
 
+    }
+
+    /**
+     * Read a created product back, waiting up to $mediaWait seconds for the media
+     * sent with it to be processed (Shopify lists an image only once it is ready).
+     */
+    private function readBackProduct(string $shopifyid, int $mediaSent, int $mediaWait): array
+    {
+        $expected = min($mediaSent, 250);
+        $deadline = microtime(true) + $mediaWait;
+
+        while (true) {
+            $product = $this->graphqlGetProduct($shopifyid);
+
+            if ($expected === 0 || $this->readyImages($product) >= $expected || microtime(true) >= $deadline) {
+                return $product;
+            }
+
+            sleep(1);
+        }
+    }
+
+    /** Images listed by graphqlGetProduct (it leaves the raw edges array when there are none). */
+    private function readyImages(array $product): int
+    {
+        $images = $product['images'] ?? [];
+
+        return isset($images['edges']) ? count($images['edges']) : count($images);
+    }
+
+    /** REST-shaped product built from the productVariantsBulkCreate payload, no read-back. */
+    private function productFromVariantsCreate(string $shopifyid, array $productdata, array $payload): array
+    {
+        $variants = [];
+
+        foreach ($payload['productVariants'] ?? [] as $node) {
+            $variants[] = [
+                'id' => $this->extractIdFromGid($node['id'], 'ProductVariant'),
+                'title' => $node['title'] ?? null,
+                'sku' => $node['sku'] ?? null,
+                'inventory_item_id' => isset($node['inventoryItem']['id'])
+                    ? $this->extractIdFromGid($node['inventoryItem']['id'], 'InventoryItem')
+                    : null,
+            ];
+        }
+
+        return [
+            'id' => $shopifyid,
+            'title' => $productdata['title'] ?? null,
+            'variants' => $variants,
+            'images' => [],
+        ];
     }
 
     /**
@@ -1247,33 +1342,43 @@ class GraphqlService
             'mediainput' => $productmedia,
         ];
 
+        // A call that only updates variants has nothing for productUpdate: skip
+        // the empty mutation.
+        if (count($product) > 1 || !empty($productmedia)) {
+            $responseData = $this->graphqlQueryThalia($productquery, $variables);
 
+            // Check for GraphQL or user errors
+            if (isset($responseData['errors'])) {
+                throw new GraphqlException(
+                    'Failed to update product via GraphQL',
+                    GraphqlException::CODE_BAD_REQUEST,
+                    $responseData["errors"]
+                );
+            }
 
-
-
-
-        $responseData = $this->graphqlQueryThalia($productquery, $variables);
-
-        // Check for GraphQL or user errors
-        if (isset($responseData['errors'])) {
-            throw new GraphqlException(
-                'Failed to update product via GraphQL',
-                GraphqlException::CODE_BAD_REQUEST,
-                $responseData["errors"]
-            );
+            if (isset($responseData['data']['productUpdate']['userErrors']) &&
+                !empty($responseData['data']['productUpdate']['userErrors'])) {
+                throw new GraphqlException(
+                    'Product update failed with validation errors',
+                    GraphqlException::CODE_BAD_REQUEST,
+                    $responseData['data']['productUpdate']['userErrors']
+                );
+            }
         }
 
-        if (isset($responseData['data']['productUpdate']['userErrors']) &&
-            !empty($responseData['data']['productUpdate']['userErrors'])) {
-            throw new GraphqlException(
-                'Product update failed with validation errors',
-                GraphqlException::CODE_BAD_REQUEST,
-                $responseData['data']['productUpdate']['userErrors']
-            );
+        // The option ids are only needed to create variants that have no id yet.
+        $needsOptionIds = false;
+        foreach ($productdata['variants'] ?? [] as $variant) {
+            if (!isset($variant['id'])) {
+                $needsOptionIds = true;
+                break;
+            }
         }
 
+        $graphqloptionids = array();
 
-        $query = <<<'GRAPHQL'
+        if ($needsOptionIds) {
+            $query = <<<'GRAPHQL'
                         query getProductDetails($id: ID!) {
                                 product(id: $id) {
                                     id
@@ -1291,24 +1396,24 @@ class GraphqlService
                                 }
                             }
                     GRAPHQL;
-        $productvariables['id'] = $product['id'];
-        $responseData = $this->graphqlQueryThalia($query, $productvariables);
+            $productvariables['id'] = $product['id'];
+            $responseData = $this->graphqlQueryThalia($query, $productvariables);
 
 
-        //get product data 
-        $graphqloptionids = array();
-        $currentopt = 1;
-        foreach ($responseData['data']['product']['options'] as $graphqloptionidkey => $option) {
+            //get product data 
+            $currentopt = 1;
+            foreach ($responseData['data']['product']['options'] as $graphqloptionidkey => $option) {
 
 
-            $graphqloptionids['option' . $currentopt]['id'] = $option['id'];
-            $graphqloptionids['option' . $currentopt]['values'] = array();
+                $graphqloptionids['option' . $currentopt]['id'] = $option['id'];
+                $graphqloptionids['option' . $currentopt]['values'] = array();
 
-            foreach ($option['optionValues'] as $optionvalue) {
-                $graphqloptionids['option' . $currentopt]['values'][$optionvalue['name']] = $optionvalue['id'];
+                foreach ($option['optionValues'] as $optionvalue) {
+                    $graphqloptionids['option' . $currentopt]['values'][$optionvalue['name']] = $optionvalue['id'];
+                }
+
+                $currentopt++;
             }
-
-            $currentopt++;
         }
 
 
